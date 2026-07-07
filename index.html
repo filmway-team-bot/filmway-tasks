@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Filmway AI — Task Dashboard</title>
+  <style>
+    /* ── Reset & Base ────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0a;
+      --card:      #1a1a2e;
+      --card2:     #16213e;
+      --accent:    #e94560;
+      --accent2:   #c73652;
+      --text:      #ffffff;
+      --text-muted:#8892a4;
+      --done:      #2ecc71;
+      --border:    rgba(233,69,96,.25);
+      --shadow:    0 8px 32px rgba(0,0,0,.6);
+      --radius:    12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise overlay ───────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      background-size: 180px;
+      pointer-events: none;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      position: relative; z-index: 10;
+      padding: 28px 32px 20px;
+      background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 60%, #0a0a0a 100%);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .logo-wrap {
+      display: flex; align-items: center; gap: 14px;
+    }
+
+    .logo-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 0 20px rgba(233,69,96,.45);
+      flex-shrink: 0;
+    }
+
+    h1 {
+      font-size: clamp(1.2rem, 4vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -.5px;
+      line-height: 1.15;
+    }
+
+    h1 span { color: var(--accent); }
+
+    .header-meta {
+      margin-left: auto;
+      text-align: right;
+      font-size: .78rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .header-meta strong { color: var(--text); }
+
+    /* ── Tabs ───────────────────────────────────────────────── */
+    .tabs-bar {
+      position: relative; z-index: 10;
+      display: flex; gap: 4px;
+      padding: 16px 32px 0;
+      background: #0d0d1a;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs-bar::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      padding: 10px 22px;
+      border: none; background: transparent;
+      color: var(--text-muted);
+      font-size: .9rem; font-weight: 600;
+      cursor: pointer;
+      border-radius: var(--radius) var(--radius) 0 0;
+      transition: color .2s, background .2s;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .tab-btn::after {
+      content: '';
+      position: absolute; bottom: 0; left: 50%; right: 50%;
+      height: 2px;
+      background: var(--accent);
+      transition: left .25s, right .25s;
+      border-radius: 2px 2px 0 0;
+    }
+
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,.04); }
+
+    .tab-btn.active {
+      color: var(--text);
+      background: rgba(233,69,96,.08);
+    }
+    .tab-btn.active::after { left: 12px; right: 12px; }
+
+    .tab-btn .badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: .7rem;
+      background: var(--accent);
+      color: #fff;
+      vertical-align: middle;
+      opacity: 0;
+      transform: scale(.7);
+      transition: opacity .2s, transform .2s;
+    }
+    .tab-btn .badge.visible { opacity: 1; transform: scale(1); }
+
+    /* ── Main content ────────────────────────────────────────── */
+    main {
+      position: relative; z-index: 5;
+      padding: 28px 32px 48px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeUp .35s ease both; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Period header ───────────────────────────────────────── */
+    .period-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .period-title {
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    .period-date {
+      font-size: .8rem;
+      color: var(--accent);
+      background: rgba(233,69,96,.1);
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(233,69,96,.3);
+    }
+
+    /* ── Progress bar ────────────────────────────────────────── */
+    .progress-wrap {
+      background: rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .progress-label {
+      font-size: .85rem;
+      color: var(--text-muted);
+      min-width: 110px;
+    }
+
+    .progress-bar-outer {
+      flex: 1; min-width: 120px;
+      height: 8px;
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #ff6b6b);
+      border-radius: 999px;
+      transition: width .7s cubic-bezier(.4,0,.2,1);
+      width: 0%;
+      box-shadow: 0 0 10px rgba(233,69,96,.5);
+    }
+
+    .progress-pct {
+      font-size: 1rem; font-weight: 700;
+      color: var(--text);
+      min-width: 44px;
+      text-align: right;
+    }
+
+    .progress-count {
+      font-size: .8rem; color: var(--text-muted);
+    }
+
+    /* ── Task list ───────────────────────────────────────────── */
+    .task-list {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    /* ── Task card ───────────────────────────────────────────── */
+    .task-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex; align-items: flex-start; gap: 14px;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      animation: cardIn .3s ease both;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .task-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .task-card:hover {
+      transform: translateX(3px);
+      box-shadow: var(--shadow);
+      border-color: rgba(233,69,96,.4);
+    }
+    .task-card:hover::before { opacity: 1; }
+
+    .task-card.done { opacity: .65; }
+    .task-card.done::before { background: var(--done); opacity: .6; }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* stagger */
+    .task-card:nth-child(1)  { animation-delay: .02s; }
+    .task-card:nth-child(2)  { animation-delay: .05s; }
+    .task-card:nth-child(3)  { animation-delay: .08s; }
+    .task-card:nth-child(4)  { animation-delay: .11s; }
+    .task-card:nth-child(5)  { animation-delay: .14s; }
+    .task-card:nth-child(6)  { animation-delay: .17s; }
+    .task-card:nth-child(7)  { animation-delay: .20s; }
+    .task-card:nth-child(8)  { animation-delay: .23s; }
+    .task-card:nth-child(9)  { animation-delay: .26s; }
+    .task-card:nth-child(10) { animation-delay: .29s; }
+
+    /* ── Checkbox ────────────────────────────────────────────── */
+    .task-check {
+      width: 20px; height: 20px; flex-shrink: 0;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      margin-top: 2px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s, border-color .2s;
+    }
+
+    .task-check.checked {
+      background: var(--done);
+      border-color: var(--done);
+    }
+
+    .task-check.checked::after {
+      content: '';
+      display: block;
+      width: 5px; height: 9px;
+      border: 2px solid #fff;
+      border-top: none; border-left: none;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    /* ── Task body ───────────────────────────────────────────── */
+    .task-body { flex: 1; min-width: 0; }
+
+    .task-text {
+      font-size: .93rem;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .task-card.done .task-text { text-decoration: line-through; color: var(--text-muted); }
+
+    .task-meta {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-top: 8px;
+    }
+
+    .meta-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .73rem;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .chip-person {
+      background: rgba(233,69,96,.12);
+      color: var(--accent);
+      border: 1px solid rgba(233,69,96,.25);
+    }
+
+    .chip-deadline {
+      background: rgba(255,190,11,.1);
+      color: #ffbe0b;
+      border: 1px solid rgba(255,190,11,.25);
+    }
+
+    /* ── Empty state ─────────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      opacity: .4;
+    }
+
+    .empty-state p { font-size: .95rem; }
+
+    /* ── Loading spinner ─────────────────────────────────────── */
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px;
+      padding: 50px 20px;
+      color: var(--text-muted);
+      font-size: .9rem;
+    }
+
+    .spinner {
+      width: 22px; height: 22px;
+      border: 3px solid rgba(233,69,96,.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Section heading inside task list ───────────────────── */
+    .section-heading {
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin: 18px 0 8px;
+      padding-left: 4px;
+      border-left: 3px solid var(--accent);
+      padding-left: 10px;
+    }
+
+    /* ── Footer bar ──────────────────────────────────────────── */
+    footer {
+      position: relative; z-index: 10;
+      text-align: center;
+      padding: 16px;
+      font-size: .75rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      header { padding: 18px 16px 14px; }
+      .tabs-bar { padding: 12px 16px 0; }
+      main { padding: 18px 16px 36px; }
+      .tab-btn { padding: 8px 14px; font-size: .82rem; }
+      .progress-wrap { padding: 14px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header>
+  <div class="logo-wrap">
+    <div class="logo-icon">🎬</div>
+    <h1>Filmway AI — <span>Task Dashboard</span></h1>
+  </div>
+  <div class="header-meta">
+    <div>Репозиторий: <strong>filmway-team-bot/filmway-tasks</strong></div>
+    <div id="last-updated">Обновление…</div>
+  </div>
+</header>
+
+<!-- ── Tabs ────────────────────────────────────────────────── -->
+<div class="tabs-bar" id="tabs-bar">
+  <button class="tab-btn active" data-tab="day">День <span class="badge" id="badge-day"></span></button>
+  <button class="tab-btn" data-tab="week">Неделя <span class="badge" id="badge-week"></span></button>
+  <button class="tab-btn" data-tab="month">Месяц <span class="badge" id="badge-month"></span></button>
+  <button class="tab-btn" data-tab="halfyear">Полгода <span class="badge" id="badge-halfyear"></span></button>
+  <button class="tab-btn" data-tab="year">Год <span class="badge" id="badge-year"></span></button>
+</div>
+
+<!-- ── Panels ──────────────────────────────────────────────── -->
+<main>
+  <div class="tab-panel active" id="panel-day"     data-period="day"></div>
+  <div class="tab-panel"       id="panel-week"     data-period="week"></div>
+  <div class="tab-panel"       id="panel-month"    data-period="month"></div>
+  <div class="tab-panel"       id="panel-halfyear" data-period="halfyear"></div>
+  <div class="tab-panel"       id="panel-year"     data-period="year"></div>
+</main>
+
+<footer>
+  Filmway AI © 2026 &nbsp;·&nbsp;
+  <a href="https://github.com/filmway-team-bot/filmway-tasks" target="_blank" rel="noopener">GitHub</a>
+  &nbsp;·&nbsp; Автообновление каждые 5 минут
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════════════
+const REPO   = 'filmway-team-bot/filmway-tasks';
+const BRANCH = 'main';
+const BASE   = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/`;
+
+const PERIODS = {
+  day:      { label: 'День',    getFilename: () => `tasks/day/${todayStr()}.md` },
+  week:     { label: 'Неделя',  getFilename: () => `tasks/week/${weekStr()}.md` },
+  month:    { label: 'Месяц',   getFilename: () => `tasks/month/${monthStr()}.md` },
+  halfyear: { label: 'Полгода', getFilename: () => `tasks/halfyear/${halfyearStr()}.md` },
+  year:     { label: 'Год',     getFilename: () => `tasks/year/${yearStr()}.md` },
+};
+
+// ══════════════════════════════════════════════════════════════
+//  DATE HELPERS
+// ══════════════════════════════════════════════════════════════
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function weekStr() {
+  const d = new Date();
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${pad(week)}`;
+}
+
+function monthStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+}
+
+function halfyearStr() {
+  const d = new Date();
+  const half = d.getMonth() < 6 ? 'H1' : 'H2';
+  return `${d.getFullYear()}-${half}`;
+}
+
+function yearStr() {
+  return String(new Date().getFullYear());
+}
+
+function humanDate(isoOrSpecial) {
+  // display friendly label
+  if (isoOrSpecial.includes('-W'))    return `Неделя ${isoOrSpecial.split('-W')[1]}, ${isoOrSpecial.split('-')[0]}`;
+  if (isoOrSpecial.includes('-H'))    return isoOrSpecial.replace('H1','первое полугодие').replace('H2','второе полугодие');
+  if (/^\d{4}$/.test(isoOrSpecial))   return isoOrSpecial;
+  // YYYY-MM-DD
+  if (/\d{4}-\d{2}-\d{2}/.test(isoOrSpecial)) {
+    const [y,m,dd] = isoOrSpecial.split('-');
+    const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+    return `${parseInt(dd,10)} ${months[parseInt(m,10)-1]} ${y}`;
+  }
+  // YYYY-MM
+  if (/\d{4}-\d{2}/.test(isoOrSpecial)) {
+    const [y,m] = isoOrSpecial.split('-');
+    const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    return `${months[parseInt(m,10)-1]} ${y}`;
+  }
+  return isoOrSpecial;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  FETCH MARKDOWN
+// ══════════════════════════════════════════════════════════════
+async function fetchMarkdown(filename) {
+  const url = BASE + filename + `?_=${Date.now()}`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return res.text();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PARSE MARKDOWN
+// ══════════════════════════════════════════════════════════════
+function parseMarkdown(md) {
+  const lines  = md.split('\n');
+  const items  = [];
+  let section  = '';
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+
+    // Section headings
+    if (/^#+\s/.test(line)) {
+      section = line.replace(/^#+\s*/, '').trim();
+      continue;
+    }
+
+    // Checkbox lines
+    const matchDone = line.match(/^[-*]\s+\[x\]\s+(.*)/i);
+    const matchTodo = line.match(/^[-*]\s+\[ \]\s+(.*)/);
+
+    if (matchDone || matchTodo) {
+      const done = !!matchDone;
+      const text = (done ? matchDone[1] : matchTodo[1]).trim();
+
+      // person: — Имя or @username
+      let person = null;
+      const personMatch = text.match(/—\s*([А-ЯЁа-яёA-Za-z][^\s,\(]*(?:\s+[А-ЯЁа-яёA-Za-z][^\s,\(]*)?)/u)
+                        || text.match(/@([\w\d_]+)/);
+      if (personMatch) person = personMatch[0].replace(/^@/, '@');
+
+      // deadline: до ДД.ММ
+      let deadline = null;
+      const dlMatch = text.match(/до\s+(\d{1,2}\.\d{2})/);
+      if (dlMatch) deadline = dlMatch[1];
+
+      // clean text (remove person/deadline markers for display)
+      const cleanText = text
+        .replace(/—\s*[А-ЯЁа-яёA-Za-z][^\s,\(]*(?:\s+[А-ЯЁа-яёA-Za-z][^\s,\(]*)?/u, '')
+        .replace(/@[\w\d_]+/, '')
+        .replace(/до\s+\d{1,2}\.\d{2}/, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
+      items.push({ done, text: cleanText || text, person, deadline, section });
+    }
+  }
+
+  return items;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RENDER PANEL
+// ══════════════════════════════════════════════════════════════
+function renderPanel(panelEl, period, filename, tasks) {
+  const total    = tasks.length;
+  const done     = tasks.filter(t => t.done).length;
+  const pct      = total ? Math.round((done / total) * 100) : 0;
+  const fileBase = filename.split('/').pop();
+
+  let html = `
+    <div class="period-header">
+      <span class="period-title">${PERIODS[period].label}</span>
+      <span class="period-date">${humanDate(fileBase.replace('.md',''))}</span>
+    </div>`;
+
+  if (total > 0) {
+    html += `
+    <div class="progress-wrap">
+      <span class="progress-label">Прогресс</span>
+      <div class="progress-bar-outer">
+        <div class="progress-bar-inner" id="pb-${period}" style="width:0%"></div>
+      </div>
+      <span class="progress-pct">${pct}%</span>
+      <span class="progress-count">${done}/${total} выполнено</span>
+    </div>`;
+  }
+
+  html += `<div class="task-list">`;
+
+  // group by section
+  const sections = [...new Set(tasks.map(t => t.section))];
+  for (const sec of sections) {
+    const group = tasks.filter(t => t.section === sec);
+    if (sec) html += `<div class="section-heading">${escHtml(sec)}</div>`;
+    for (const task of group) {
+      html += renderCard(task);
+    }
+  }
+
+  html += `</div>`;
+  panelEl.innerHTML = html;
+
+  // animate progress bar after paint
+  requestAnimationFrame(() => {
+    const pb = document.getElementById(`pb-${period}`);
+    if (pb) pb.style.width = pct + '%';
+  });
+
+  // update badge
+  const badge = document.getElementById(`badge-${period}`);
+  if (badge && total > 0) {
+    badge.textContent = total - done || '✓';
+    badge.classList.add('visible');
+  }
+}
+
+function renderCard(task) {
+  const checkClass = task.done ? 'task-check checked' : 'task-check';
+  const cardClass  = task.done ? 'task-card done' : 'task-card';
+
+  let meta = '';
+  if (task.person) {
+    meta += `<span class="meta-chip chip-person">👤 ${escHtml(task.person)}</span>`;
+  }
+  if (task.deadline) {
+    meta += `<span class="meta-chip chip-deadline">📅 до ${escHtml(task.deadline)}</span>`;
+  }
+
+  return `
+  <div class="${cardClass}">
+    <div class="${checkClass}"></div>
+    <div class="task-body">
+      <div class="task-text">${escHtml(task.text)}</div>
+      ${meta ? `<div class="task-meta">${meta}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderEmpty(panelEl, period, filename) {
+  const fileBase = filename.split('/').pop();
+  panelEl.innerHTML = `
+    <div class="period-header">
+      <span class="period-title">${PERIODS[period].label}</span>
+      <span class="period-date">${humanDate(fileBase.replace('.md',''))}</span>
+    </div>
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <p>Задач нет</p>
+      <p style="margin-top:6px;font-size:.8rem">Файл <code>${filename}</code> не найден или пуст</p>
+    </div>`;
+}
+
+function renderLoading(panelEl) {
+  panelEl.innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      Загрузка задач…
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  LOAD ALL PERIODS
+// ══════════════════════════════════════════════════════════════
+async function loadAll() {
+  const now = new Date();
+  const timeStr = now.toLocaleString('ru-RU', {
+    day:'2-digit', month:'2-digit', year:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+  document.getElementById('last-updated').innerHTML =
+    `Последнее обновление: <strong>${timeStr}</strong>`;
+
+  for (const [period, cfg] of Object.entries(PERIODS)) {
+    const panelEl  = document.getElementById(`panel-${period}`);
+    const filename = cfg.getFilename();
+
+    renderLoading(panelEl);
+
+    const md = await fetchMarkdown(filename);
+    if (!md) {
+      renderEmpty(panelEl, period, filename);
+      continue;
+    }
+
+    const tasks = parseMarkdown(md);
+    if (tasks.length === 0) {
+      renderEmpty(panelEl, period, filename);
+    } else {
+      renderPanel(panelEl, period, filename, tasks);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════════════
+document.getElementById('tabs-bar').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+  btn.classList.add('active');
+  document.getElementById(`panel-${tab}`).classList.add('active');
+});
+
+// ══════════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════════
+function escHtml(str) {
+  return str
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT + AUTO-REFRESH
+// ══════════════════════════════════════════════════════════════
+loadAll();
+setInterval(loadAll, 5 * 60 * 1000); // every 5 minutes
+</script>
+</body>
+</html>
