@@ -457,12 +457,218 @@
     .attach-input-row button:hover { background: #2244bb; }
     .attach-cancel { background: #eee !important; color: #555 !important; }
     .attach-cancel:hover { background: #ddd !important; }
+  
+    /* ── Layout: sidebar + main ───────────────────────────────── */
+    body { margin: 0; }
+    .fw-layout {
+      display: flex;
+      min-height: 100vh;
+      gap: 0;
+    }
+    .fw-sidebar-left, .fw-sidebar-right {
+      width: 220px;
+      min-width: 220px;
+      background: var(--bg, #f8f9fa);
+      border-right: 1px solid var(--border, #e0e0e0);
+      padding: 12px 10px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      transition: width .2s, min-width .2s, padding .2s;
+      font-size: 13px;
+    }
+    .fw-sidebar-right {
+      border-right: none;
+      border-left: 1px solid var(--border, #e0e0e0);
+    }
+    .fw-sidebar-left.collapsed, .fw-sidebar-right.collapsed {
+      width: 0; min-width: 0; padding: 0; overflow: hidden;
+    }
+    .fw-main { flex: 1; min-width: 0; padding: 0 8px; }
+    .fw-sidebar-toggle {
+      background: none; border: 1px solid var(--border, #ccc);
+      border-radius: 6px; cursor: pointer; font-size: 14px;
+      padding: 2px 7px; margin: 4px 2px; color: var(--text, #333);
+    }
+    .fw-sidebar-toggle:hover { background: var(--hover, #eee); }
+
+    /* ── Команда (левая панель) ──────────────────────────────── */
+    .sidebar-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: #888; margin: 0 0 8px; padding-bottom: 4px;
+      border-bottom: 1px solid var(--border, #e0e0e0);
+    }
+    .team-member {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 4px; border-radius: 7px; cursor: pointer;
+      transition: background .12s; margin-bottom: 2px;
+    }
+    .team-member:hover { background: var(--hover, #eee); }
+    .team-member.active { background: #e8f0fe; }
+    .member-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #c5d0f0; display: flex; align-items: center;
+      justify-content: center; font-size: 13px; font-weight: 700;
+      color: #3355cc; flex-shrink: 0; text-transform: uppercase;
+    }
+    .member-info { min-width: 0; }
+    .member-name { font-weight: 600; font-size: 12px; }
+    .member-tasks { font-size: 10px; color: #888; }
+    .member-filter-clear {
+      font-size: 11px; color: #3355cc; cursor: pointer;
+      padding: 2px 4px; margin-top: 4px; display: none;
+    }
+    .member-filter-clear.visible { display: block; }
+
+    /* ── Быстрые действия (правая панель) ───────────────────── */
+    .quick-add-form { margin-bottom: 14px; }
+    .quick-add-form textarea {
+      width: 100%; box-sizing: border-box; resize: vertical;
+      border: 1px solid var(--border, #ccc); border-radius: 7px;
+      padding: 6px 8px; font-size: 12px; font-family: inherit;
+      background: var(--input-bg, #fff); color: var(--text, #222);
+      min-height: 54px;
+    }
+    .quick-add-form textarea:focus { outline: none; border-color: #3355cc; }
+    .quick-add-row { display: flex; gap: 4px; margin-top: 4px; }
+    .quick-add-row select, .quick-add-row button {
+      font-size: 11px; padding: 3px 6px; border-radius: 6px;
+      border: 1px solid var(--border, #ccc);
+      background: var(--input-bg, #fff); color: var(--text, #222);
+    }
+    .quick-add-row button {
+      background: #3355cc; color: #fff; border-color: #3355cc;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .quick-add-row button:hover { background: #2244bb; }
+
+    .activity-log { font-size: 11px; }
+    .activity-item {
+      padding: 4px 0; border-bottom: 1px solid var(--border, #eee);
+      color: #666; line-height: 1.35;
+    }
+    .activity-item .act-time { color: #aaa; }
+
+    /* ── Поиск ──────────────────────────────────────────────── */
+    .fw-search-wrap {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 0 4px;
+    }
+    .fw-search {
+      flex: 1; padding: 6px 12px; border-radius: 20px;
+      border: 1px solid var(--border, #ccc); font-size: 13px;
+      background: var(--input-bg, #fff); color: var(--text, #222);
+    }
+    .fw-search:focus { outline: none; border-color: #3355cc; }
+    .fw-search-count { font-size: 11px; color: #888; white-space: nowrap; }
+    .task-hidden-by-search { display: none !important; }
+
+    /* ── Авто-обновление ────────────────────────────────────── */
+    .fw-refresh-bar {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: #aaa; padding: 2px 0 6px;
+    }
+    .fw-refresh-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #4caf50; display: inline-block;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; } 50% { opacity: .3; }
+    }
+    .fw-refresh-bar.refreshing .fw-refresh-dot { background: #ff9800; }
+
+    /* ── Редактирование задачи ──────────────────────────────── */
+    .task-edit-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 12px; opacity: 0; padding: 0 3px;
+      transition: opacity .15s; color: #888;
+      vertical-align: middle;
+    }
+    .task-item:hover .task-edit-btn,
+    li:hover .task-edit-btn { opacity: 1; }
+    .task-edit-input {
+      font-size: inherit; font-family: inherit;
+      border: 1px solid #3355cc; border-radius: 5px;
+      padding: 2px 6px; background: var(--input-bg, #fff);
+      color: var(--text, #222); width: calc(100% - 28px);
+      box-sizing: border-box;
+    }
+    .task-edit-input:focus { outline: none; }
+    .task-edit-actions {
+      font-size: 11px; margin-top: 2px; display: none;
+    }
+    .task-edit-actions.visible { display: flex; gap: 4px; }
+    .task-edit-save, .task-edit-cancel {
+      padding: 2px 8px; border-radius: 5px; border: 1px solid;
+      cursor: pointer; font-size: 11px;
+    }
+    .task-edit-save {
+      background: #3355cc; color: #fff; border-color: #3355cc;
+    }
+    .task-edit-cancel {
+      background: #eee; color: #555; border-color: #ccc;
+    }
+    .task-edited-badge {
+      font-size: 10px; background: #fff3cd; color: #856404;
+      border: 1px solid #ffc107; border-radius: 8px;
+      padding: 0 5px; margin-left: 4px; vertical-align: middle;
+    }
+
+    /* ── Канбан ─────────────────────────────────────────────── */
+    .kanban-board {
+      display: flex; gap: 12px; padding: 8px 0; overflow-x: auto;
+    }
+    .kanban-col {
+      flex: 1; min-width: 220px; background: var(--bg, #f5f5f5);
+      border-radius: 10px; padding: 10px; box-sizing: border-box;
+    }
+    .kanban-col-title {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; padding-bottom: 8px; margin-bottom: 8px;
+      border-bottom: 2px solid;
+    }
+    .kanban-col.col-progress .kanban-col-title { color: #1565c0; border-color: #1565c0; }
+    .kanban-col.col-done .kanban-col-title { color: #2e7d32; border-color: #2e7d32; }
+    .kanban-col.col-blocked .kanban-col-title { color: #c62828; border-color: #c62828; }
+    .kanban-card {
+      background: var(--card-bg, #fff); border-radius: 8px;
+      padding: 8px 10px; margin-bottom: 7px; font-size: 12px;
+      border: 1px solid var(--border, #e0e0e0);
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .kanban-card .kc-person {
+      font-size: 10px; color: #888; margin-top: 3px;
+    }
+    .kanban-card .kc-time {
+      display: inline-block; background: #e8f0fe; color: #3355cc;
+      border-radius: 8px; padding: 1px 6px; font-size: 10px; margin-top: 3px;
+    }
+
   </style>
 </head>
 <body>
 
+  <!-- Filmway v2 toolbar -->
+  <div style="display:flex;align-items:center;padding:4px 8px;gap:6px;border-bottom:1px solid var(--border,#e0e0e0)">
+    <button class="fw-sidebar-toggle" onclick="toggleSidebar('left')" title="Команда">☰ Команда</button>
+    <div class="fw-search-wrap" style="flex:1">
+      <input class="fw-search" id="fw-search-input" type="search" placeholder="🔍 Поиск задач…">
+      <span class="fw-search-count" id="fw-search-count"></span>
+    </div>
+    <button class="fw-sidebar-toggle" onclick="toggleSidebar('right')" title="Действия">⚡ Действия</button>
+  </div>
+  <div class="fw-refresh-bar" id="fw-refresh-bar">
+    <span class="fw-refresh-dot"></span>
+    <span id="fw-refresh-time">авто-обновление каждые 2 мин</span>
+  </div>
+
 <!-- Header -->
-<header>
+
+  <!-- Filmway layout -->
+  <div class="fw-layout">
+    <div class="fw-sidebar-left" id="fw-sidebar-left"></div>
+    <div class="fw-main" id="fw-main">
+  <header>
   <div class="logo-wrap">
     <div class="logo-icon">🎬</div>
     <h1>Filmway AI — <span>Task Dashboard</span></h1>
@@ -1074,6 +1280,365 @@ setInterval(loadAll, 5 * 60 * 1000);
     initAttachments();
   });
   /* ══ end filmway-attachments ═══════════════════════════════════════════════ */
+  </script>
+
+  <!-- Канбан-доска -->
+  <div id="kanban-board" class="kanban-board" style="display:none;padding:8px"></div>
+
+    </div><!-- /fw-main -->
+    <div class="fw-sidebar-right" id="fw-sidebar-right"></div>
+  </div><!-- /fw-layout -->
+  <script>
+
+/* ══ Filmway Dashboard v2 ══════════════════════════════════════════════════ */
+
+// ── Команда ──────────────────────────────────────────────────────────────────
+const TEAM = [
+  { name: 'Кирилл', key: 'кирилл', color: '#c5d0f0' },
+  { name: 'Эрадж',  key: 'эрадж',  color: '#c8e6c9' },
+  { name: 'Кира',   key: 'кира',   color: '#fce4ec' },
+  { name: 'Ульяна', key: 'ульяна', color: '#f3e5f5' },
+  { name: 'Катрина',key: 'катрина',color: '#fff3e0' },
+  { name: 'Полина', key: 'полина', color: '#e0f7fa' },
+  { name: 'Дима',   key: 'дима',   color: '#fff9c4' },
+  { name: 'Даша',   key: 'даша',   color: '#fbe9e7' },
+  { name: 'Лера',   key: 'лера',   color: '#ede7f6' },
+];
+
+let activeMemberFilter = null;
+
+function buildSidebars() {
+  // Левая панель — команда
+  const left = document.getElementById('fw-sidebar-left');
+  if (!left) return;
+  left.innerHTML = '<div class="sidebar-title">👥 Команда</div>';
+  const clearBtn = document.createElement('div');
+  clearBtn.className = 'member-filter-clear';
+  clearBtn.id = 'member-filter-clear';
+  clearBtn.textContent = '✕ Показать всех';
+  clearBtn.onclick = () => { activeMemberFilter = null; applyFilters(); updateTeamUI(); };
+  left.appendChild(clearBtn);
+
+  TEAM.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'team-member';
+    el.dataset.key = m.key;
+    const taskCount = countTasksForMember(m.key);
+    el.innerHTML = `
+      <div class="member-avatar" style="background:${m.color}">${m.name[0]}</div>
+      <div class="member-info">
+        <div class="member-name">${m.name}</div>
+        <div class="member-tasks">${taskCount > 0 ? taskCount + ' задач' : 'нет задач'}</div>
+      </div>`;
+    el.onclick = () => {
+      activeMemberFilter = activeMemberFilter === m.key ? null : m.key;
+      applyFilters();
+      updateTeamUI();
+    };
+    left.appendChild(el);
+  });
+
+  // Правая панель — действия
+  const right = document.getElementById('fw-sidebar-right');
+  if (!right) return;
+  right.innerHTML = `
+    <div class="sidebar-title">⚡ Быстро добавить</div>
+    <div class="quick-add-form">
+      <textarea id="quick-task-text" placeholder="Текст задачи…&#10;Можно с именем: — Кирилл"></textarea>
+      <div class="quick-add-row">
+        <select id="quick-task-period">
+          <option value="day">Сегодня</option>
+          <option value="week">Неделя</option>
+          <option value="month">Месяц</option>
+        </select>
+        <button onclick="quickAddTask()">＋ Добавить</button>
+      </div>
+    </div>
+    <div class="sidebar-title" style="margin-top:10px">🕐 Активность</div>
+    <div class="activity-log" id="activity-log"></div>`;
+  renderActivityLog();
+}
+
+function countTasksForMember(key) {
+  let count = 0;
+  document.querySelectorAll('.task-item, li').forEach(el => {
+    if (el.textContent.toLowerCase().includes(key)) count++;
+  });
+  return count;
+}
+
+function updateTeamUI() {
+  document.querySelectorAll('.team-member').forEach(el => {
+    el.classList.toggle('active', el.dataset.key === activeMemberFilter);
+  });
+  const clearBtn = document.getElementById('member-filter-clear');
+  if (clearBtn) clearBtn.classList.toggle('visible', !!activeMemberFilter);
+}
+
+// ── Фильтр / поиск ──────────────────────────────────────────────────────────
+let searchQuery = '';
+
+function applyFilters() {
+  const q = searchQuery.toLowerCase();
+  let visible = 0, total = 0;
+  document.querySelectorAll('.task-item, li').forEach(el => {
+    if (!el.querySelector('input[type=checkbox]') && !el.classList.contains('task-item')) return;
+    const text = el.textContent.toLowerCase();
+    total++;
+    const matchSearch = !q || text.includes(q);
+    const matchMember = !activeMemberFilter || text.includes(activeMemberFilter);
+    const hide = !matchSearch || !matchMember;
+    el.classList.toggle('task-hidden-by-search', hide);
+    if (!hide) visible++;
+  });
+  const cnt = document.getElementById('fw-search-count');
+  if (cnt) cnt.textContent = q || activeMemberFilter ? `${visible} из ${total}` : '';
+}
+
+function initSearch() {
+  const inp = document.getElementById('fw-search-input');
+  if (!inp) return;
+  inp.addEventListener('input', () => {
+    searchQuery = inp.value;
+    applyFilters();
+  });
+}
+
+// ── Редактирование задачи ────────────────────────────────────────────────────
+const EDITS_KEY = 'fw-task-edits';
+let isEditing = false;
+
+function loadEdits() {
+  try { return JSON.parse(localStorage.getItem(EDITS_KEY) || '{}'); }
+  catch { return {}; }
+}
+function saveEdit(key, text) {
+  const d = loadEdits(); d[key] = text; localStorage.setItem(EDITS_KEY, JSON.stringify(d));
+  logActivity(`✏️ Задача отредактирована`);
+}
+function removeEdit(key) {
+  const d = loadEdits(); delete d[key]; localStorage.setItem(EDITS_KEY, JSON.stringify(d));
+}
+
+function taskKey(text) {
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = ((h << 5) + h) ^ text.charCodeAt(i);
+  return 'edit_' + (h >>> 0).toString(36);
+}
+
+function initTaskEditing() {
+  document.querySelectorAll('.task-item label, li label').forEach(label => {
+    if (label.querySelector('.task-edit-btn')) return;
+    const origText = label.textContent.trim();
+    const key = taskKey(origText);
+    const edits = loadEdits();
+
+    // Применяем сохранённую правку
+    if (edits[key] && edits[key] !== origText) {
+      const badge = document.createElement('span');
+      badge.className = 'task-edited-badge';
+      badge.textContent = 'ред.';
+      label.appendChild(badge);
+    }
+
+    // Кнопка редактирования
+    const btn = document.createElement('button');
+    btn.className = 'task-edit-btn';
+    btn.title = 'Редактировать';
+    btn.textContent = '✏️';
+    btn.onclick = (e) => { e.stopPropagation(); startEdit(label, origText, key); };
+    label.appendChild(btn);
+  });
+}
+
+function startEdit(label, origText, key) {
+  if (isEditing) return;
+  isEditing = true;
+  const edits = loadEdits();
+  const currentText = edits[key] || origText;
+
+  // Скрываем текущий текст, вставляем input
+  label.querySelectorAll(':not(.task-edit-btn)').forEach(el => el.style.visibility = 'hidden');
+
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'task-edit-input';
+  inp.value = currentText;
+
+  const actions = document.createElement('div');
+  actions.className = 'task-edit-actions visible';
+  actions.innerHTML = '<button class="task-edit-save">💾 Сохранить</button><button class="task-edit-cancel">Отмена</button>';
+
+  label.appendChild(inp);
+  label.appendChild(actions);
+  inp.focus(); inp.select();
+
+  const finish = (save) => {
+    isEditing = false;
+    if (save && inp.value.trim() && inp.value.trim() !== origText) {
+      saveEdit(key, inp.value.trim());
+    }
+    inp.remove(); actions.remove();
+    label.querySelectorAll(':not(.task-edit-btn)').forEach(el => el.style.visibility = '');
+    initTaskEditing();
+  };
+
+  actions.querySelector('.task-edit-save').onclick = () => finish(true);
+  actions.querySelector('.task-edit-cancel').onclick = () => finish(false);
+  inp.onkeydown = e => { if (e.key === 'Enter') finish(true); if (e.key === 'Escape') finish(false); };
+}
+
+// ── Быстрое добавление ───────────────────────────────────────────────────────
+function quickAddTask() {
+  const text = document.getElementById('quick-task-text')?.value.trim();
+  if (!text) return;
+  const pending = JSON.parse(localStorage.getItem('fw-pending-tasks') || '[]');
+  pending.push({ text, period: document.getElementById('quick-task-period')?.value || 'day', ts: Date.now() });
+  localStorage.setItem('fw-pending-tasks', JSON.stringify(pending));
+  document.getElementById('quick-task-text').value = '';
+  logActivity(`➕ Добавлена задача: ${text.slice(0,30)}${text.length>30?'…':''}`);
+  renderActivityLog();
+  alert('✅ Задача добавлена локально.\nЛера синхронизирует её с GitHub при следующем запросе.');
+}
+
+// ── Лог активности ───────────────────────────────────────────────────────────
+function logActivity(msg) {
+  const log = JSON.parse(localStorage.getItem('fw-activity') || '[]');
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  log.unshift({ msg, time, date: now.toLocaleDateString('ru') });
+  if (log.length > 20) log.pop();
+  localStorage.setItem('fw-activity', JSON.stringify(log));
+}
+
+function renderActivityLog() {
+  const el = document.getElementById('activity-log');
+  if (!el) return;
+  const log = JSON.parse(localStorage.getItem('fw-activity') || '[]');
+  if (!log.length) { el.innerHTML = '<div class="activity-item" style="color:#bbb">Нет активности</div>'; return; }
+  el.innerHTML = log.slice(0,10).map(e =>
+    `<div class="activity-item">${e.msg} <span class="act-time">${e.time}</span></div>`
+  ).join('');
+}
+
+// ── Канбан ───────────────────────────────────────────────────────────────────
+function buildKanban(rawContent) {
+  const board = document.getElementById('kanban-board');
+  if (!board) return;
+
+  const cols = { progress: [], done: [], blocked: [] };
+  const lines = (rawContent || '').split('\n');
+  let curSection = null;
+
+  lines.forEach(line => {
+    if (/в процессе/i.test(line)) { curSection = 'progress'; return; }
+    if (/выполнено/i.test(line)) { curSection = 'done'; return; }
+    if (/не выполнено|заблокир/i.test(line)) { curSection = 'blocked'; return; }
+    if (!curSection || !line.trim().startsWith('-')) return;
+
+    const text = line.replace(/^[\s\-\[\]x]*/, '').trim();
+    if (!text) return;
+
+    const personMatch = text.match(/—\s*([\wА-яЁё]+)\s*(?:—|$)/i);
+    const timeMatch = text.match(/(\d{1,2}:\d{2}[-–]\d{1,2}:\d{2})/);
+    const cleanText = text.replace(/—\s*[\wА-яЁё]+\s*(?:—|$)/i,'').replace(/\d{1,2}:\d{2}[-–]\d{1,2}:\d{2}/,'').trim();
+
+    cols[curSection].push({
+      text: cleanText, person: personMatch?.[1] || '', time: timeMatch?.[1] || ''
+    });
+  });
+
+  const labels = { progress: '🔄 В процессе', done: '✅ Выполнено', blocked: '❌ Не выполнено' };
+  board.innerHTML = Object.entries(cols).map(([col, tasks]) => `
+    <div class="kanban-col col-${col}">
+      <div class="kanban-col-title">${labels[col]} <span style="opacity:.5;font-weight:400">(${tasks.length})</span></div>
+      ${tasks.map(t => `
+        <div class="kanban-card">
+          ${t.text}
+          ${t.person ? `<div class="kc-person">👤 ${t.person}</div>` : ''}
+          ${t.time   ? `<span class="kc-time">🕐 ${t.time}</span>` : ''}
+        </div>`).join('')}
+      ${tasks.length === 0 ? '<div style="color:#bbb;font-size:12px;text-align:center;padding:12px 0">Нет задач</div>' : ''}
+    </div>`).join('');
+}
+
+// ── Авто-обновление каждые 2 минуты ─────────────────────────────────────────
+let lastRefresh = Date.now();
+let refreshTimer = null;
+const RAW_BASE = 'https://raw.githubusercontent.com/filmway-team-bot/filmway-tasks/main/';
+
+function getDateStr(offset = 0) {
+  const d = new Date(); d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0, 10);
+}
+
+function setRefreshStatus(loading) {
+  const bar = document.getElementById('fw-refresh-bar');
+  if (bar) bar.classList.toggle('refreshing', loading);
+}
+
+async function autoRefresh() {
+  if (isEditing) return; // пауза при редактировании
+  setRefreshStatus(true);
+  try {
+    const today = getDateStr();
+    const r = await fetch(RAW_BASE + 'tasks/day/' + today + '.md?_=' + Date.now());
+    if (r.ok) {
+      const text = await r.text();
+      const el = document.getElementById('main-content');
+      if (el && window._lastRawContent !== text) {
+        window._lastRawContent = text;
+        // Только если есть активная вкладка задач — рендерим через существующую функцию
+        if (typeof renderContent === 'function' && document.querySelector('[data-tab].active')) {
+          const activeTab = document.querySelector('[data-tab].active')?.dataset?.tab;
+          if (activeTab === 'day') renderContent(text, 'day');
+        }
+        buildKanban(text);
+        buildSidebars();
+        initTaskEditing();
+        applyFilters();
+      }
+    }
+  } catch(e) {}
+  setRefreshStatus(false);
+  const bar = document.getElementById('fw-refresh-time');
+  if (bar) bar.textContent = 'обновлено ' + new Date().toLocaleTimeString('ru', {hour:'2-digit',minute:'2-digit'});
+}
+
+// ── Сайдбар-тогглы ───────────────────────────────────────────────────────────
+function toggleSidebar(side) {
+  const el = document.getElementById('fw-sidebar-' + side);
+  if (el) el.classList.toggle('collapsed');
+}
+
+// ── Инициализация ────────────────────────────────────────────────────────────
+function fwInit() {
+  buildSidebars();
+  initSearch();
+  initTaskEditing();
+  applyFilters();
+
+  // Авто-обновление каждые 2 минуты
+  refreshTimer = setInterval(autoRefresh, 2 * 60 * 1000);
+  // Первое обновление через 5 сек после загрузки
+  setTimeout(autoRefresh, 5000);
+}
+
+document.addEventListener('DOMContentLoaded', fwInit);
+
+// Перехватываем изменения контента (если основной JS перерисовывает задачи)
+const _fwObserver = new MutationObserver(() => {
+  initTaskEditing();
+  applyFilters();
+  buildSidebars();
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const target = document.getElementById('main-content') || document.body;
+  _fwObserver.observe(target, { childList: true, subtree: true });
+});
+
+/* ══ end Filmway Dashboard v2 ═══════════════════════════════════════════════ */
+
   </script>
 </body>
 </html>
