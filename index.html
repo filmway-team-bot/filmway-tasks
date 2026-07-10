@@ -317,6 +317,31 @@
     .cal-close-btn { margin-left:auto; background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; line-height:1; padding:2px 4px; transition:color .12s; }
     .cal-close-btn:hover { color:var(--acc); }
     .cal-section-tasks { margin-top:16px; }
+
+    /* ══ MEETING CARDS ═══════════════════════════════════════════ */
+    .meetings-section { margin-bottom:16px; }
+    .meetings-hdr { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:#5b9df5; margin:12px 0 6px; padding-left:8px; border-left:3px solid #5b9df5; display:flex; align-items:center; gap:6px; }
+    .meetings-hdr .mhdr-cnt { font-size:.65rem; background:rgba(91,157,245,.12); border:1px solid rgba(91,157,245,.22); border-radius:8px; padding:0 6px; color:#5b9df5; }
+    .meeting-card { background:rgba(91,157,245,.07); border:1px solid rgba(91,157,245,.22); border-radius:var(--r); padding:10px 12px; display:flex; gap:10px; animation:cin .22s ease both; position:relative; overflow:hidden; margin-bottom:6px; }
+    .meeting-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:#5b9df5; }
+    .meeting-time-col { display:flex; flex-direction:column; align-items:center; flex-shrink:0; gap:3px; padding-top:2px; }
+    .meeting-icon { font-size:1.1rem; line-height:1; }
+    .meeting-time { font-size:.68rem; color:#5b9df5; font-weight:700; white-space:nowrap; }
+    .meeting-body { flex:1; min-width:0; }
+    .meeting-title { font-size:.88rem; font-weight:700; color:var(--text); line-height:1.35; margin-bottom:3px; }
+    .meeting-desc { font-size:.74rem; color:var(--muted); margin-bottom:4px; }
+    .meeting-meta { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; align-items:center; }
+    .meeting-link { display:inline-flex; align-items:center; gap:3px; font-size:.67rem; color:#5b9df5; text-decoration:none; padding:2px 8px; border:1px solid rgba(91,157,245,.28); border-radius:999px; margin-top:5px; transition:background .12s; }
+    .meeting-link:hover { background:rgba(91,157,245,.13); }
+    /* Conflict highlighting */
+    .task-card.conflict { border-color:rgba(255,190,11,.45)!important; }
+    .task-card.conflict::before { background:#ffbe0b!important; opacity:1!important; }
+    .conflict-badge { font-size:.6rem; padding:1px 5px; border-radius:999px; background:rgba(255,190,11,.1); color:#ffbe0b; border:1px solid rgba(255,190,11,.26); }
+    /* Compact meeting card for week columns */
+    .cal-week-col .meeting-card { padding:5px 7px; }
+    .cal-week-col .meeting-title { font-size:.74rem; }
+    .cal-week-col .meeting-time { font-size:.62rem; }
+    .cal-week-col .meeting-icon { font-size:.85rem; }
   </style>
 </head>
 <body>
@@ -569,19 +594,106 @@ function parseMd(md){
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  MEETINGS — PARSE / RENDER / CONFLICT
+// ═══════════════════════════════════════════════════════════════
+
+// Format: tasks/meetings/YYYY-MM-DD.md
+// ## 11:00–12:00 Название встречи
+// участники: Кирилл, Эрадж
+// ссылка: https://...
+// описание: текст
+function parseMeetingsMd(md){
+  const meetings=[];
+  const blocks=md.split(/(?=^##\s)/m).filter(b=>b.trim());
+  for(const block of blocks){
+    const lines=block.split('\n').map(l=>l.trim()).filter(Boolean);
+    if(!lines.length)continue;
+    const header=lines[0].replace(/^##\s*/,'').trim();
+    const timeM=header.match(/(\d{1,2}:\d{2})\s*[–\-]\s*(\d{1,2}:\d{2})/);
+    if(!timeM)continue;
+    const timeRange=`${timeM[1]}–${timeM[2]}`;
+    const title=header.replace(/(\d{1,2}:\d{2})\s*[–\-]\s*(\d{1,2}:\d{2})\s*/,'').trim();
+    const [sh,sm]=timeM[1].split(':').map(Number);
+    const [eh,em]=timeM[2].split(':').map(Number);
+    const sortKey=sh*60+sm;
+    let persons=[],link=null,desc=null;
+    for(const l of lines.slice(1)){
+      const ll=l.toLowerCase();
+      if(ll.startsWith('участники:'))persons=l.replace(/участники:\s*/i,'').split(',').map(p=>p.trim()).filter(Boolean);
+      else if(ll.startsWith('ссылка:'))link=l.replace(/ссылка:\s*/i,'').trim();
+      else if(ll.startsWith('описание:'))desc=l.replace(/описание:\s*/i,'').trim();
+    }
+    meetings.push({type:'meeting',timeRange,title,persons,link,desc,sortKey,
+      startMin:sh*60+sm, endMin:eh*60+em});
+  }
+  return meetings.sort((a,b)=>a.sortKey-b.sortKey);
+}
+
+function renderMeetingCard(m){
+  const pChips=m.persons.map(p=>`<span class="chip cp">👤 ${esc(p)}</span>`).join('');
+  return `<div class="meeting-card">
+    <div class="meeting-time-col">
+      <span class="meeting-icon">📅</span>
+      <span class="meeting-time">${esc(m.timeRange)}</span>
+    </div>
+    <div class="meeting-body">
+      <div class="meeting-title">${esc(m.title)}</div>
+      ${m.desc?`<div class="meeting-desc">${esc(m.desc)}</div>`:''}
+      ${m.persons.length?`<div class="meeting-meta">${pChips}</div>`:''}
+      ${m.link?`<a class="meeting-link" href="${esc(m.link)}" target="_blank" rel="noopener">🔗 Подключиться</a>`:''}
+    </div>
+  </div>`;
+}
+
+// Возвращает Set ключей задач, которые пересекаются по времени с встречами
+function detectConflicts(tasks,meetings){
+  const conflictKeys=new Set();
+  if(!meetings.length)return conflictKeys;
+  tasks.forEach(t=>{
+    if(!t.timeRange)return;
+    const parts=t.timeRange.split('–');
+    if(parts.length<2)return;
+    const[ths,tms]=parts[0].split(':').map(Number);
+    const[the,tme]=parts[1].split(':').map(Number);
+    if(isNaN(ths)||isNaN(the))return;
+    const tStart=ths*60+tms,tEnd=the*60+tme;
+    for(const m of meetings){
+      if(tStart<m.endMin&&tEnd>m.startMin){
+        conflictKeys.add(djb2(t.rawText||t.text));
+        break;
+      }
+    }
+  });
+  return conflictKeys;
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  RENDER TASK PANELS
 // ═══════════════════════════════════════════════════════════════
 // Базовый список-рендер (день / полгода / год)
-function renderPanelList(el,period,file,tasks){
+function renderPanelList(el,period,file,tasks,meetings=[]){
   const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
   const base=file.split('/').pop();
   let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
   if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
+
+  // Встречи — перед задачами
+  if(meetings.length){
+    html+=`<div class="meetings-section">`;
+    html+=`<div class="meetings-hdr">📅 Встречи <span class="mhdr-cnt">${meetings.length}</span></div>`;
+    meetings.forEach(m=>html+=renderMeetingCard(m));
+    html+=`</div>`;
+  }
+
+  const conflicts=detectConflicts(tasks,meetings);
   html+=`<div class="task-list">`;
   const secs=[...new Set(tasks.map(t=>t.section))];
   for(const s of secs){
     if(s)html+=`<div class="sec-heading">${esc(s)}</div>`;
-    for(const t of tasks.filter(x=>x.section===s))html+=renderCard(t);
+    for(const t of tasks.filter(x=>x.section===s)){
+      const key=djb2(t.rawText||t.text);
+      html+=renderCard(t,conflicts.has(key));
+    }
   }
   html+=`</div>`;
   el.innerHTML=html;
@@ -594,10 +706,10 @@ function renderPanelList(el,period,file,tasks){
 }
 
 // Роутер: week/month → календарный вид, остальное → список
-function renderPanel(el,period,file,tasks){
-  if(period==='week'){renderWeekCalendar(el,period,file,tasks);return;}
-  if(period==='month'){renderMonthCalendar(el,period,file,tasks);return;}
-  renderPanelList(el,period,file,tasks);
+function renderPanel(el,period,file,tasks,meetings=[]){
+  if(period==='week'){renderWeekCalendar(el,period,file,tasks,meetings);return;}
+  if(period==='month'){renderMonthCalendar(el,period,file,tasks,meetings);return;}
+  renderPanelList(el,period,file,tasks,meetings);
 }
 
 // ─── НЕДЕЛЯ: сетка по дням ───────────────────────────────────
@@ -608,10 +720,10 @@ const WEEK_DAYS=[
   {ru:'воскресенье',short:'Вс',dow:6},
 ];
 
-function renderWeekCalendar(el,period,file,tasks){
+function renderWeekCalendar(el,period,file,tasks,meetings=[]){
   // Если нет секций с названиями дней — обычный список
   const hasDaySections=tasks.some(t=>t.section&&WEEK_DAYS.some(d=>t.section.toLowerCase().includes(d.ru)));
-  if(!hasDaySections){renderPanelList(el,period,file,tasks);return;}
+  if(!hasDaySections){renderPanelList(el,period,file,tasks,meetings);return;}
 
   const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
   const base=file.split('/').pop();
@@ -623,16 +735,21 @@ function renderWeekCalendar(el,period,file,tasks){
 
   WEEK_DAYS.forEach(d=>{
     const dayTasks=tasks.filter(t=>t.section&&t.section.toLowerCase().includes(d.ru));
+    // Встречи в этот день недели (только если есть даты в meeting.title или секции)
+    // Пока показываем встречи только в столбце сегодняшнего дня
+    const dayMeetings=d.dow===todayDow?meetings:[];
     const dayDone=dayTasks.filter(t=>t.done).length;
     const isToday=d.dow===todayDow;
+    const conflicts=detectConflicts(dayTasks,dayMeetings);
     html+=`<div class="cal-week-col${isToday?' cal-today-col':''}">
       <div class="cal-week-hdr">
         <span>${d.short}</span>
-        ${dayTasks.length?`<span class="cal-day-count">${dayDone}/${dayTasks.length}</span>`:''}
+        ${(dayTasks.length+dayMeetings.length)?`<span class="cal-day-count">${dayDone}/${dayTasks.length}${dayMeetings.length?` ·${dayMeetings.length}📅`:''}</span>`:''}
       </div>
       <div class="task-list">`;
-    if(!dayTasks.length)html+=`<div class="cal-empty-day">—</div>`;
-    dayTasks.forEach(t=>html+=renderCard(t));
+    if(!dayTasks.length&&!dayMeetings.length)html+=`<div class="cal-empty-day">—</div>`;
+    dayMeetings.forEach(m=>html+=renderMeetingCard(m));
+    dayTasks.forEach(t=>html+=renderCard(t,conflicts.has(djb2(t.rawText||t.text))));
     html+=`</div></div>`;
   });
 
@@ -747,7 +864,7 @@ async function calMonthDayClick(dateStr){
   if(dotEl)dotEl.innerHTML=`<span class="cal-dot" style="background:${doneC===dayTasks.length?'var(--done)':'var(--acc)'}"></span>`;
 }
 
-function renderCard(task){
+function renderCard(task,isConflict=false){
   const edits=ls(K_EDITS,{});
   const checks=ls(K_CHECKS,{});
   const key=djb2(task.rawText||task.text);
@@ -762,12 +879,13 @@ function renderCard(task){
   pList.forEach(p=>{ meta+=`<span class="chip cp">👤 ${esc(p)}</span>`; });
   if(task.timeRange)meta+=`<span class="chip ct">🕐 ${esc(task.timeRange)}</span>`;
   if(task.deadline)meta+=`<span class="chip cd">📅 ${esc(task.deadline)}</span>`;
+  if(isConflict)meta+=`<span class="conflict-badge">⚠️ пересечение со встречей</span>`;
   const files=ls(K_FILES,{});
   const tf=files[key]||[];
   let fhtml='';
   if(tf.length>0){fhtml=`<div class="attach-row" id="ar-${key}">`;tf.forEach((f,i)=>{fhtml+=`<a class="file-chip" href="${esc(f.dataUrl)}" download="${esc(f.name)}" title="${esc(f.name)}">📄 <span class="fcn">${esc(f.name)}</span><span class="fcd" data-key="${key}" data-idx="${i}" onclick="delTaskFile(event)">×</span></a>`;});fhtml+=`</div>`;}
   else fhtml=`<div class="attach-row" id="ar-${key}"></div>`;
-  return `<div class="task-card${isDone?' done':''}" data-key="${key}"${borderC?` style="--acc:${borderC}"`:''}><div class="task-check${isDone?' checked':''}" onclick="toggleCheck(event,'${key}')"></div><div class="task-body"><div class="task-text">${esc(disp)}</div><textarea class="edit-area" rows="2">${esc(disp)}</textarea><div class="edit-btns"><button class="btn-save">Сохранить</button><button class="btn-cancel">Отмена</button></div>${meta?`<div class="task-meta">${meta}</div>`:''}${fhtml}<button class="attach-btn" data-key="${key}" onclick="openTaskFile(event)">📎 Прикрепить</button></div><button class="edit-btn" title="Редактировать">✏️</button></div>`;
+  return `<div class="task-card${isDone?' done':''}${isConflict?' conflict':''}" data-key="${key}"${borderC?` style="--acc:${borderC}"`:''}><div class="task-check${isDone?' checked':''}" onclick="toggleCheck(event,'${key}')"></div><div class="task-body"><div class="task-text">${esc(disp)}</div><textarea class="edit-area" rows="2">${esc(disp)}</textarea><div class="edit-btns"><button class="btn-save">Сохранить</button><button class="btn-cancel">Отмена</button></div>${meta?`<div class="task-meta">${meta}</div>`:''}${fhtml}<button class="attach-btn" data-key="${key}" onclick="openTaskFile(event)">📎 Прикрепить</button></div><button class="edit-btn" title="Редактировать">✏️</button></div>`;
 }
 
 function renderEmpty(el,period,file){const base=file.split('/').pop();el.innerHTML=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div><div class="empty"><div class="empty-icon">📭</div><p>Нет задач</p><p style="margin-top:5px;font-size:.7rem">Файл <code>${file}</code> не найден</p></div>`;}
@@ -1119,15 +1237,26 @@ async function loadAll(){
   const rr=document.getElementById('ref-row');if(rr)rr.classList.add('refreshing');
   const now=new Date();
   document.getElementById('last-updated').innerHTML=`<strong>${now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</strong>`;
-  let dayTasks=[];
+  let dayTasks=[],dayMeetings=[];
   for(const [period,cfg] of Object.entries(PERIODS)){
     const panel=document.getElementById('panel-'+period);
     const file=cfg.fn();renderLoading(panel);
     const md=await fetchMd(file);
-    if(!md){renderEmpty(panel,period,file);continue;}
+    // Подтягиваем встречи для дня и недели
+    let meetings=[];
+    if(period==='day'){
+      const mmd=await fetchMd(`tasks/meetings/${tdStr()}.md`);
+      meetings=mmd?parseMeetingsMd(mmd):[];
+      dayMeetings=meetings;
+    }
+    if(!md){
+      if(meetings.length)renderPanel(panel,period,file,[],meetings);
+      else renderEmpty(panel,period,file);
+      continue;
+    }
     const tasks=parseMd(md);
-    if(!tasks.length)renderEmpty(panel,period,file);
-    else{renderPanel(panel,period,file,tasks);if(period==='day')dayTasks=tasks;}
+    if(!tasks.length&&!meetings.length)renderEmpty(panel,period,file);
+    else{renderPanel(panel,period,file,tasks,meetings);if(period==='day')dayTasks=tasks;}
   }
   // Rebuild kanban from today's tasks
   kbBuildFromTasks(dayTasks);
