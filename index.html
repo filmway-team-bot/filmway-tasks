@@ -1304,13 +1304,17 @@ async function loadAll(){
       }));
       meetings=mMap;
     }
+    // Проверяем есть ли встречи (meetings может быть массивом или объектом-картой)
+    const hasMtgs=Array.isArray(meetings)
+      ?meetings.length>0
+      :Object.values(meetings).some(a=>a.length>0);
     if(!md){
-      if(meetings.length)renderPanel(panel,period,file,[],meetings);
+      if(hasMtgs)renderPanel(panel,period,file,[],meetings);
       else renderEmpty(panel,period,file);
       continue;
     }
     const tasks=parseMd(md);
-    if(!tasks.length&&!meetings.length)renderEmpty(panel,period,file);
+    if(!tasks.length&&!hasMtgs)renderEmpty(panel,period,file);
     else{renderPanel(panel,period,file,tasks,meetings);if(period==='day')dayTasks=tasks;}
   }
   // Rebuild kanban from today's tasks
