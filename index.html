@@ -644,6 +644,67 @@
       border-radius: 8px; padding: 1px 6px; font-size: 10px; margin-top: 3px;
     }
 
+  
+    /* ── Search toggle (v2) ─────────────────────────────────── */
+    .fw-search-wrap {
+      position: relative;
+      overflow: hidden;
+      max-width: 0;
+      opacity: 0;
+      transition: max-width .25s ease, opacity .2s ease;
+      display: flex; align-items: center;
+    }
+    .fw-search-wrap.open {
+      max-width: 320px;
+      opacity: 1;
+    }
+    .fw-search {
+      width: 240px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border, #ccc);
+      font-size: 13px;
+      background: var(--input-bg, #fff);
+      color: var(--text, #222);
+      outline: none;
+    }
+    .fw-search:focus { border-color: #3355cc; }
+    .fw-search-count {
+      font-size: 11px; color: #888;
+      margin-left: 6px; white-space: nowrap;
+    }
+    .fw-search-btn {
+      background: none; border: 1px solid var(--border, #ddd);
+      border-radius: 8px; cursor: pointer;
+      font-size: 16px; padding: 3px 9px;
+      color: var(--text, #555);
+      transition: background .12s;
+      line-height: 1.4;
+    }
+    .fw-search-btn:hover, .fw-search-btn.active { background: #e8f0fe; border-color: #3355cc; }
+
+    /* ── Топбар — чище ─────────────────────────────────────── */
+    .fw-topbar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border, #e0e0e0);
+      background: var(--bg, #fff);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .fw-topbar .fw-sidebar-toggle {
+      font-size: 12px; padding: 4px 10px;
+      background: var(--bg, #f5f5f5);
+      border: 1px solid var(--border, #ddd);
+      border-radius: 8px; cursor: pointer; color: var(--text, #444);
+      white-space: nowrap;
+    }
+    .fw-topbar .fw-sidebar-toggle:hover { background: #e8f0fe; border-color: #3355cc; }
+    .fw-topbar-spacer { flex: 1; }
+    .fw-refresh-bar {
+      font-size: 10px; color: #bbb;
+      display: flex; align-items: center; gap: 5px;
+      padding: 2px 10px 4px;
+    }
   </style>
 </head>
 <body>
@@ -651,10 +712,7 @@
   <!-- Filmway v2 toolbar -->
   <div style="display:flex;align-items:center;padding:4px 8px;gap:6px;border-bottom:1px solid var(--border,#e0e0e0)">
     <button class="fw-sidebar-toggle" onclick="toggleSidebar('left')" title="Команда">☰ Команда</button>
-    <div class="fw-search-wrap" style="flex:1">
-      <input class="fw-search" id="fw-search-input" type="search" placeholder="🔍 Поиск задач…">
-      <span class="fw-search-count" id="fw-search-count"></span>
-    </div>
+    <button class="fw-search-btn" id="fw-search-btn" title="Поиск (⌘F)">🔍</button><div class="fw-search-wrap" id="fw-search-wrap"><input class="fw-search" id="fw-search-input" type="search" placeholder="Поиск задач…"><span class="fw-search-count" id="fw-search-count"></span></div>
     <button class="fw-sidebar-toggle" onclick="toggleSidebar('right')" title="Действия">⚡ Действия</button>
   </div>
   <div class="fw-refresh-bar" id="fw-refresh-bar">
@@ -1639,6 +1697,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ══ end Filmway Dashboard v2 ═══════════════════════════════════════════════ */
 
+  </script>
+  <script>
+
+  /* ── Search toggle v2 ──────────────────────────────────────────────────── */
+  function initSearchToggle() {
+    const btn = document.getElementById('fw-search-btn');
+    const wrap = document.getElementById('fw-search-wrap');
+    const inp  = document.getElementById('fw-search-input');
+    if (!btn || !wrap || !inp) return;
+
+    btn.addEventListener('click', () => {
+      const isOpen = wrap.classList.toggle('open');
+      btn.classList.toggle('active', isOpen);
+      if (isOpen) { inp.focus(); }
+      else { inp.value = ''; searchQuery = ''; applyFilters && applyFilters(); }
+    });
+
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { btn.click(); }
+    });
+
+    // Глобальный shortcut: Cmd+F / Ctrl+F
+    document.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        if (!wrap.classList.contains('open')) btn.click();
+        else inp.focus();
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', initSearchToggle);
+  /* ── end search toggle ──────────────────────────────────────────────────── */
   </script>
 </body>
 </html>
