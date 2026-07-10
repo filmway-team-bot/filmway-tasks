@@ -290,8 +290,11 @@
     @media(max-width:560px){ .cal-week-grid { grid-template-columns:repeat(3,minmax(120px,1fr)); padding-bottom:8px; } }
     .cal-week-col { background:rgba(255,255,255,.03); border:1px solid var(--b2); border-radius:var(--r); padding:8px 6px 10px; min-width:110px; }
     .cal-week-col.cal-today-col { border-color:rgba(233,69,96,.32); background:rgba(233,69,96,.04); }
+    .cal-week-col.cal-offday { background:rgba(233,69,96,.02); border-color:rgba(233,69,96,.12); }
     .cal-week-hdr { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; padding:0 2px 5px; border-bottom:1px solid var(--b2); }
     .cal-week-col.cal-today-col .cal-week-hdr { color:var(--acc); border-bottom-color:rgba(233,69,96,.2); }
+    .cal-week-col.cal-offday .cal-week-hdr { color:rgba(233,69,96,.5); border-bottom-color:rgba(233,69,96,.15); }
+    .offday-badge { background:rgba(233,69,96,.1); border:1px solid rgba(233,69,96,.28); color:var(--acc); font-size:8.5px; font-weight:700; text-align:center; padding:5px 4px; border-radius:6px; letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px; text-decoration:line-through; text-decoration-color:rgba(233,69,96,.6); }
     .cal-day-count { font-size:9px; background:rgba(255,255,255,.07); padding:1px 5px; border-radius:8px; }
     .cal-empty-day { padding:10px 0; text-align:center; color:rgba(255,255,255,.15); font-size:.75rem; }
     .cal-week-col .task-card { font-size:.78rem; padding:7px 8px; }
@@ -306,6 +309,7 @@
     .cal-day-cell:hover { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.12); }
     .cal-day-cell.cal-today { border-color:var(--acc); background:rgba(233,69,96,.08); }
     .cal-day-cell.cal-weekend .cal-day-num { color:var(--muted); }
+    .cal-day-cell.cal-holiday .cal-day-num { color:rgba(233,69,96,.7); }
     .cal-day-cell.cal-day-empty { background:transparent; border-color:transparent; cursor:default; pointer-events:none; }
     .cal-day-cell.cal-day-active { border-color:rgba(233,69,96,.5); background:rgba(233,69,96,.13); }
     .cal-day-num { font-size:11.5px; font-weight:700; color:var(--text); line-height:1.2; flex-shrink:0; }
@@ -332,6 +336,8 @@
     .mini-cell.mc-today { color:var(--acc); font-weight:800; }
     .mini-cell.mc-meeting { background:rgba(91,157,245,.2); color:#89b4ff; font-weight:700; border-radius:50%; }
     .mini-cell.mc-meeting.mc-today { background:rgba(233,69,96,.3); color:var(--acc); }
+    .mini-cell.mc-offday { color:rgba(233,69,96,.45); }
+    .mini-cell.mc-holiday { color:rgba(233,69,96,.65); font-weight:600; }
     .mini-cell.mc-empty { cursor:default; pointer-events:none; }
     .mini-detail { background:rgba(255,255,255,.03); border:1px solid rgba(233,69,96,.22); border-radius:var(--r); padding:14px; margin-bottom:16px; animation:fup .2s ease; }
     .cal-month-detail { background:rgba(255,255,255,.03); border:1px solid rgba(233,69,96,.22); border-radius:var(--r); padding:14px 14px 10px; margin-bottom:16px; animation:fup .2s ease; }
@@ -517,6 +523,34 @@ const PERIODS = {
   halfyear: { label:'Полгода', fn:()=>`tasks/halfyear/${hyStr()}.md` },
   year:     { label:'Год',     fn:()=>`tasks/year/${yrStr()}.md` },
 };
+
+// Производственный календарь РФ 2026 — официальные нерабочие праздничные дни
+const RU_HOLIDAYS_2026 = new Set([
+  // Новогодние каникулы (1–8 января)
+  '2026-01-01','2026-01-02','2026-01-05','2026-01-06','2026-01-07','2026-01-08',
+  // День защитника Отечества
+  '2026-02-23',
+  // Международный женский день (8 марта — вс, перенос на 9 марта — пн)
+  '2026-03-09',
+  // Праздник Весны и Труда
+  '2026-05-01',
+  // мостовые дни у длинных майских выходных
+  '2026-05-04',
+  // День Победы (9 мая — сб, перенос на 11 мая — пн)
+  '2026-05-11',
+  // День России
+  '2026-06-12',
+  // День народного единства
+  '2026-11-04',
+]);
+// Вспомогательная функция
+function isOffDay(dateStr){
+  if(RU_HOLIDAYS_2026.has(dateStr))return'holiday';
+  const dow=new Date(dateStr).getDay(); // 0=Sun,6=Sat
+  if(dow===0||dow===6)return'weekend';
+  return null;
+}
+let _weekDayTasks={};  // задачи из day-файлов для каждой даты текущей недели
 
 const TEAM = [
   {name:'Кирилл',k:'кирилл',bg:'#2a2e50',tx:'#8899ee'},
@@ -745,7 +779,8 @@ function renderMiniMonth(year,month,meetingsByDate={}){
     const ds=`${year}-${pad(month+1)}-${pad(d)}`;
     const isToday=ds===todayStr;
     const hasMtg=(meetingsByDate[ds]||[]).length>0;
-    const cls='mini-cell'+(hasMtg?' mc-meeting':'')+(isToday?' mc-today':'');
+    const offType=isOffDay(ds); // 'weekend', 'holiday', or null
+    const cls='mini-cell'+(hasMtg?' mc-meeting':'')+(isToday?' mc-today':'')+(offType==='holiday'?' mc-holiday':offType?' mc-offday':'');
     html+=`<div class="${cls}" onclick="miniDayClick('${ds}')" title="${ds}">${d}</div>`;
   }
   html+=`</div></div>`;
@@ -838,20 +873,27 @@ function renderWeekCalendar(el,period,file,tasks,meetings=[]){
   html+=`<div class="cal-week-grid">`;
 
   WEEK_DAYS.forEach((d,i)=>{
-    const dayTasks=tasks.filter(t=>t.section&&t.section.toLowerCase().includes(d.ru));
-    // Встречи для конкретной даты этого столбца
     const colDate=wDates[i];
+    // Задачи из недельного файла (по секции дня) + задачи из индивидуального дневного файла
+    const weekFileTasks=tasks.filter(t=>t.section&&t.section.toLowerCase().includes(d.ru));
+    const dayFileTasks=_weekDayTasks[colDate]||[];
+    const seenKeys=new Set(weekFileTasks.map(t=>djb2(t.rawText||t.text)));
+    const dayTasks=[...weekFileTasks,...dayFileTasks.filter(t=>!seenKeys.has(djb2(t.rawText||t.text)))];
+    // Встречи для конкретной даты этого столбца
     const dayMeetings=meetingsByDate[colDate]||[];
     const dayDone=dayTasks.filter(t=>t.done).length;
     const isToday=d.dow===todayDow;
+    const offDay=isOffDay(colDate); // 'weekend', 'holiday', or null
     const conflicts=detectConflicts(dayTasks,dayMeetings);
-    html+=`<div class="cal-week-col${isToday?' cal-today-col':''}">
+    const colCls='cal-week-col'+(isToday?' cal-today-col':'')+(offDay?' cal-offday':'');
+    html+=`<div class="${colCls}">
       <div class="cal-week-hdr">
         <span>${d.short}</span>
         ${(dayTasks.length+dayMeetings.length)?`<span class="cal-day-count">${dayDone}/${dayTasks.length}${dayMeetings.length?` ·${dayMeetings.length}📅`:''}</span>`:''}
       </div>
       <div class="task-list">`;
-    if(!dayTasks.length&&!dayMeetings.length)html+=`<div class="cal-empty-day">—</div>`;
+    if(offDay)html+=`<div class="offday-badge">выходной</div>`;
+    if(!dayTasks.length&&!dayMeetings.length&&!offDay)html+=`<div class="cal-empty-day">—</div>`;
     dayMeetings.forEach(m=>html+=renderMeetingCard(m));
     dayTasks.forEach(t=>html+=renderCard(t,conflicts.has(djb2(t.rawText||t.text))));
     html+=`</div></div>`;
@@ -903,9 +945,10 @@ function renderMonthCalendar(el,period,file,tasks,meetings={}){
     const isToday=dateStr===todayStr;
     const dow=(new Date(year,month,d).getDay()+6)%7;
     const isWeekend=dow>=5;
+    const isHoliday=RU_HOLIDAYS_2026.has(dateStr);
     const _mts=meetingsByDate[dateStr]||[];
     const _miniMts=_mts.map(m=>`<div class="cal-mini-meeting" title="${esc(m.title)}">📅 ${m.timeRange?m.timeRange.split('–')[0]+' ':''}<b>${esc(m.title)}</b></div>`).join('');
-    html+=`<div class="cal-day-cell${isToday?' cal-today':''}${isWeekend?' cal-weekend':''}" data-date="${dateStr}" onclick="calMonthDayClick('${dateStr}')">
+    html+=`<div class="cal-day-cell${isToday?' cal-today':''}${isWeekend?' cal-weekend':''}${isHoliday?' cal-holiday':''}" data-date="${dateStr}" onclick="calMonthDayClick('${dateStr}')">
       <div class="cal-day-num">${d}${_mts.length?`<span style="float:right;font-size:8px;color:#89b4ff;font-weight:400;opacity:.8">${_mts.length}📅</span>`:''}</div>
       ${_miniMts}
       <div id="cal-d-${dateStr}" class="cal-day-dots"></div>
@@ -1395,12 +1438,17 @@ async function loadAll(){
       dayMeetings=meetings;
     }
     if(period==='week'){
-      // Загружаем встречи для каждого дня текущей недели
+      // Загружаем встречи и задачи дня для каждого дня текущей недели
       const wDates=weekDates();
       const wMap={};
+      _weekDayTasks={};
       await Promise.all(wDates.map(async ds=>{
-        const mmd=await fetchMd(`tasks/meetings/${ds}.md`);
+        const [mmd,dmd]=await Promise.all([
+          fetchMd(`tasks/meetings/${ds}.md`),
+          fetchMd(`tasks/day/${ds}.md`),
+        ]);
         if(mmd)wMap[ds]=parseMeetingsMd(mmd);
+        if(dmd)_weekDayTasks[ds]=parseMd(dmd);
       }));
       meetings=wMap; // объект {dateStr: meetings[]}
     }
