@@ -5,21 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Filmway AI — Task Dashboard</title>
   <style>
-    /* ── Reset & Base ────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0a0a0a;
-      --card:      #1a1a2e;
-      --card2:     #16213e;
-      --accent:    #e94560;
-      --accent2:   #c73652;
-      --text:      #ffffff;
-      --text-muted:#8892a4;
-      --done:      #2ecc71;
-      --border:    rgba(233,69,96,.25);
-      --shadow:    0 8px 32px rgba(0,0,0,.6);
-      --radius:    12px;
+      --bg:          #0a0a0a;
+      --card:        #1a1a2e;
+      --accent:      #e94560;
+      --accent2:     #c73652;
+      --text:        #ffffff;
+      --text-muted:  #8892a4;
+      --done:        #2ecc71;
+      --border:      rgba(233,69,96,.25);
+      --shadow:      0 8px 32px rgba(0,0,0,.6);
+      --radius:      12px;
+      --time-color:  #4fc3f7;
+      --time-bg:     rgba(79,195,247,.10);
+      --time-border: rgba(79,195,247,.28);
     }
 
     html { scroll-behavior: smooth; }
@@ -32,7 +33,6 @@
       overflow-x: hidden;
     }
 
-    /* ── Noise overlay ───────────────────────────────────────── */
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: 0;
@@ -41,7 +41,7 @@
       pointer-events: none;
     }
 
-    /* ── Header ─────────────────────────────────────────────── */
+    /* ── Header ─────────────────────────────────────────── */
     header {
       position: relative; z-index: 10;
       padding: 28px 32px 20px;
@@ -51,9 +51,7 @@
       flex-wrap: wrap;
     }
 
-    .logo-wrap {
-      display: flex; align-items: center; gap: 14px;
-    }
+    .logo-wrap { display: flex; align-items: center; gap: 14px; }
 
     .logo-icon {
       width: 48px; height: 48px;
@@ -65,26 +63,13 @@
       flex-shrink: 0;
     }
 
-    h1 {
-      font-size: clamp(1.2rem, 4vw, 1.75rem);
-      font-weight: 700;
-      letter-spacing: -.5px;
-      line-height: 1.15;
-    }
-
+    h1 { font-size: clamp(1.2rem, 4vw, 1.75rem); font-weight: 700; letter-spacing: -.5px; line-height: 1.15; }
     h1 span { color: var(--accent); }
 
-    .header-meta {
-      margin-left: auto;
-      text-align: right;
-      font-size: .78rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-    }
-
+    .header-meta { margin-left: auto; text-align: right; font-size: .78rem; color: var(--text-muted); line-height: 1.6; }
     .header-meta strong { color: var(--text); }
 
-    /* ── Tabs ───────────────────────────────────────────────── */
+    /* ── Tabs ────────────────────────────────────────────── */
     .tabs-bar {
       position: relative; z-index: 10;
       display: flex; gap: 4px;
@@ -117,29 +102,20 @@
     }
 
     .tab-btn:hover { color: var(--text); background: rgba(255,255,255,.04); }
-
-    .tab-btn.active {
-      color: var(--text);
-      background: rgba(233,69,96,.08);
-    }
+    .tab-btn.active { color: var(--text); background: rgba(233,69,96,.08); }
     .tab-btn.active::after { left: 12px; right: 12px; }
 
     .tab-btn .badge {
-      display: inline-block;
-      margin-left: 6px;
-      padding: 1px 7px;
-      border-radius: 999px;
-      font-size: .7rem;
-      background: var(--accent);
-      color: #fff;
+      display: inline-block; margin-left: 6px;
+      padding: 1px 7px; border-radius: 999px;
+      font-size: .7rem; background: var(--accent); color: #fff;
       vertical-align: middle;
-      opacity: 0;
-      transform: scale(.7);
+      opacity: 0; transform: scale(.7);
       transition: opacity .2s, transform .2s;
     }
     .tab-btn .badge.visible { opacity: 1; transform: scale(1); }
 
-    /* ── Main content ────────────────────────────────────────── */
+    /* ── Main ────────────────────────────────────────────── */
     main {
       position: relative; z-index: 5;
       padding: 28px 32px 48px;
@@ -155,52 +131,40 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── Period header ───────────────────────────────────────── */
+    /* ── Period header ───────────────────────────────────── */
     .period-header {
       display: flex; align-items: center; gap: 14px;
-      margin-bottom: 22px;
-      flex-wrap: wrap;
+      margin-bottom: 22px; flex-wrap: wrap;
     }
 
     .period-title {
       font-size: 1.1rem; font-weight: 700;
       color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
+      text-transform: uppercase; letter-spacing: 1.5px;
     }
 
     .period-date {
-      font-size: .8rem;
-      color: var(--accent);
+      font-size: .8rem; color: var(--accent);
       background: rgba(233,69,96,.1);
-      padding: 3px 10px;
-      border-radius: 999px;
+      padding: 3px 10px; border-radius: 999px;
       border: 1px solid rgba(233,69,96,.3);
     }
 
-    /* ── Progress bar ────────────────────────────────────────── */
+    /* ── Progress bar ────────────────────────────────────── */
     .progress-wrap {
       background: rgba(255,255,255,.06);
       border-radius: var(--radius);
-      padding: 18px 22px;
-      margin-bottom: 24px;
+      padding: 18px 22px; margin-bottom: 24px;
       border: 1px solid var(--border);
-      display: flex; align-items: center; gap: 18px;
-      flex-wrap: wrap;
+      display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
     }
 
-    .progress-label {
-      font-size: .85rem;
-      color: var(--text-muted);
-      min-width: 110px;
-    }
+    .progress-label { font-size: .85rem; color: var(--text-muted); min-width: 110px; }
 
     .progress-bar-outer {
-      flex: 1; min-width: 120px;
-      height: 8px;
+      flex: 1; min-width: 120px; height: 8px;
       background: rgba(255,255,255,.08);
-      border-radius: 999px;
-      overflow: hidden;
+      border-radius: 999px; overflow: hidden;
     }
 
     .progress-bar-inner {
@@ -212,23 +176,13 @@
       box-shadow: 0 0 10px rgba(233,69,96,.5);
     }
 
-    .progress-pct {
-      font-size: 1rem; font-weight: 700;
-      color: var(--text);
-      min-width: 44px;
-      text-align: right;
-    }
+    .progress-pct { font-size: 1rem; font-weight: 700; color: var(--text); min-width: 44px; text-align: right; }
+    .progress-count { font-size: .8rem; color: var(--text-muted); }
 
-    .progress-count {
-      font-size: .8rem; color: var(--text-muted);
-    }
+    /* ── Task list ───────────────────────────────────────── */
+    .task-list { display: flex; flex-direction: column; gap: 10px; }
 
-    /* ── Task list ───────────────────────────────────────────── */
-    .task-list {
-      display: flex; flex-direction: column; gap: 10px;
-    }
-
-    /* ── Task card ───────────────────────────────────────────── */
+    /* ── Task card ───────────────────────────────────────── */
     .task-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -237,8 +191,7 @@
       display: flex; align-items: flex-start; gap: 14px;
       transition: transform .2s, box-shadow .2s, border-color .2s;
       animation: cardIn .3s ease both;
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
 
     .task-card::before {
@@ -246,17 +199,11 @@
       position: absolute; top: 0; left: 0;
       width: 3px; height: 100%;
       background: var(--accent);
-      opacity: 0;
-      transition: opacity .2s;
+      opacity: 0; transition: opacity .2s;
     }
 
-    .task-card:hover {
-      transform: translateX(3px);
-      box-shadow: var(--shadow);
-      border-color: rgba(233,69,96,.4);
-    }
+    .task-card:hover { transform: translateX(3px); box-shadow: var(--shadow); border-color: rgba(233,69,96,.4); }
     .task-card:hover::before { opacity: 1; }
-
     .task-card.done { opacity: .65; }
     .task-card.done::before { background: var(--done); opacity: .6; }
 
@@ -265,7 +212,6 @@
       to   { opacity: 1; transform: translateX(0); }
     }
 
-    /* stagger */
     .task-card:nth-child(1)  { animation-delay: .02s; }
     .task-card:nth-child(2)  { animation-delay: .05s; }
     .task-card:nth-child(3)  { animation-delay: .08s; }
@@ -277,88 +223,149 @@
     .task-card:nth-child(9)  { animation-delay: .26s; }
     .task-card:nth-child(10) { animation-delay: .29s; }
 
-    /* ── Checkbox ────────────────────────────────────────────── */
+    /* ── Checkbox ────────────────────────────────────────── */
     .task-check {
       width: 20px; height: 20px; flex-shrink: 0;
       border: 2px solid var(--border);
-      border-radius: 5px;
-      margin-top: 2px;
+      border-radius: 5px; margin-top: 2px;
       display: flex; align-items: center; justify-content: center;
       transition: background .2s, border-color .2s;
+      cursor: pointer;
+      user-select: none;
     }
 
-    .task-check.checked {
-      background: var(--done);
-      border-color: var(--done);
-    }
+    .task-check:hover { border-color: var(--done); background: rgba(46,204,113,.08); }
+
+    .task-check.checked { background: var(--done); border-color: var(--done); }
 
     .task-check.checked::after {
       content: '';
-      display: block;
-      width: 5px; height: 9px;
+      display: block; width: 5px; height: 9px;
       border: 2px solid #fff;
       border-top: none; border-left: none;
       transform: rotate(45deg) translate(-1px, -1px);
     }
 
-    /* ── Task body ───────────────────────────────────────────── */
+    /* ── Task body ───────────────────────────────────────── */
     .task-body { flex: 1; min-width: 0; }
 
-    .task-text {
-      font-size: .93rem;
-      line-height: 1.5;
-      word-break: break-word;
-    }
-
+    .task-text { font-size: .93rem; line-height: 1.5; word-break: break-word; transition: color .2s; }
     .task-card.done .task-text { text-decoration: line-through; color: var(--text-muted); }
 
-    .task-meta {
-      display: flex; flex-wrap: wrap; gap: 8px;
-      margin-top: 8px;
-    }
+    .task-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 
     .meta-chip {
       display: inline-flex; align-items: center; gap: 4px;
-      font-size: .73rem;
-      padding: 2px 9px;
-      border-radius: 999px;
-      font-weight: 600;
+      font-size: .73rem; padding: 2px 9px;
+      border-radius: 999px; font-weight: 600;
     }
 
-    .chip-person {
-      background: rgba(233,69,96,.12);
-      color: var(--accent);
-      border: 1px solid rgba(233,69,96,.25);
-    }
+    .chip-person   { background: rgba(233,69,96,.12); color: var(--accent); border: 1px solid rgba(233,69,96,.25); }
+    .chip-deadline { background: rgba(255,190,11,.10); color: #ffbe0b;      border: 1px solid rgba(255,190,11,.25); }
+    .chip-time     { background: var(--time-bg);       color: var(--time-color); border: 1px solid var(--time-border); }
+    .chip-period   { background: rgba(139,92,246,.10); color: #a78bfa;      border: 1px solid rgba(139,92,246,.25); }
 
-    .chip-deadline {
-      background: rgba(255,190,11,.1);
-      color: #ffbe0b;
-      border: 1px solid rgba(255,190,11,.25);
-    }
-
-    /* ── Empty state ─────────────────────────────────────────── */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
+    /* ── Section heading ─────────────────────────────────── */
+    .section-heading {
+      font-size: .78rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.5px;
       color: var(--text-muted);
+      margin: 18px 0 8px;
+      border-left: 3px solid var(--accent);
+      padding-left: 10px;
     }
 
-    .empty-icon {
-      font-size: 3rem;
-      margin-bottom: 12px;
-      opacity: .4;
+    /* ── Person heading (Команда tab) ────────────────────── */
+    .person-heading {
+      display: flex; align-items: center; gap: 12px;
+      margin: 28px 0 10px;
+      padding: 12px 16px;
+      background: rgba(233,69,96,.06);
+      border-radius: var(--radius);
+      border: 1px solid rgba(233,69,96,.15);
     }
 
+    .person-avatar {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), #ff6b6b);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; flex-shrink: 0;
+    }
+
+    .person-name { font-size: 1rem; font-weight: 700; }
+    .person-count { margin-left: auto; font-size: .8rem; color: var(--text-muted); }
+
+    /* ── Files panel ─────────────────────────────────────── */
+    .files-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+
+    .upload-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius);
+      font-size: .88rem; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: background .2s, transform .15s;
+    }
+    .upload-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .file-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex; align-items: center; gap: 14px;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      animation: cardIn .3s ease both;
+    }
+
+    .file-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: rgba(233,69,96,.4); }
+
+    .file-icon {
+      font-size: 26px; flex-shrink: 0;
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.05); border-radius: 8px;
+    }
+
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { font-size: .88rem; font-weight: 600; word-break: break-all; margin-bottom: 4px; }
+    .file-size { font-size: .74rem; color: var(--text-muted); }
+
+    .file-dl {
+      flex-shrink: 0;
+      color: var(--accent);
+      font-size: .8rem; font-weight: 600;
+      text-decoration: none;
+      padding: 4px 12px;
+      border: 1px solid rgba(233,69,96,.3);
+      border-radius: 6px;
+      transition: background .2s;
+    }
+    .file-dl:hover { background: rgba(233,69,96,.1); }
+
+    /* ── Empty / loading ─────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--text-muted);
+    }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: .4; display: block; }
     .empty-state p { font-size: .95rem; }
+    .empty-state a { color: var(--accent); }
 
-    /* ── Loading spinner ─────────────────────────────────────── */
     .loading {
       display: flex; align-items: center; justify-content: center;
-      gap: 12px;
-      padding: 50px 20px;
-      color: var(--text-muted);
-      font-size: .9rem;
+      gap: 12px; padding: 50px 20px;
+      color: var(--text-muted); font-size: .9rem;
     }
 
     .spinner {
@@ -371,44 +378,28 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Section heading inside task list ───────────────────── */
-    .section-heading {
-      font-size: .78rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--text-muted);
-      margin: 18px 0 8px;
-      padding-left: 4px;
-      border-left: 3px solid var(--accent);
-      padding-left: 10px;
-    }
-
-    /* ── Footer bar ──────────────────────────────────────────── */
+    /* ── Footer ──────────────────────────────────────────── */
     footer {
       position: relative; z-index: 10;
-      text-align: center;
-      padding: 16px;
-      font-size: .75rem;
-      color: var(--text-muted);
+      text-align: center; padding: 16px;
+      font-size: .75rem; color: var(--text-muted);
       border-top: 1px solid var(--border);
     }
-
     footer a { color: var(--accent); text-decoration: none; }
 
-    /* ── Responsive ──────────────────────────────────────────── */
+    /* ── Responsive ──────────────────────────────────────── */
     @media (max-width: 640px) {
       header { padding: 18px 16px 14px; }
       .tabs-bar { padding: 12px 16px 0; }
       main { padding: 18px 16px 36px; }
       .tab-btn { padding: 8px 14px; font-size: .82rem; }
-      .progress-wrap { padding: 14px 16px; }
+      .file-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-<!-- ── Header ──────────────────────────────────────────────── -->
+<!-- Header -->
 <header>
   <div class="logo-wrap">
     <div class="logo-icon">🎬</div>
@@ -420,22 +411,26 @@
   </div>
 </header>
 
-<!-- ── Tabs ────────────────────────────────────────────────── -->
+<!-- Tabs -->
 <div class="tabs-bar" id="tabs-bar">
   <button class="tab-btn active" data-tab="day">День <span class="badge" id="badge-day"></span></button>
   <button class="tab-btn" data-tab="week">Неделя <span class="badge" id="badge-week"></span></button>
   <button class="tab-btn" data-tab="month">Месяц <span class="badge" id="badge-month"></span></button>
   <button class="tab-btn" data-tab="halfyear">Полгода <span class="badge" id="badge-halfyear"></span></button>
   <button class="tab-btn" data-tab="year">Год <span class="badge" id="badge-year"></span></button>
+  <button class="tab-btn" data-tab="team">Команда 👥</button>
+  <button class="tab-btn" data-tab="files">Файлы 📁</button>
 </div>
 
-<!-- ── Panels ──────────────────────────────────────────────── -->
-<main>
-  <div class="tab-panel active" id="panel-day"     data-period="day"></div>
-  <div class="tab-panel"       id="panel-week"     data-period="week"></div>
-  <div class="tab-panel"       id="panel-month"    data-period="month"></div>
-  <div class="tab-panel"       id="panel-halfyear" data-period="halfyear"></div>
-  <div class="tab-panel"       id="panel-year"     data-period="year"></div>
+<!-- Panels -->
+<main id="main-content">
+  <div class="tab-panel active" id="panel-day"      data-period="day"></div>
+  <div class="tab-panel"       id="panel-week"      data-period="week"></div>
+  <div class="tab-panel"       id="panel-month"     data-period="month"></div>
+  <div class="tab-panel"       id="panel-halfyear"  data-period="halfyear"></div>
+  <div class="tab-panel"       id="panel-year"      data-period="year"></div>
+  <div class="tab-panel"       id="panel-team"></div>
+  <div class="tab-panel"       id="panel-files"></div>
 </main>
 
 <footer>
@@ -445,25 +440,26 @@
 </footer>
 
 <script>
-// ══════════════════════════════════════════════════════════════
-//  CONFIG
-// ══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════════════════ */
 const REPO   = 'filmway-team-bot/filmway-tasks';
 const BRANCH = 'main';
-const BASE   = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/`;
+const RAW    = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/`;
+const API    = `https://api.github.com/repos/${REPO}/`;
 
 const PERIODS = {
-  day:      { label: 'День',    getFilename: () => `tasks/day/${todayStr()}.md` },
-  week:     { label: 'Неделя',  getFilename: () => `tasks/week/${weekStr()}.md` },
-  month:    { label: 'Месяц',   getFilename: () => `tasks/month/${monthStr()}.md` },
-  halfyear: { label: 'Полгода', getFilename: () => `tasks/halfyear/${halfyearStr()}.md` },
-  year:     { label: 'Год',     getFilename: () => `tasks/year/${yearStr()}.md` },
+  day:      { label: 'День',    fn: () => `tasks/day/${todayStr()}.md` },
+  week:     { label: 'Неделя',  fn: () => `tasks/week/${weekStr()}.md` },
+  month:    { label: 'Месяц',   fn: () => `tasks/month/${monthStr()}.md` },
+  halfyear: { label: 'Полгода', fn: () => `tasks/halfyear/${halfyearStr()}.md` },
+  year:     { label: 'Год',     fn: () => `tasks/year/${yearStr()}.md` },
 };
 
-// ══════════════════════════════════════════════════════════════
-//  DATE HELPERS
-// ══════════════════════════════════════════════════════════════
-function pad(n) { return String(n).padStart(2, '0'); }
+/* ══════════════════════════════════════════════════════════
+   DATE HELPERS
+══════════════════════════════════════════════════════════ */
+const pad = n => String(n).padStart(2, '0');
 
 function todayStr() {
   const d = new Date();
@@ -471,10 +467,9 @@ function todayStr() {
 }
 
 function weekStr() {
-  const d = new Date();
-  const jan1 = new Date(d.getFullYear(), 0, 1);
-  const week = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
-  return `${d.getFullYear()}-W${pad(week)}`;
+  const d = new Date(), jan1 = new Date(d.getFullYear(), 0, 1);
+  const w = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${pad(w)}`;
 }
 
 function monthStr() {
@@ -484,231 +479,386 @@ function monthStr() {
 
 function halfyearStr() {
   const d = new Date();
-  const half = d.getMonth() < 6 ? 'H1' : 'H2';
-  return `${d.getFullYear()}-${half}`;
+  return `${d.getFullYear()}-${d.getMonth() < 6 ? 'H1' : 'H2'}`;
 }
 
-function yearStr() {
-  return String(new Date().getFullYear());
-}
+function yearStr() { return String(new Date().getFullYear()); }
 
-function humanDate(isoOrSpecial) {
-  // display friendly label
-  if (isoOrSpecial.includes('-W'))    return `Неделя ${isoOrSpecial.split('-W')[1]}, ${isoOrSpecial.split('-')[0]}`;
-  if (isoOrSpecial.includes('-H'))    return isoOrSpecial.replace('H1','первое полугодие').replace('H2','второе полугодие');
-  if (/^\d{4}$/.test(isoOrSpecial))   return isoOrSpecial;
-  // YYYY-MM-DD
-  if (/\d{4}-\d{2}-\d{2}/.test(isoOrSpecial)) {
-    const [y,m,dd] = isoOrSpecial.split('-');
-    const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-    return `${parseInt(dd,10)} ${months[parseInt(m,10)-1]} ${y}`;
+function humanDate(s) {
+  if (s.includes('-W')) return `Неделя ${s.split('-W')[1]}, ${s.split('-')[0]}`;
+  if (s.includes('-H')) return s.replace('H1','первое полугодие').replace('H2','второе полугодие');
+  if (/^\d{4}$/.test(s)) return s;
+  if (/\d{4}-\d{2}-\d{2}/.test(s)) {
+    const [y,m,dd] = s.split('-');
+    const mo = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+    return `${+dd} ${mo[+m-1]} ${y}`;
   }
-  // YYYY-MM
-  if (/\d{4}-\d{2}/.test(isoOrSpecial)) {
-    const [y,m] = isoOrSpecial.split('-');
-    const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-    return `${months[parseInt(m,10)-1]} ${y}`;
+  if (/\d{4}-\d{2}/.test(s)) {
+    const [y,m] = s.split('-');
+    const mo = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    return `${mo[+m-1]} ${y}`;
   }
-  return isoOrSpecial;
+  return s;
 }
 
-// ══════════════════════════════════════════════════════════════
-//  FETCH MARKDOWN
-// ══════════════════════════════════════════════════════════════
-async function fetchMarkdown(filename) {
-  const url = BASE + filename + `?_=${Date.now()}`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  return res.text();
+function formatSize(b) {
+  if (b < 1024)       return b + ' Б';
+  if (b < 1048576)    return (b/1024).toFixed(1) + ' КБ';
+  return (b/1048576).toFixed(1) + ' МБ';
 }
 
-// ══════════════════════════════════════════════════════════════
-//  PARSE MARKDOWN
-// ══════════════════════════════════════════════════════════════
-function parseMarkdown(md) {
-  const lines  = md.split('\n');
-  const items  = [];
-  let section  = '';
+function fileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  return { pdf:'📄',mp4:'🎬',mov:'🎬',avi:'🎬',mkv:'🎬',webm:'🎬',
+    mp3:'🎵',wav:'🎵',aac:'🎵',flac:'🎵',
+    jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️',svg:'🖼️',
+    doc:'📝',docx:'📝',txt:'📝',md:'📝',
+    xls:'📊',xlsx:'📊',csv:'📊',
+    zip:'🗜️',rar:'🗜️','7z':'🗜️',
+    ppt:'📋',pptx:'📋',
+    ai:'🎨',psd:'🎨',fig:'🎨',sketch:'🎨',
+  }[ext] || '📎';
+}
 
-  for (const raw of lines) {
+/* ══════════════════════════════════════════════════════════
+   LOCALSTORAGE — checkbox state
+══════════════════════════════════════════════════════════ */
+function taskKey(period, rawText) {
+  const s = period + '|' + rawText.slice(0, 80);
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+  return 'fw_' + (h >>> 0).toString(36);
+}
+
+function storedDone(key, fallback) {
+  const v = localStorage.getItem(key);
+  return v === 'done' ? true : v === 'todo' ? false : fallback;
+}
+
+function toggleStored(key, currentDone) {
+  localStorage.setItem(key, currentDone ? 'todo' : 'done');
+}
+
+/* ══════════════════════════════════════════════════════════
+   FETCH
+══════════════════════════════════════════════════════════ */
+async function fetchMd(filename) {
+  try {
+    const r = await fetch(RAW + filename + '?_=' + Date.now());
+    return r.ok ? r.text() : null;
+  } catch { return null; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   PARSE MARKDOWN
+══════════════════════════════════════════════════════════ */
+function parseMd(md, period) {
+  const items = [];
+  let section = '';
+
+  for (const raw of md.split('\n')) {
     const line = raw.trimEnd();
 
-    // Section headings
     if (/^#+\s/.test(line)) {
       section = line.replace(/^#+\s*/, '').trim();
       continue;
     }
 
-    // Checkbox lines
-    const matchDone = line.match(/^[-*]\s+\[x\]\s+(.*)/i);
-    const matchTodo = line.match(/^[-*]\s+\[ \]\s+(.*)/);
+    const mDone = line.match(/^[-*]\s+\[x\]\s+(.*)/i);
+    const mTodo = line.match(/^[-*]\s+\[ \]\s+(.*)/);
+    if (!mDone && !mTodo) continue;
 
-    if (matchDone || matchTodo) {
-      const done = !!matchDone;
-      const text = (done ? matchDone[1] : matchTodo[1]).trim();
+    const origDone = !!mDone;
+    const full     = (origDone ? mDone[1] : mTodo[1]).trim();
 
-      // person: — Имя or @username
-      let person = null;
-      const personMatch = text.match(/—\s*([А-ЯЁа-яёA-Za-z][^\s,\(]*(?:\s+[А-ЯЁа-яёA-Za-z][^\s,\(]*)?)/u)
-                        || text.match(/@([\w\d_]+)/);
-      if (personMatch) person = personMatch[0].replace(/^@/, '@');
+    // time range: 12:00-18:00 / 12:00–18:00
+    const tMatch = full.match(/(\d{1,2}:\d{2})\s*[–\-—]\s*(\d{1,2}:\d{2})/);
+    const timeRange = tMatch ? `${tMatch[1]}–${tMatch[2]}` : null;
 
-      // deadline: до ДД.ММ
-      let deadline = null;
-      const dlMatch = text.match(/до\s+(\d{1,2}\.\d{2})/);
-      if (dlMatch) deadline = dlMatch[1];
+    // person: — Имя or @handle
+    const pMatch = full.match(/—\s*([А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?)/u)
+                || full.match(/@([\w\d_]+)/);
+    const person  = pMatch ? pMatch[0].replace(/^—\s*/, '').trim() : null;
 
-      // clean text (remove person/deadline markers for display)
-      const cleanText = text
-        .replace(/—\s*[А-ЯЁа-яёA-Za-z][^\s,\(]*(?:\s+[А-ЯЁа-яёA-Za-z][^\s,\(]*)?/u, '')
-        .replace(/@[\w\d_]+/, '')
-        .replace(/до\s+\d{1,2}\.\d{2}/, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
+    // deadline: до ДД.ММ
+    const dMatch   = full.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
+    const deadline = dMatch ? dMatch[1] : null;
 
-      items.push({ done, text: cleanText || text, person, deadline, section });
-    }
+    // clean text
+    let text = full
+      .replace(/(\d{1,2}:\d{2})\s*[–\-—]\s*(\d{1,2}:\d{2})/, '')
+      .replace(/—\s*[А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?/u, '')
+      .replace(/@[\w\d_]+/, '')
+      .replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/, '')
+      .replace(/\s{2,}/g, ' ').trim().replace(/^[-—]\s*/, '');
+    if (!text) text = full;
+
+    const key  = taskKey(period, full);
+    const done = storedDone(key, origDone);
+
+    items.push({ done, origDone, text, person, deadline, timeRange, section, key });
   }
-
   return items;
 }
 
-// ══════════════════════════════════════════════════════════════
-//  RENDER PANEL
-// ══════════════════════════════════════════════════════════════
-function renderPanel(panelEl, period, filename, tasks) {
-  const total    = tasks.length;
-  const done     = tasks.filter(t => t.done).length;
-  const pct      = total ? Math.round((done / total) * 100) : 0;
-  const fileBase = filename.split('/').pop();
-
-  let html = `
-    <div class="period-header">
-      <span class="period-title">${PERIODS[period].label}</span>
-      <span class="period-date">${humanDate(fileBase.replace('.md',''))}</span>
-    </div>`;
-
-  if (total > 0) {
-    html += `
-    <div class="progress-wrap">
-      <span class="progress-label">Прогресс</span>
-      <div class="progress-bar-outer">
-        <div class="progress-bar-inner" id="pb-${period}" style="width:0%"></div>
-      </div>
-      <span class="progress-pct">${pct}%</span>
-      <span class="progress-count">${done}/${total} выполнено</span>
-    </div>`;
-  }
-
-  html += `<div class="task-list">`;
-
-  // group by section
-  const sections = [...new Set(tasks.map(t => t.section))];
-  for (const sec of sections) {
-    const group = tasks.filter(t => t.section === sec);
-    if (sec) html += `<div class="section-heading">${escHtml(sec)}</div>`;
-    for (const task of group) {
-      html += renderCard(task);
-    }
-  }
-
-  html += `</div>`;
-  panelEl.innerHTML = html;
-
-  // animate progress bar after paint
-  requestAnimationFrame(() => {
-    const pb = document.getElementById(`pb-${period}`);
-    if (pb) pb.style.width = pct + '%';
-  });
-
-  // update badge
-  const badge = document.getElementById(`badge-${period}`);
-  if (badge && total > 0) {
-    badge.textContent = total - done || '✓';
-    badge.classList.add('visible');
-  }
-}
-
-function renderCard(task) {
-  const checkClass = task.done ? 'task-check checked' : 'task-check';
-  const cardClass  = task.done ? 'task-card done' : 'task-card';
-
+/* ══════════════════════════════════════════════════════════
+   RENDER CARD
+══════════════════════════════════════════════════════════ */
+function card(task, extra = '') {
+  const done = task.done;
   let meta = '';
-  if (task.person) {
-    meta += `<span class="meta-chip chip-person">👤 ${escHtml(task.person)}</span>`;
-  }
-  if (task.deadline) {
-    meta += `<span class="meta-chip chip-deadline">📅 до ${escHtml(task.deadline)}</span>`;
-  }
+  if (task.timeRange) meta += `<span class="meta-chip chip-time">⏰ ${esc(task.timeRange)}</span>`;
+  if (task.person)    meta += `<span class="meta-chip chip-person">👤 ${esc(task.person)}</span>`;
+  if (task.deadline)  meta += `<span class="meta-chip chip-deadline">📅 до ${esc(task.deadline)}</span>`;
+  meta += extra;
 
-  return `
-  <div class="${cardClass}">
-    <div class="${checkClass}"></div>
+  return `<div class="task-card${done?' done':''}" data-key="${esc(task.key)}" data-done="${done}">
+    <div class="task-check${done?' checked':''}" role="checkbox" aria-checked="${done}" tabindex="0"></div>
     <div class="task-body">
-      <div class="task-text">${escHtml(task.text)}</div>
+      <div class="task-text">${esc(task.text)}</div>
       ${meta ? `<div class="task-meta">${meta}</div>` : ''}
     </div>
   </div>`;
 }
 
-function renderEmpty(panelEl, period, filename) {
-  const fileBase = filename.split('/').pop();
-  panelEl.innerHTML = `
-    <div class="period-header">
-      <span class="period-title">${PERIODS[period].label}</span>
-      <span class="period-date">${humanDate(fileBase.replace('.md',''))}</span>
-    </div>
-    <div class="empty-state">
-      <div class="empty-icon">📭</div>
-      <p>Задач нет</p>
-      <p style="margin-top:6px;font-size:.8rem">Файл <code>${filename}</code> не найден или пуст</p>
-    </div>`;
-}
+/* ══════════════════════════════════════════════════════════
+   RENDER PERIOD PANEL
+══════════════════════════════════════════════════════════ */
+function renderPeriod(el, period, filename, tasks) {
+  const total = tasks.length;
+  const done  = tasks.filter(t => t.done).length;
+  const pct   = total ? Math.round(done/total*100) : 0;
+  const fbase = filename.split('/').pop().replace('.md','');
 
-function renderLoading(panelEl) {
-  panelEl.innerHTML = `
-    <div class="loading">
-      <div class="spinner"></div>
-      Загрузка задач…
-    </div>`;
-}
+  let h = `<div class="period-header">
+    <span class="period-title">${PERIODS[period].label}</span>
+    <span class="period-date">${humanDate(fbase)}</span>
+  </div>`;
 
-// ══════════════════════════════════════════════════════════════
-//  LOAD ALL PERIODS
-// ══════════════════════════════════════════════════════════════
-async function loadAll() {
-  const now = new Date();
-  const timeStr = now.toLocaleString('ru-RU', {
-    day:'2-digit', month:'2-digit', year:'numeric',
-    hour:'2-digit', minute:'2-digit'
+  if (total > 0) h += `<div class="progress-wrap">
+    <span class="progress-label">Прогресс</span>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="pb-${period}"></div></div>
+    <span class="progress-pct">${pct}%</span>
+    <span class="progress-count">${done}/${total} выполнено</span>
+  </div>`;
+
+  h += `<div class="task-list">`;
+  for (const sec of [...new Set(tasks.map(t => t.section))]) {
+    if (sec) h += `<div class="section-heading">${esc(sec)}</div>`;
+    tasks.filter(t => t.section === sec).forEach(t => { h += card(t); });
+  }
+  h += `</div>`;
+
+  el.innerHTML = h;
+
+  requestAnimationFrame(() => {
+    const pb = document.getElementById(`pb-${period}`);
+    if (pb) pb.style.width = pct + '%';
   });
-  document.getElementById('last-updated').innerHTML =
-    `Последнее обновление: <strong>${timeStr}</strong>`;
 
-  for (const [period, cfg] of Object.entries(PERIODS)) {
-    const panelEl  = document.getElementById(`panel-${period}`);
-    const filename = cfg.getFilename();
-
-    renderLoading(panelEl);
-
-    const md = await fetchMarkdown(filename);
-    if (!md) {
-      renderEmpty(panelEl, period, filename);
-      continue;
-    }
-
-    const tasks = parseMarkdown(md);
-    if (tasks.length === 0) {
-      renderEmpty(panelEl, period, filename);
-    } else {
-      renderPanel(panelEl, period, filename, tasks);
-    }
+  const badge = document.getElementById(`badge-${period}`);
+  if (badge && total > 0) {
+    badge.textContent = (total - done) || '✓';
+    badge.classList.add('visible');
   }
 }
 
-// ══════════════════════════════════════════════════════════════
-//  TABS
-// ══════════════════════════════════════════════════════════════
+function renderEmpty(el, period, filename) {
+  const fbase = filename.split('/').pop();
+  el.innerHTML = `<div class="period-header">
+    <span class="period-title">${PERIODS[period].label}</span>
+    <span class="period-date">${humanDate(fbase.replace('.md',''))}</span>
+  </div>
+  <div class="empty-state">
+    <span class="empty-icon">📭</span>
+    <p>Задач нет</p>
+    <p style="margin-top:6px;font-size:.8rem">Файл <code>${filename}</code> не найден или пуст</p>
+  </div>`;
+}
+
+function renderLoading(el) {
+  el.innerHTML = `<div class="loading"><div class="spinner"></div> Загрузка…</div>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TEAM PANEL
+══════════════════════════════════════════════════════════ */
+async function loadTeam() {
+  const el = document.getElementById('panel-team');
+  renderLoading(el);
+
+  const periodsList = { day:'День', week:'Неделя', month:'Месяц' };
+  const all = [];
+
+  for (const [period, lbl] of Object.entries(periodsList)) {
+    const md = await fetchMd(PERIODS[period].fn());
+    if (!md) continue;
+    parseMd(md, period).forEach(t => all.push({ ...t, periodLabel: lbl }));
+  }
+
+  if (!all.length) {
+    el.innerHTML = `<div class="empty-state">
+      <span class="empty-icon">👥</span>
+      <p>Нет задач с исполнителями</p>
+      <p style="margin-top:6px;font-size:.8rem">Добавьте имена через «—» в файлах задач</p>
+    </div>`;
+    return;
+  }
+
+  const byPerson = {};
+  const noPerson = [];
+  for (const t of all) {
+    t.person ? (byPerson[t.person] = byPerson[t.person] || [], byPerson[t.person].push(t))
+             : noPerson.push(t);
+  }
+
+  let h = `<div class="period-header">
+    <span class="period-title">Команда</span>
+    <span class="period-date">День · Неделя · Месяц</span>
+  </div>`;
+
+  for (const [person, tasks] of Object.entries(byPerson)) {
+    const ini = person.replace(/[@]/g,'').trim().split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
+    const dc  = tasks.filter(t=>t.done).length;
+    h += `<div class="person-heading">
+      <div class="person-avatar">${ini||'?'}</div>
+      <span class="person-name">${esc(person)}</span>
+      <span class="person-count">${dc}/${tasks.length} выполнено</span>
+    </div><div class="task-list">`;
+    tasks.forEach(t => {
+      h += card(t, `<span class="meta-chip chip-period">📅 ${esc(t.periodLabel)}</span>`);
+    });
+    h += `</div>`;
+  }
+
+  if (noPerson.length) {
+    h += `<div class="person-heading" style="margin-top:28px">
+      <div class="person-avatar">?</div>
+      <span class="person-name">Без исполнителя</span>
+      <span class="person-count">${noPerson.length} задач</span>
+    </div><div class="task-list">`;
+    noPerson.forEach(t => {
+      h += card(t, `<span class="meta-chip chip-period">📅 ${esc(t.periodLabel)}</span>`);
+    });
+    h += `</div>`;
+  }
+
+  el.innerHTML = h;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FILES PANEL
+══════════════════════════════════════════════════════════ */
+async function loadFiles() {
+  const el = document.getElementById('panel-files');
+  renderLoading(el);
+
+  const uploadUrl = `https://github.com/${REPO}/upload/${BRANCH}/files`;
+  let files = [];
+
+  try {
+    const r = await fetch(API + 'contents/files?_=' + Date.now());
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data)) files = data.filter(f => f.type === 'file');
+    }
+  } catch {}
+
+  let h = `<div class="files-toolbar">
+    <div>
+      <div class="period-title" style="font-size:1.05rem;margin-bottom:4px">Файлы проекта</div>
+      <div style="font-size:.8rem;color:var(--text-muted)">Хранятся в папке <code>files/</code> репозитория</div>
+    </div>
+    <a class="upload-btn" href="${uploadUrl}" target="_blank" rel="noopener">↑ Загрузить файл</a>
+  </div>`;
+
+  if (!files.length) {
+    h += `<div class="empty-state">
+      <span class="empty-icon">📁</span>
+      <p>Файлов пока нет</p>
+      <p style="margin-top:10px;font-size:.85rem">
+        <a href="${uploadUrl}" target="_blank" rel="noopener">Загрузить первый файл →</a>
+      </p>
+      <p style="margin-top:6px;font-size:.77rem;color:var(--text-muted)">
+        Поддерживаются любые форматы: видео, фото, PDF, архивы
+      </p>
+    </div>`;
+  } else {
+    h += `<div class="file-grid">`;
+    for (const f of files) {
+      h += `<div class="file-card">
+        <div class="file-icon">${fileIcon(f.name)}</div>
+        <div class="file-info">
+          <div class="file-name">${esc(f.name)}</div>
+          <div class="file-size">${f.size ? formatSize(f.size) : ''}</div>
+        </div>
+        <a class="file-dl" href="${f.download_url}" target="_blank" rel="noopener" download title="Скачать">↓</a>
+      </div>`;
+    }
+    h += `</div>`;
+  }
+
+  el.innerHTML = h;
+}
+
+/* ══════════════════════════════════════════════════════════
+   LOAD ALL PERIODS
+══════════════════════════════════════════════════════════ */
+async function loadAll() {
+  const now = new Date();
+  document.getElementById('last-updated').innerHTML =
+    `Последнее обновление: <strong>${now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</strong>`;
+
+  for (const [period, cfg] of Object.entries(PERIODS)) {
+    const el  = document.getElementById(`panel-${period}`);
+    const fn  = cfg.fn();
+    renderLoading(el);
+    const md = await fetchMd(fn);
+    if (!md) { renderEmpty(el, period, fn); continue; }
+    const tasks = parseMd(md, period);
+    tasks.length ? renderPeriod(el, period, fn, tasks) : renderEmpty(el, period, fn);
+  }
+
+  // refresh team if visible
+  if (document.getElementById('panel-team').classList.contains('active')) loadTeam();
+}
+
+/* ══════════════════════════════════════════════════════════
+   CHECKBOX INTERACTION
+══════════════════════════════════════════════════════════ */
+document.getElementById('main-content').addEventListener('click', e => {
+  const chk = e.target.closest('.task-check');
+  if (!chk) return;
+  const c = chk.closest('.task-card');
+  if (!c) return;
+
+  const key     = c.dataset.key;
+  const isDone  = c.dataset.done === 'true';
+  const nowDone = !isDone;
+
+  toggleStored(key, isDone);
+
+  c.dataset.done = nowDone;
+  c.classList.toggle('done', nowDone);
+  chk.classList.toggle('checked', nowDone);
+  chk.setAttribute('aria-checked', nowDone);
+
+  const txt = c.querySelector('.task-text');
+  txt.style.textDecoration = nowDone ? 'line-through' : '';
+  txt.style.color          = nowDone ? 'var(--text-muted)' : '';
+});
+
+// keyboard support
+document.getElementById('main-content').addEventListener('keydown', e => {
+  if (e.key !== ' ' && e.key !== 'Enter') return;
+  if (!e.target.classList.contains('task-check')) return;
+  e.preventDefault();
+  e.target.click();
+});
+
+/* ══════════════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════════════ */
 document.getElementById('tabs-bar').addEventListener('click', e => {
   const btn = e.target.closest('.tab-btn');
   if (!btn) return;
@@ -719,24 +869,25 @@ document.getElementById('tabs-bar').addEventListener('click', e => {
 
   btn.classList.add('active');
   document.getElementById(`panel-${tab}`).classList.add('active');
+
+  if (tab === 'team')  loadTeam();
+  if (tab === 'files') loadFiles();
 });
 
-// ══════════════════════════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════════════════════════
-function escHtml(str) {
-  return str
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+/* ══════════════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════════════ */
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ══════════════════════════════════════════════════════════════
-//  INIT + AUTO-REFRESH
-// ══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════ */
 loadAll();
-setInterval(loadAll, 5 * 60 * 1000); // every 5 minutes
+setInterval(loadAll, 5 * 60 * 1000);
 </script>
 </body>
 </html>
