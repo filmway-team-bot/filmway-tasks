@@ -166,44 +166,20 @@
     .spinner { width:17px; height:17px; border:3px solid rgba(233,69,96,.14); border-top-color:var(--acc); border-radius:50%; animation:spin .6s linear infinite; }
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* ══ KANBAN TAB ══════════════════════════════════════════════ */
-    #panel-kanban { padding-top:4px; }
-    .kb-board { display:flex; gap:12px; align-items:flex-start; padding:4px 0 16px; overflow-x:auto; min-height:300px; }
-    .kb-col { flex:1; min-width:210px; background:rgba(255,255,255,.03); border:1px solid var(--b2); border-radius:var(--r); padding:10px 8px 12px; }
-    .kb-col-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-    .kb-col-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
-    .kb-col-cnt { font-size:10px; background:rgba(255,255,255,.08); border-radius:8px; padding:1px 7px; color:var(--muted); }
-    .kb-col.kc-todo   .kb-col-title { color:var(--muted); }
-    .kb-col.kc-prog   .kb-col-title { color:#5b9df5; }
-    .kb-col.kc-done   .kb-col-title { color:var(--done); }
-    .kb-col.kc-block  .kb-col-title { color:#f55; }
-    .kb-col.kc-todo   { border-top:2px solid var(--muted); }
-    .kb-col.kc-prog   { border-top:2px solid #5b9df5; }
-    .kb-col.kc-done   { border-top:2px solid var(--done); }
-    .kb-col.kc-block  { border-top:2px solid #f55; }
-
-    .kb-drop { min-height:40px; border-radius:7px; border:2px dashed transparent; transition:border-color .14s,background .14s; }
-    .kb-drop.over { border-color:rgba(233,69,96,.4); background:rgba(233,69,96,.05); }
-
-    .kb-card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:8px 10px; margin-bottom:7px; font-size:12px; line-height:1.4; cursor:grab; transition:box-shadow .13s,transform .1s; user-select:none; }
-    .kb-card:active { cursor:grabbing; }
-    .kb-card.dragging { opacity:.45; box-shadow:0 5px 18px rgba(0,0,0,.4); transform:rotate(1.2deg) scale(1.03); }
-    .kb-card-text { margin-bottom:3px; }
-    .kb-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
-    .kb-tag { font-size:9.5px; border-radius:7px; padding:1px 6px; white-space:nowrap; }
-    .kt-p { background:rgba(233,69,96,.1); color:var(--acc); }
-    .kt-t { background:rgba(255,190,11,.1); color:#ffbe0b; }
-    .kt-s { background:rgba(80,130,220,.1); color:#7aacff; }
-
-    .kb-add-btn { width:100%; background:none; border:1px dashed rgba(255,255,255,.1); border-radius:7px; padding:5px; font-size:11px; color:var(--muted); cursor:pointer; margin-top:4px; transition:background .12s,color .12s,border-color .12s; }
-    .kb-add-btn:hover { background:rgba(233,69,96,.08); color:var(--acc); border-color:rgba(233,69,96,.28); }
-    .kb-add-form { display:none; margin-top:5px; }
-    .kb-add-form.open { display:block; }
-    .kb-add-form textarea { width:100%; box-sizing:border-box; resize:none; border:1px solid rgba(233,69,96,.36); border-radius:6px; padding:5px 8px; font-size:11px; font-family:inherit; background:rgba(255,255,255,.05); color:var(--text); outline:none; }
-    .kb-form-btns { display:flex; gap:4px; margin-top:4px; }
-    .kb-form-btns button { font-size:10.5px; padding:3px 9px; border-radius:5px; border:1px solid; cursor:pointer; font-family:inherit; }
-    .kbf-save { background:var(--acc); color:#fff; border-color:var(--acc); }
-    .kbf-cancel { background:rgba(255,255,255,.05); color:var(--muted); border-color:rgba(255,255,255,.1); }
+    /* ══ WEEK CHIPS ══════════════════════════════════════════════ */
+    .wk-chip { display:flex; align-items:center; gap:5px; font-size:9.5px; padding:3px 6px 3px 5px; border-radius:5px; cursor:pointer; background:rgba(255,255,255,.04); border:1px solid var(--b2); margin-bottom:3px; line-height:1.35; transition:background .1s,border-color .1s; }
+    .wk-chip:hover { background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.15); }
+    .wk-chip.wk-done { opacity:.5; }
+    .wk-chip.wk-done .wk-chip-text { text-decoration:line-through; color:var(--muted); }
+    .wk-chip-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.25); flex-shrink:0; margin-top:1px; }
+    .wk-chip.wk-done .wk-chip-dot { background:var(--done); }
+    .wk-chip.wk-conflict .wk-chip-dot { background:var(--acc); }
+    .wk-chip-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); flex:1; min-width:0; }
+    .wk-chip-time { font-size:8.5px; color:var(--muted); flex-shrink:0; }
+    .wk-task-detail { background:rgba(255,255,255,.05); border:1px solid rgba(233,69,96,.2); border-radius:6px; padding:7px 8px 6px; margin-bottom:4px; animation:fup .15s ease; }
+    .wk-td-text { font-weight:600; font-size:10.5px; margin-bottom:4px; color:var(--text); line-height:1.4; }
+    .wk-td-meta { color:var(--muted); font-size:9px; display:flex; flex-wrap:wrap; gap:4px; }
+    .wk-td-tag { background:rgba(255,255,255,.07); border-radius:4px; padding:1px 5px; }
 
     /* ══ FILES TAB ═══════════════════════════════════════════════ */
     #panel-files { padding-top:4px; }
@@ -438,7 +414,6 @@
   <button class="tab-btn" data-tab="month">Месяц <span class="tab-badge" id="badge-month"></span></button>
   <button class="tab-btn" data-tab="halfyear">Полгода <span class="tab-badge" id="badge-halfyear"></span></button>
   <button class="tab-btn" data-tab="year">Год <span class="tab-badge" id="badge-year"></span></button>
-  <button class="tab-btn" data-tab="kanban">🗂 Канбан</button>
   <button class="tab-btn" data-tab="files">📁 Файлы</button>
 </div>
 
@@ -449,13 +424,6 @@
   <div class="tab-panel" id="panel-month"></div>
   <div class="tab-panel" id="panel-halfyear"></div>
   <div class="tab-panel" id="panel-year"></div>
-
-  <!-- ─── KANBAN ──────────────────────────────────────────────── -->
-  <div class="tab-panel" id="panel-kanban">
-    <div class="kb-board" id="kb-board">
-      <div class="loading"><div class="spinner"></div>Загрузка…</div>
-    </div>
-  </div>
 
   <!-- ─── FILES ───────────────────────────────────────────────── -->
   <div class="tab-panel" id="panel-files">
@@ -511,8 +479,6 @@ const K_EDITS = 'fw-edits';
 const K_FILES = 'fw-files';      // task attachments {taskKey:[{name,dataUrl,size}]}
 const K_PROJ  = 'fw-projects';   // [{id,name,color}]
 const K_PFILES= 'fw-pfiles';     // project files [{id,name,dataUrl,size,projId,date,type}]
-const K_KB    = 'fw-kb';         // kanban state {cardId: colId}
-const K_KB_CARDS = 'fw-kb-cards'; // manual cards [{id,text,col}]
 const K_ACT   = 'fw-act';
 const K_CHECKS= 'fw-checks';    // manual checkbox overrides {taskKey: bool}
 
@@ -562,13 +528,6 @@ const TEAM = [
   {name:'Дима',k:'дима',bg:'#2a2800',tx:'#ddcc20'},
   {name:'Даша',k:'даша',bg:'#301c10',tx:'#ee7040'},
   {name:'Лера',k:'лера',bg:'#220a30',tx:'#bb60ee'},
-];
-
-const KB_COLS = [
-  {id:'todo',  label:'📋 К выполнению', cls:'kc-todo'},
-  {id:'prog',  label:'🔄 В процессе',   cls:'kc-prog'},
-  {id:'done',  label:'✅ Готово',        cls:'kc-done'},
-  {id:'block', label:'❌ Заблокировано', cls:'kc-block'},
 ];
 
 const PROJ_COLORS = ['#e94560','#5b9df5','#2ecc71','#ffbe0b','#bb60ee','#40ccb0','#ee9040','#ee6080','#ddcc20'];
@@ -895,7 +854,7 @@ function renderWeekCalendar(el,period,file,tasks,meetings=[]){
     if(offDay)html+=`<div class="offday-badge">выходной</div>`;
     if(!dayTasks.length&&!dayMeetings.length&&!offDay)html+=`<div class="cal-empty-day">—</div>`;
     dayMeetings.forEach(m=>html+=renderMeetingCard(m));
-    dayTasks.forEach(t=>html+=renderCard(t,conflicts.has(djb2(t.rawText||t.text))));
+    dayTasks.forEach(t=>html+=renderWeekChip(t,conflicts.has(djb2(t.rawText||t.text))));
     html+=`</div></div>`;
   });
 
@@ -905,7 +864,7 @@ function renderWeekCalendar(el,period,file,tasks,meetings=[]){
   const noDayTasks=tasks.filter(t=>!t.section||!WEEK_DAYS.some(d=>t.section.toLowerCase().includes(d.ru)));
   if(noDayTasks.length){
     html+=`<div class="cal-noday-section"><div class="cal-noday-hdr">📋 Задачи недели без привязки к дню (${noDayTasks.filter(t=>t.done).length}/${noDayTasks.length})</div><div class="task-list">`;
-    noDayTasks.forEach(t=>html+=renderCard(t));
+    noDayTasks.forEach(t=>html+=renderWeekChip(t,false));
     html+=`</div></div>`;
   }
 
@@ -913,7 +872,6 @@ function renderWeekCalendar(el,period,file,tasks,meetings=[]){
   requestAnimationFrame(()=>{const pb=document.getElementById('pb-'+period);if(pb)pb.style.width=pct+'%';});
   const badge=document.getElementById('badge-'+period);
   if(badge&&total>0){badge.textContent=total-done||'✓';badge.classList.add('show');}
-  el.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
   applyFilters();renderTeam();
 }
 
@@ -1163,104 +1121,36 @@ function applyFilters(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  KANBAN
+//  WEEK CHIPS
 // ═══════════════════════════════════════════════════════════════
-let kbAllCards=[];
-let dragId=null;
+let _wkTaskMap={};  // key → task object для expand по клику
 
-function kbBuildFromTasks(tasks){
-  const state=ls(K_KB,{});const manual=ls(K_KB_CARDS,[]);
-  kbAllCards=[];
-  tasks.forEach(t=>{
-    const id='kbt_'+djb2(t.rawText||t.text);
-    // Tasks with a time slot default to "in progress" (они запланированы на конкретное время)
-    const defCol=t.done?'done':(t.timeRange?'prog':'todo');
-    kbAllCards.push({id,text:t.text,person:t.person,persons:t.persons,time:t.timeRange,col:state[id]||defCol,manual:false});
-  });
-  manual.forEach(m=>{
-    if(!kbAllCards.find(c=>c.id===m.id))
-      kbAllCards.push({...m,col:state[m.id]||m.col||'todo',manual:true});
-  });
-  kbRender();
+function renderWeekChip(t,isConflict){
+  const key=djb2(t.rawText||t.text);
+  _wkTaskMap[key]=t;
+  const isDone=t.done;
+  const cls='wk-chip'+(isDone?' wk-done':'')+(isConflict?' wk-conflict':'');
+  const timeStr=t.timeRange?`<span class="wk-chip-time">${esc(t.timeRange.split('–')[0])}</span>`:'';
+  return `<div class="${cls}" data-key="${key}" onclick="wkToggleChip(this)"><div class="wk-chip-dot"></div><span class="wk-chip-text">${esc(t.text)}</span>${timeStr}</div>`;
 }
 
-function kbRender(){
-  const board=document.getElementById('kb-board');if(!board)return;
-  board.innerHTML='';
-  KB_COLS.forEach(colDef=>{
-    const cards=kbAllCards.filter(c=>c.col===colDef.id);
-    const col=document.createElement('div');
-    col.className=`kb-col ${colDef.cls}`;col.dataset.col=colDef.id;
-
-    const hdr=document.createElement('div');hdr.className='kb-col-hdr';
-    hdr.innerHTML=`<span class="kb-col-title">${colDef.label}</span><span class="kb-col-cnt">${cards.length}</span>`;
-    col.appendChild(hdr);
-
-    const drop=document.createElement('div');drop.className='kb-drop';drop.dataset.col=colDef.id;
-
-    // drop zone events
-    [col,drop].forEach(el=>{
-      el.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});
-      el.addEventListener('dragleave',()=>drop.classList.remove('over'));
-      el.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');if(!dragId)return;moveCard(dragId,colDef.id);});
-    });
-
-    cards.forEach(card=>{
-      const el=document.createElement('div');
-      el.className='kb-card';el.draggable=true;el.dataset.id=card.id;
-      const pTags=(card.persons?.length?card.persons:card.person?[card.person]:[]).map(p=>`<span class="kb-tag kt-p">👤 ${esc(p)}</span>`).join('');
-      el.innerHTML=`<div class="kb-card-text">${esc(card.text)}</div><div class="kb-tags">${pTags}${card.time?`<span class="kb-tag kt-t">🕐 ${esc(card.time)}</span>`:''}</div>`;
-
-      el.addEventListener('dragstart',e=>{dragId=card.id;el.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
-      el.addEventListener('dragend',()=>{el.classList.remove('dragging');dragId=null;});
-      el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over');});
-      el.addEventListener('dragleave',()=>el.classList.remove('over'));
-      el.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();el.classList.remove('over');if(dragId&&dragId!==card.id)moveCard(dragId,colDef.id);});
-      drop.appendChild(el);
-    });
-
-    col.appendChild(drop);
-
-    // Add card form
-    const addBtn=document.createElement('button');addBtn.className='kb-add-btn';addBtn.textContent='+ Добавить';
-    const addForm=document.createElement('div');addForm.className='kb-add-form';
-    addForm.innerHTML=`<textarea rows="2" placeholder="Текст задачи…"></textarea><div class="kb-form-btns"><button class="kbf-save">Добавить</button><button class="kbf-cancel">Отмена</button></div>`;
-    addBtn.onclick=()=>{addForm.classList.toggle('open');addForm.querySelector('textarea').focus();};
-    addForm.querySelector('.kbf-cancel').onclick=()=>addForm.classList.remove('open');
-    addForm.querySelector('.kbf-save').onclick=()=>{
-      const text=addForm.querySelector('textarea').value.trim();if(!text)return;
-      const id='kbm_'+uid();
-      const manual=ls(K_KB_CARDS,[]);manual.push({id,text,col:colDef.id});sv(K_KB_CARDS,manual);
-      kbAllCards.push({id,text,person:null,time:null,col:colDef.id,manual:true});
-      addForm.classList.remove('open');kbRender();
-      logAct(`📋 Карточка: ${text.slice(0,20)}`);
-    };
-    col.appendChild(addBtn);col.appendChild(addForm);
-    board.appendChild(col);
-  });
+function wkToggleChip(el){
+  const next=el.nextElementSibling;
+  if(next&&next.classList.contains('wk-task-detail')){next.remove();return;}
+  el.closest('.task-list')?.querySelectorAll('.wk-task-detail').forEach(d=>d.remove());
+  const t=_wkTaskMap[el.dataset.key];if(!t)return;
+  const detail=document.createElement('div');detail.className='wk-task-detail';
+  const persons=t.persons?.length?t.persons:(t.person?[t.person]:[]);
+  const meta=[];
+  if(persons.length)meta.push(persons.map(p=>`<span class="wk-td-tag">👤 ${esc(p)}</span>`).join(''));
+  if(t.timeRange)meta.push(`<span class="wk-td-tag">🕐 ${esc(t.timeRange)}</span>`);
+  if(t.tag)meta.push(`<span class="wk-td-tag">🏷 ${esc(t.tag)}</span>`);
+  detail.innerHTML=`<div class="wk-td-text">${esc(t.text)}</div>${meta.length?`<div class="wk-td-meta">${meta.join('')}</div>`:''}`;
+  el.after(detail);
 }
 
-function moveCard(id,colId){
-  const c=kbAllCards.find(x=>x.id===id);if(!c)return;
-  c.col=colId;
-  const state=ls(K_KB,{});state[id]=colId;sv(K_KB,state);
-  // Синхронизируем с чекбоксами дневного вида
-  if(!c.manual&&id.startsWith('kbt_')){
-    const checkKey=id.slice(4);
-    const checks=ls(K_CHECKS,{});
-    if(colId==='done')checks[checkKey]=true;
-    else delete checks[checkKey];
-    sv(K_CHECKS,checks);
-    const dayCard=document.querySelector(`.task-card[data-key="${checkKey}"]`);
-    if(dayCard){
-      dayCard.classList.toggle('done',colId==='done');
-      const cb=dayCard.querySelector('.task-check');
-      if(cb)cb.classList.toggle('checked',colId==='done');
-    }
-  }
-  kbRender();
-  logAct(`📋 → ${KB_COLS.find(x=>x.id===colId)?.label||colId}`);
-}
+
+
 
 // ═══════════════════════════════════════════════════════════════
 //  FILES / PROJECTS
@@ -1413,7 +1303,6 @@ document.getElementById('tabs-bar').addEventListener('click',e=>{
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('panel-'+tab).classList.add('active');
-  if(tab==='kanban'&&kbAllCards.length===0)kbLoadFromGitHub();
   if(tab==='files'){renderProjList();renderProjColors();}
 });
 
@@ -1490,21 +1379,12 @@ async function loadAll(){
     if(!tasks.length&&!hasMtgs)renderEmpty(panel,period,file);
     else{renderPanel(panel,period,file,tasks,meetings);if(period==='day')dayTasks=tasks;}
   }
-  // Rebuild kanban from today's tasks
-  kbBuildFromTasks(dayTasks);
   renderTeam();renderActLog();
   if(rr)rr.classList.remove('refreshing');
   const rt=document.getElementById('ref-time');
   if(rt)rt.textContent=`обновлено ${now.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}`;
 }
 
-async function kbLoadFromGitHub(){
-  const board=document.getElementById('kb-board');
-  if(board)board.innerHTML='<div class="loading"><div class="spinner"></div>Загрузка…</div>';
-  const md=await fetchMd(`tasks/day/${tdStr()}.md`);
-  if(md)kbBuildFromTasks(parseMd(md));
-  else kbBuildFromTasks([]);
-}
 
 // ═══════════════════════════════════════════════════════════════
 //  INIT
