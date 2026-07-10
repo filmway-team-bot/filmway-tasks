@@ -5,245 +5,206 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Filmway AI — Task Dashboard</title>
   <style>
-    /* ── Reset ────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0a0a0a;
-      --bg2:       #0d0d1a;
-      --card:      #1a1a2e;
-      --accent:    #e94560;
-      --accent2:   #c73652;
-      --text:      #ffffff;
-      --muted:     #8892a4;
-      --done:      #2ecc71;
-      --border:    rgba(233,69,96,.2);
-      --border2:   rgba(255,255,255,.07);
-      --shadow:    0 8px 32px rgba(0,0,0,.6);
-      --radius:    12px;
-      --sidebar-w: 210px;
+      --bg:      #0a0a0a;
+      --bg2:     #0d0d1a;
+      --card:    #14142a;
+      --accent:  #e94560;
+      --a2:      #c73652;
+      --text:    #f0f0f0;
+      --muted:   #7a8499;
+      --done:    #2ecc71;
+      --border:  rgba(233,69,96,.18);
+      --border2: rgba(255,255,255,.07);
+      --shadow:  0 8px 28px rgba(0,0,0,.55);
+      --r:       11px;
     }
 
     html { scroll-behavior: smooth; }
-
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: var(--bg); color: var(--text);
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
+      min-height: 100vh; overflow-x: hidden;
     }
-
     body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
       background-size: 180px;
     }
 
-    /* ── Header ───────────────────────────────────────────────── */
+    /* ══ HEADER ══════════════════════════════════════════════════ */
     header {
       position: relative; z-index: 20;
-      padding: 18px 20px 14px;
-      background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 60%, #0a0a0a 100%);
+      background: linear-gradient(135deg,#0d0d1a 0%,#1a1a2e 60%,#0a0a0a 100%);
       border-bottom: 1px solid var(--border);
+      padding: 16px 22px 12px;
       display: flex; align-items: center; gap: 12px;
     }
-
-    .logo-wrap {
-      display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;
-    }
+    .logo-wrap { display: flex; align-items: center; gap: 11px; flex: 1; min-width: 0; }
     .logo-icon {
-      width: 40px; height: 40px; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--accent), #ff6b6b);
-      border-radius: 10px;
+      width: 38px; height: 38px; flex-shrink: 0; border-radius: 9px;
+      background: linear-gradient(135deg,var(--accent),#ff6b6b);
       display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
-      box-shadow: 0 0 18px rgba(233,69,96,.4);
+      font-size: 19px; box-shadow: 0 0 16px rgba(233,69,96,.38);
     }
-    h1 {
-      font-size: clamp(1rem, 3vw, 1.5rem);
-      font-weight: 700; letter-spacing: -.4px; line-height: 1.2;
-    }
+    h1 { font-size: clamp(.95rem,2.8vw,1.45rem); font-weight: 700; letter-spacing: -.3px; }
     h1 span { color: var(--accent); }
 
-    /* ── Search toggle (in header) ────────────────────────────── */
-    .hdr-right {
-      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
-    }
+    .hdr-right { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+
+    /* search slide */
     .search-slide {
       overflow: hidden; max-width: 0; opacity: 0;
       transition: max-width .28s ease, opacity .22s ease;
-      display: flex; align-items: center; gap: 7px;
+      display: flex; align-items: center; gap: 6px;
     }
-    .search-slide.open { max-width: 280px; opacity: 1; }
-
+    .search-slide.open { max-width: 260px; opacity: 1; }
     .search-input {
-      width: 200px; padding: 6px 14px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 18px;
-      color: var(--text); font-size: .83rem; font-family: inherit;
-      outline: none; transition: border-color .15s;
+      width: 195px; padding: 6px 13px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px; color: var(--text); font-size: .82rem;
+      font-family: inherit; outline: none; transition: border-color .14s;
     }
     .search-input::placeholder { color: var(--muted); }
-    .search-input:focus { border-color: rgba(233,69,96,.5); }
-
-    .search-count {
-      font-size: .72rem; color: var(--muted); white-space: nowrap; min-width: 52px;
-    }
+    .search-input:focus { border-color: rgba(233,69,96,.48); }
+    .search-count { font-size: .7rem; color: var(--muted); white-space: nowrap; min-width: 48px; }
 
     .btn-icon {
-      width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.04);
-      color: var(--muted); font-size: 15px; cursor: pointer;
+      width: 32px; height: 32px; border-radius: 7px; flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04);
+      color: var(--muted); font-size: 14px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: background .14s, border-color .14s, color .14s;
+      transition: background .13s, border-color .13s, color .13s;
     }
-    .btn-icon:hover, .btn-icon.active {
-      background: rgba(233,69,96,.15);
-      border-color: rgba(233,69,96,.4); color: var(--accent);
-    }
+    .btn-icon:hover, .btn-icon.on { background: rgba(233,69,96,.14); border-color: rgba(233,69,96,.36); color: var(--accent); }
 
-    .hdr-meta { font-size: .72rem; color: var(--muted); line-height: 1.5; text-align: right; }
+    .hdr-meta { font-size: .7rem; color: var(--muted); line-height: 1.5; text-align: right; white-space: nowrap; }
     .hdr-meta strong { color: var(--text); }
 
-    /* ── Three-column layout ──────────────────────────────────── */
-    .fw-layout {
-      display: flex; min-height: calc(100vh - 130px);
-      position: relative; z-index: 5;
-    }
-
-    /* ── Sidebars ─────────────────────────────────────────────── */
-    .fw-sidebar {
-      width: var(--sidebar-w);
-      min-width: var(--sidebar-w);
+    /* ══ TEAM ROW ════════════════════════════════════════════════ */
+    .team-bar {
+      position: relative; z-index: 15;
       background: var(--bg2);
-      padding: 14px 10px;
-      overflow-y: auto; overflow-x: hidden;
-      transition: width .22s ease, min-width .22s ease, padding .22s ease, opacity .15s;
-      border-right: 1px solid var(--border2);
-      font-size: 12.5px;
+      border-bottom: 1px solid var(--border2);
+      padding: 9px 22px;
+      display: flex; align-items: center; gap: 6px;
+      overflow-x: auto; scrollbar-width: none;
     }
-    .fw-sidebar.right { border-right: none; border-left: 1px solid var(--border2); }
-    .fw-sidebar.collapsed {
-      width: 0 !important; min-width: 0 !important; padding: 0 !important; opacity: 0;
-    }
+    .team-bar::-webkit-scrollbar { display: none; }
 
-    .sidebar-title {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .07em; color: var(--muted);
-      margin: 0 0 10px 2px; padding-bottom: 6px;
+    .team-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); flex-shrink: 0; margin-right: 4px; }
+
+    .member-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px 4px 5px;
+      border-radius: 20px; border: 1px solid var(--border2);
+      background: rgba(255,255,255,.04);
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background .13s, border-color .13s;
+    }
+    .member-chip:hover { background: rgba(255,255,255,.08); }
+    .member-chip.active { background: rgba(233,69,96,.12); border-color: rgba(233,69,96,.35); }
+
+    .m-avatar {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+    }
+    .m-name { font-size: 12px; font-weight: 600; color: var(--text); }
+    .m-count { font-size: 10px; color: var(--muted); margin-left: 2px; }
+
+    .team-bar-spacer { flex: 1; }
+    .filter-clear-btn {
+      font-size: 10px; color: var(--accent); cursor: pointer; flex-shrink: 0;
+      padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(233,69,96,.25);
+      display: none; background: rgba(233,69,96,.06);
+    }
+    .filter-clear-btn:hover { background: rgba(233,69,96,.14); }
+    .filter-clear-btn.show { display: block; }
+
+    /* ══ QUICK ADD + ACTIVITY (collapsible top panel) ══════════ */
+    .actions-bar-wrap {
+      position: relative; z-index: 14;
+      overflow: hidden; max-height: 0;
+      transition: max-height .3s ease;
+      background: rgba(8,8,20,.95);
       border-bottom: 1px solid var(--border2);
     }
+    .actions-bar-wrap.open { max-height: 180px; }
 
-    /* Team members */
-    .team-member {
-      display: flex; align-items: center; gap: 8px;
-      padding: 5px 5px; border-radius: 8px; cursor: pointer;
-      transition: background .12s; margin-bottom: 2px;
+    .actions-bar {
+      padding: 12px 22px;
+      display: flex; gap: 20px; align-items: flex-start;
     }
-    .team-member:hover { background: rgba(255,255,255,.05); }
-    .team-member.active { background: rgba(233,69,96,.12); }
 
-    .member-avatar {
-      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 700;
+    .qa-section { flex: 1; }
+    .section-mini-title {
+      font-size: 10px; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--muted); margin-bottom: 6px;
     }
-    .member-name  { font-size: 12px; font-weight: 600; color: var(--text); }
-    .member-tasks { font-size: 10px; color: var(--muted); }
-
-    .filter-clear {
-      font-size: 10px; color: var(--accent); cursor: pointer;
-      padding: 2px 5px; margin-top: 4px; display: none; border-radius: 5px;
-    }
-    .filter-clear:hover { background: rgba(233,69,96,.1); }
-    .filter-clear.show { display: inline-block; }
-
-    /* Quick add */
+    .qa-row { display: flex; gap: 6px; }
     .qa-textarea {
-      width: 100%; min-height: 52px; resize: vertical;
-      background: rgba(255,255,255,.05);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 8px; padding: 6px 8px;
-      font-size: 11.5px; font-family: inherit;
-      color: var(--text); outline: none;
+      flex: 1; min-height: 44px; resize: none;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 7px; padding: 6px 9px;
+      font-size: 12px; font-family: inherit; color: var(--text); outline: none;
     }
     .qa-textarea::placeholder { color: var(--muted); }
     .qa-textarea:focus { border-color: rgba(233,69,96,.4); }
-
-    .qa-row { display: flex; gap: 4px; margin-top: 5px; }
+    .qa-controls { display: flex; flex-direction: column; gap: 4px; }
     .qa-select {
-      font-size: 11px; padding: 3px 5px; flex: 1;
-      background: rgba(255,255,255,.06); color: var(--text);
-      border: 1px solid rgba(255,255,255,.1); border-radius: 6px;
-      font-family: inherit;
+      font-size: 11px; padding: 3px 5px; background: rgba(255,255,255,.06);
+      color: var(--text); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px; font-family: inherit;
     }
-    .qa-btn {
-      font-size: 11px; padding: 3px 9px;
-      background: var(--accent); color: #fff;
-      border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;
-    }
-    .qa-btn:hover { background: var(--accent2); }
-
-    /* Activity log */
-    .act-item {
-      font-size: 11px; padding: 4px 2px;
-      border-bottom: 1px solid var(--border2);
-      color: var(--muted); line-height: 1.4;
-    }
-    .act-time { color: rgba(255,255,255,.25); margin-left: 4px; font-size: 10px; }
-
-    /* Sidebar toggle buttons (in topbar) */
-    .fw-topbar {
-      position: relative; z-index: 10;
-      display: flex; align-items: center; gap: 6px;
-      padding: 6px 14px 0;
-      background: var(--bg2);
-    }
-
-    .sidebar-toggle-btn {
+    .qa-add-btn {
       font-size: 11px; padding: 4px 10px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid var(--border2);
-      border-radius: 7px; cursor: pointer; color: var(--muted);
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 6px; cursor: pointer;
+    }
+    .qa-add-btn:hover { background: var(--a2); }
+
+    .act-section { width: 200px; flex-shrink: 0; }
+    .act-scroll { max-height: 110px; overflow-y: auto; }
+    .act-item { font-size: 11px; color: var(--muted); padding: 3px 0; border-bottom: 1px solid var(--border2); line-height: 1.35; }
+    .act-time { color: rgba(255,255,255,.22); margin-left: 4px; font-size: 10px; }
+
+    /* Topbar: refresh + actions toggle */
+    .topbar {
+      position: relative; z-index: 13;
+      background: var(--bg2); border-bottom: 1px solid var(--border2);
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 22px;
+    }
+    .topbar-btn {
+      font-size: 11px; padding: 3px 10px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border2);
+      border-radius: 6px; color: var(--muted); cursor: pointer;
       transition: background .12s, color .12s;
-      white-space: nowrap;
     }
-    .sidebar-toggle-btn:hover { background: rgba(233,69,96,.1); color: var(--text); }
-    .sidebar-toggle-btn.active { background: rgba(233,69,96,.12); color: var(--accent); border-color: rgba(233,69,96,.3); }
-
+    .topbar-btn:hover { background: rgba(233,69,96,.1); color: var(--text); }
+    .topbar-btn.on { background: rgba(233,69,96,.1); color: var(--accent); border-color: rgba(233,69,96,.28); }
     .topbar-spacer { flex: 1; }
+    .refresh-row { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); }
+    .rdot { width: 6px; height: 6px; border-radius: 50%; background: var(--done); animation: pdot 2.5s infinite; }
+    @keyframes pdot { 0%,100%{opacity:1}50%{opacity:.22} }
+    .refreshing .rdot { background: #ff9800; }
 
-    .refresh-status {
-      font-size: 10px; color: var(--muted);
-      display: flex; align-items: center; gap: 5px;
-    }
-    .refresh-dot {
-      width: 6px; height: 6px; border-radius: 50%; background: var(--done);
-      animation: pdot 2.5s infinite;
-    }
-    @keyframes pdot { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
-    .refreshing .refresh-dot { background: #ff9800; }
-
-    /* ── Tabs ─────────────────────────────────────────────────── */
+    /* ══ TABS ════════════════════════════════════════════════════ */
     .tabs-bar {
       position: relative; z-index: 10;
-      display: flex; gap: 2px;
-      padding: 10px 14px 0;
-      background: var(--bg2);
+      background: var(--bg2); border-bottom: 1px solid var(--border2);
+      display: flex; gap: 2px; padding: 8px 22px 0;
       overflow-x: auto; scrollbar-width: none;
     }
     .tabs-bar::-webkit-scrollbar { display: none; }
-
     .tab-btn {
-      padding: 9px 18px; border: none; background: transparent;
-      color: var(--muted); font-size: .86rem; font-weight: 600;
-      cursor: pointer; border-radius: var(--radius) var(--radius) 0 0;
-      transition: color .18s, background .18s; white-space: nowrap;
-      position: relative;
+      padding: 8px 18px; border: none; background: transparent;
+      color: var(--muted); font-size: .85rem; font-weight: 600;
+      cursor: pointer; border-radius: var(--r) var(--r) 0 0;
+      transition: color .16s, background .16s; white-space: nowrap; position: relative;
     }
     .tab-btn::after {
       content: ''; position: absolute; bottom: 0; left: 50%; right: 50%;
@@ -251,271 +212,229 @@
       transition: left .22s, right .22s; border-radius: 2px 2px 0 0;
     }
     .tab-btn:hover { color: var(--text); background: rgba(255,255,255,.04); }
-    .tab-btn.active { color: var(--text); background: rgba(233,69,96,.08); }
+    .tab-btn.active { color: var(--text); background: rgba(233,69,96,.07); }
     .tab-btn.active::after { left: 10px; right: 10px; }
-
     .tab-badge {
       display: inline-block; margin-left: 5px; padding: 1px 6px;
-      border-radius: 999px; font-size: .66rem;
+      border-radius: 999px; font-size: .65rem;
       background: var(--accent); color: #fff; vertical-align: middle;
-      opacity: 0; transform: scale(.7);
-      transition: opacity .2s, transform .2s;
+      opacity: 0; transform: scale(.7); transition: opacity .18s, transform .18s;
     }
     .tab-badge.show { opacity: 1; transform: scale(1); }
 
-    /* ── Main content ─────────────────────────────────────────── */
-    .fw-main {
-      flex: 1; min-width: 0;
-      display: flex; flex-direction: column;
-    }
-
-    main {
-      padding: 22px 24px 48px;
-      flex: 1;
-    }
-
+    /* ══ MAIN ════════════════════════════════════════════════════ */
+    main { padding: 20px 22px 48px; max-width: 1060px; margin: 0 auto; position: relative; z-index: 5; }
     .tab-panel { display: none; }
-    .tab-panel.active { display: block; animation: fadeUp .28s ease both; }
+    .tab-panel.active { display: block; animation: fup .26s ease both; }
+    @keyframes fup { from{opacity:0;transform:translateY(9px)} to{opacity:1;transform:translateY(0)} }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    /* period header */
+    .period-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .period-title { font-size: .88rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.4px; }
+    .period-date { font-size: .72rem; color: var(--accent); background: rgba(233,69,96,.09); padding: 3px 9px; border-radius: 999px; border: 1px solid rgba(233,69,96,.26); }
 
-    /* ── Period header ────────────────────────────────────────── */
-    .period-header {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
+    /* progress */
+    .prog-wrap {
+      background: rgba(255,255,255,.04); border-radius: var(--r); padding: 12px 18px; margin-bottom: 18px;
+      border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
-    .period-title {
-      font-size: .9rem; font-weight: 700; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 1.5px;
-    }
-    .period-date {
-      font-size: .74rem; color: var(--accent);
-      background: rgba(233,69,96,.1); padding: 3px 10px;
-      border-radius: 999px; border: 1px solid rgba(233,69,96,.28);
-    }
+    .prog-label { font-size: .76rem; color: var(--muted); min-width: 80px; }
+    .prog-outer { flex: 1; min-width: 80px; height: 6px; background: rgba(255,255,255,.07); border-radius: 999px; overflow: hidden; }
+    .prog-inner { height: 100%; background: linear-gradient(90deg,var(--accent),#ff6b6b); border-radius: 999px; transition: width .6s cubic-bezier(.4,0,.2,1); width: 0%; box-shadow: 0 0 7px rgba(233,69,96,.4); }
+    .prog-pct { font-size: .88rem; font-weight: 700; min-width: 36px; text-align: right; }
+    .prog-cnt { font-size: .73rem; color: var(--muted); }
 
-    /* ── Progress ─────────────────────────────────────────────── */
-    .progress-wrap {
-      background: rgba(255,255,255,.04);
-      border-radius: var(--radius); padding: 14px 18px; margin-bottom: 20px;
-      border: 1px solid var(--border);
-      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-    }
-    .progress-label { font-size: .78rem; color: var(--muted); min-width: 90px; }
-    .progress-bar-outer {
-      flex: 1; min-width: 90px; height: 6px;
-      background: rgba(255,255,255,.07); border-radius: 999px; overflow: hidden;
-    }
-    .progress-bar-inner {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), #ff6b6b);
-      border-radius: 999px;
-      transition: width .65s cubic-bezier(.4,0,.2,1); width: 0%;
-      box-shadow: 0 0 8px rgba(233,69,96,.45);
-    }
-    .progress-pct { font-size: .9rem; font-weight: 700; color: var(--text); min-width: 38px; text-align: right; }
-    .progress-count { font-size: .75rem; color: var(--muted); }
-
-    /* ── Task list ────────────────────────────────────────────── */
+    /* task list */
     .task-list { display: flex; flex-direction: column; gap: 7px; }
+    .section-heading { font-size: .71rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.3px; color: var(--muted); margin: 14px 0 6px; padding-left: 8px; border-left: 3px solid var(--accent); }
 
-    /* ── Task card ────────────────────────────────────────────── */
+    /* ══ TASK CARD ═══════════════════════════════════════════════ */
     .task-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 14px;
-      display: flex; align-items: flex-start; gap: 11px;
-      transition: transform .16s, box-shadow .16s, border-color .16s;
-      animation: cardIn .25s ease both;
-      position: relative; overflow: hidden;
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
+      padding: 11px 13px; display: flex; align-items: flex-start; gap: 10px;
+      transition: transform .15s, box-shadow .15s, border-color .15s;
+      animation: cin .23s ease both; position: relative; overflow: hidden;
     }
     .task-card::before {
-      content: ''; position: absolute; top: 0; left: 0;
-      width: 3px; height: 100%; background: var(--accent);
-      opacity: 0; transition: opacity .16s;
+      content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+      background: var(--accent); opacity: 0; transition: opacity .15s;
     }
-    .task-card:hover { transform: translateX(3px); box-shadow: var(--shadow); border-color: rgba(233,69,96,.32); }
+    .task-card:hover { transform: translateX(3px); box-shadow: var(--shadow); border-color: rgba(233,69,96,.3); }
     .task-card:hover::before { opacity: 1; }
-    .task-card.done { opacity: .58; }
-    .task-card.done::before { background: var(--done); opacity: .45; }
+    .task-card.done { opacity: .55; }
+    .task-card.done::before { background: var(--done); opacity: .4; }
+    .task-card.found { border-color: rgba(233,69,96,.45); }
+    .task-card.h-search, .task-card.h-member { display: none !important; }
 
-    /* Search filtering */
-    .task-card.found { border-color: rgba(233,69,96,.48); }
-    .task-card.hidden-search { display: none !important; }
-    .task-card.hidden-member { display: none !important; }
+    @keyframes cin { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
+    .task-card:nth-child(1){animation-delay:.02s}.task-card:nth-child(2){animation-delay:.04s}
+    .task-card:nth-child(3){animation-delay:.07s}.task-card:nth-child(4){animation-delay:.09s}
+    .task-card:nth-child(5){animation-delay:.11s}.task-card:nth-child(6){animation-delay:.13s}
+    .task-card:nth-child(7){animation-delay:.15s}.task-card:nth-child(8){animation-delay:.17s}
+    .task-card:nth-child(9){animation-delay:.19s}.task-card:nth-child(10){animation-delay:.21s}
 
-    @keyframes cardIn {
-      from { opacity: 0; transform: translateX(-7px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-    .task-card:nth-child(1)  { animation-delay: .02s; }
-    .task-card:nth-child(2)  { animation-delay: .05s; }
-    .task-card:nth-child(3)  { animation-delay: .07s; }
-    .task-card:nth-child(4)  { animation-delay: .09s; }
-    .task-card:nth-child(5)  { animation-delay: .11s; }
-    .task-card:nth-child(6)  { animation-delay: .13s; }
-    .task-card:nth-child(7)  { animation-delay: .15s; }
-    .task-card:nth-child(8)  { animation-delay: .17s; }
-    .task-card:nth-child(9)  { animation-delay: .19s; }
-    .task-card:nth-child(10) { animation-delay: .21s; }
-
-    /* ── Checkbox ─────────────────────────────────────────────── */
+    /* checkbox */
     .task-check {
-      width: 18px; height: 18px; flex-shrink: 0;
-      border: 2px solid rgba(255,255,255,.15);
-      border-radius: 5px; margin-top: 2px;
+      width: 17px; height: 17px; flex-shrink: 0; border-radius: 5px;
+      border: 2px solid rgba(255,255,255,.14); margin-top: 2px;
       display: flex; align-items: center; justify-content: center;
-      transition: background .15s, border-color .15s; cursor: pointer;
+      transition: background .14s, border-color .14s; cursor: pointer;
     }
     .task-check.checked { background: var(--done); border-color: var(--done); }
-    .task-check.checked::after {
-      content: ''; display: block;
-      width: 4px; height: 8px;
-      border: 2px solid #fff; border-top: none; border-left: none;
-      transform: rotate(45deg) translate(-1px, -1px);
-    }
+    .task-check.checked::after { content:''; display:block; width:4px; height:8px; border:2px solid #fff; border-top:none; border-left:none; transform:rotate(45deg) translate(-1px,-1px); }
 
-    /* ── Task body ────────────────────────────────────────────── */
+    /* task body */
     .task-body { flex: 1; min-width: 0; }
-
-    .task-text {
-      font-size: .89rem; line-height: 1.5; word-break: break-word;
-    }
+    .task-text { font-size: .88rem; line-height: 1.5; word-break: break-word; }
     .task-card.done .task-text { text-decoration: line-through; color: var(--muted); }
+    mark { background: rgba(233,69,96,.3); color: inherit; border-radius: 3px; padding: 0 1px; }
 
-    mark {
-      background: rgba(233,69,96,.32); color: inherit;
-      border-radius: 3px; padding: 0 1px;
-    }
-
-    .task-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-    .meta-chip {
+    /* meta chips row */
+    .task-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; align-items: center; }
+    .chip {
       display: inline-flex; align-items: center; gap: 3px;
       font-size: .7rem; padding: 2px 8px; border-radius: 999px; font-weight: 600;
     }
-    .chip-person { background: rgba(233,69,96,.1); color: var(--accent); border: 1px solid rgba(233,69,96,.22); }
-    .chip-deadline { background: rgba(255,190,11,.1); color: #ffbe0b; border: 1px solid rgba(255,190,11,.22); }
+    .chip-person   { background: rgba(233,69,96,.1);  color: var(--accent); border: 1px solid rgba(233,69,96,.2); }
+    .chip-time     { background: rgba(255,190,11,.1); color: #ffbe0b; border: 1px solid rgba(255,190,11,.22); }
+    .chip-deadline { background: rgba(80,180,80,.1); color: #5db867; border: 1px solid rgba(80,180,80,.2); }
 
-    /* ── Pencil edit button ───────────────────────────────────── */
-    .task-edit-btn {
-      opacity: 0; flex-shrink: 0;
-      width: 26px; height: 26px; border-radius: 6px;
-      border: 1px solid rgba(255,255,255,.07);
-      background: rgba(255,255,255,.03);
+    /* ── pencil edit button ───────────────────────────────── */
+    .edit-btn {
+      opacity: 0; flex-shrink: 0; width: 25px; height: 25px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.03);
       color: var(--muted); font-size: 12px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: opacity .13s, background .13s, color .13s, border-color .13s;
-      margin-top: 1px; flex-shrink: 0;
+      transition: opacity .12s, background .12s; margin-top: 1px;
     }
-    .task-card:hover .task-edit-btn { opacity: 1; }
-    .task-edit-btn:hover {
-      background: rgba(233,69,96,.14); border-color: rgba(233,69,96,.32); color: var(--accent);
-    }
+    .task-card:hover .edit-btn { opacity: 1; }
+    .edit-btn:hover { background: rgba(233,69,96,.13); border-color: rgba(233,69,96,.3); color: var(--accent); }
 
-    /* ── Inline edit ──────────────────────────────────────────── */
-    .task-edit-area {
+    /* ── inline edit ─────────────────────────────────────── */
+    .edit-area {
       display: none; width: 100%;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(233,69,96,.4);
-      border-radius: 7px; padding: 5px 9px;
-      color: var(--text); font-size: .89rem; font-family: inherit;
-      line-height: 1.5; outline: none; resize: none;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(233,69,96,.38);
+      border-radius: 6px; padding: 5px 8px; color: var(--text);
+      font-size: .88rem; font-family: inherit; line-height: 1.45; outline: none; resize: none;
     }
-    .task-edit-area.open { display: block; }
-
-    .task-edit-btns {
-      display: none; gap: 5px; margin-top: 5px;
-    }
-    .task-edit-btns.open { display: flex; }
-
+    .edit-area.open { display: block; }
+    .edit-btns { display: none; gap: 5px; margin-top: 4px; }
+    .edit-btns.open { display: flex; }
     .btn-save, .btn-cancel {
-      font-size: .75rem; padding: 3px 11px;
-      border-radius: 6px; border: 1px solid; cursor: pointer; font-family: inherit;
+      font-size: .73rem; padding: 3px 10px; border-radius: 5px; border: 1px solid; cursor: pointer; font-family: inherit;
     }
     .btn-save { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .btn-save:hover { background: var(--accent2); }
+    .btn-save:hover { background: var(--a2); }
     .btn-cancel { background: rgba(255,255,255,.05); color: var(--muted); border-color: rgba(255,255,255,.1); }
     .btn-cancel:hover { background: rgba(255,255,255,.1); }
 
-    /* ── Empty / loading ──────────────────────────────────────── */
-    .empty-state { text-align: center; padding: 50px 20px; color: var(--muted); }
-    .empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: .4; }
-    .loading {
-      display: flex; align-items: center; justify-content: center;
-      gap: 12px; padding: 45px 20px; color: var(--muted); font-size: .86rem;
-    }
-    .spinner {
-      width: 19px; height: 19px;
-      border: 3px solid rgba(233,69,96,.18);
-      border-top-color: var(--accent);
-      border-radius: 50%; animation: spin .65s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    /* ── file attachments ────────────────────────────────── */
+    .attach-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 
-    .section-heading {
-      font-size: .73rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1.4px; color: var(--muted);
-      margin: 15px 0 6px; padding-left: 9px;
-      border-left: 3px solid var(--accent);
+    .file-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .68rem; padding: 2px 7px 2px 5px;
+      background: rgba(80,130,220,.1); border: 1px solid rgba(80,130,220,.25);
+      border-radius: 999px; color: #7aacff; max-width: 200px;
+      text-decoration: none; cursor: pointer;
     }
+    .file-chip:hover { background: rgba(80,130,220,.18); }
+    .file-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
+    .file-chip-del {
+      color: rgba(255,255,255,.3); cursor: pointer; font-size: 13px;
+      line-height: 1; flex-shrink: 0; transition: color .12s;
+    }
+    .file-chip-del:hover { color: var(--accent); }
 
-    /* ── Footer ───────────────────────────────────────────────── */
-    footer {
-      position: relative; z-index: 10;
-      text-align: center; padding: 12px;
-      font-size: .7rem; color: var(--muted);
-      border-top: 1px solid var(--border2);
+    .attach-btn {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: .68rem; padding: 2px 7px;
+      background: rgba(255,255,255,.04); border: 1px dashed rgba(255,255,255,.15);
+      border-radius: 999px; color: var(--muted); cursor: pointer;
+      transition: background .12s, border-color .12s, color .12s;
     }
+    .attach-btn:hover { background: rgba(80,130,220,.1); border-color: rgba(80,130,220,.3); color: #7aacff; }
+    input.file-input { display: none; }
+
+    /* ══ EMPTY / LOADING ═════════════════════════════════════════ */
+    .empty { text-align: center; padding: 46px 20px; color: var(--muted); }
+    .empty-icon { font-size: 2.3rem; margin-bottom: 9px; opacity: .38; }
+    .loading { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 42px 20px; color: var(--muted); font-size: .84rem; }
+    .spinner { width: 18px; height: 18px; border: 3px solid rgba(233,69,96,.16); border-top-color: var(--accent); border-radius: 50%; animation: spin .62s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* ══ FOOTER ══════════════════════════════════════════════════ */
+    footer { position: relative; z-index: 5; text-align: center; padding: 11px; font-size: .68rem; color: var(--muted); border-top: 1px solid var(--border2); }
     footer a { color: var(--accent); text-decoration: none; }
 
-    /* ── Responsive ───────────────────────────────────────────── */
-    @media (max-width: 900px) {
-      :root { --sidebar-w: 170px; }
-    }
-    @media (max-width: 640px) {
-      .fw-sidebar { display: none !important; }
-      header { padding: 14px 12px; }
-      main { padding: 14px 12px 32px; }
-      .hdr-meta { display: none; }
+    @media(max-width:640px) {
+      header,.topbar,.team-bar,.tabs-bar { padding-left:12px; padding-right:12px; }
+      main { padding:14px 12px 36px; }
+      .act-section { display: none; }
     }
   </style>
 </head>
 <body>
 
-<!-- ═══ HEADER ══════════════════════════════════════════════════ -->
+<!-- ═══ HEADER ═══════════════════════════════════════════════════ -->
 <header>
   <div class="logo-wrap">
     <div class="logo-icon">🎬</div>
-    <h1>Filmway AI — <span>Task Dashboard</span></h1>
+    <h1>Filmway AI — <span>Tasks</span></h1>
   </div>
   <div class="hdr-right">
-    <!-- Search: slide-out field + toggle button -->
     <div class="search-slide" id="search-slide">
-      <input class="search-input" id="search-input" type="search"
-             placeholder="Поиск задач…" autocomplete="off" />
+      <input class="search-input" id="search-input" type="search" placeholder="Поиск…" autocomplete="off">
       <span class="search-count" id="search-count"></span>
     </div>
     <button class="btn-icon" id="search-btn" title="Поиск (⌘F)">🔍</button>
-    <div class="hdr-meta" id="last-updated">Обновление…</div>
+    <div class="hdr-meta" id="last-updated">…</div>
   </div>
 </header>
 
-<!-- ═══ TOPBAR (sidebar toggles + refresh) ══════════════════════ -->
-<div class="fw-topbar">
-  <button class="sidebar-toggle-btn active" id="toggle-left" onclick="toggleSidebar('left')">☰ Команда</button>
-  <span class="topbar-spacer"></span>
-  <div class="refresh-status" id="refresh-status">
-    <span class="refresh-dot"></span>
-    <span id="refresh-time">авто-обновление каждые 2 мин</span>
-  </div>
-  <span class="topbar-spacer"></span>
-  <button class="sidebar-toggle-btn active" id="toggle-right" onclick="toggleSidebar('right')">⚡ Действия</button>
+<!-- ═══ TEAM BAR ═════════════════════════════════════════════════ -->
+<div class="team-bar" id="team-bar">
+  <span class="team-label">👥</span>
+  <!-- chips rendered by JS -->
+  <span class="team-bar-spacer"></span>
+  <span class="filter-clear-btn" id="filter-clear" onclick="clearMember()">✕ Все</span>
 </div>
 
-<!-- ═══ TABS ════════════════════════════════════════════════════ -->
+<!-- ═══ ACTIONS PANEL (collapsible) ══════════════════════════════ -->
+<div class="actions-bar-wrap" id="actions-wrap">
+  <div class="actions-bar">
+    <div class="qa-section">
+      <div class="section-mini-title">⚡ Быстро добавить задачу</div>
+      <div class="qa-row">
+        <textarea class="qa-textarea" id="qa-text" placeholder="Текст задачи… — Кирилл 10:00-11:00"></textarea>
+        <div class="qa-controls">
+          <select class="qa-select" id="qa-period">
+            <option value="day">Сегодня</option>
+            <option value="week">Неделя</option>
+            <option value="month">Месяц</option>
+          </select>
+          <button class="qa-add-btn" onclick="quickAdd()">＋ Добавить</button>
+        </div>
+      </div>
+    </div>
+    <div class="act-section">
+      <div class="section-mini-title">🕐 Активность</div>
+      <div class="act-scroll" id="act-log"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOPBAR ════════════════════════════════════════════════════ -->
+<div class="topbar" id="topbar">
+  <button class="topbar-btn" id="actions-toggle" onclick="toggleActions()">⚡ Действия</button>
+  <div class="topbar-spacer"></div>
+  <div class="refresh-row" id="refresh-row">
+    <span class="rdot"></span>
+    <span id="refresh-time">авто-обновление 2 мин</span>
+  </div>
+</div>
+
+<!-- ═══ TABS ══════════════════════════════════════════════════════ -->
 <div class="tabs-bar" id="tabs-bar">
   <button class="tab-btn active" data-tab="day">День <span class="tab-badge" id="badge-day"></span></button>
   <button class="tab-btn" data-tab="week">Неделя <span class="tab-badge" id="badge-week"></span></button>
@@ -524,497 +443,526 @@
   <button class="tab-btn" data-tab="year">Год <span class="tab-badge" id="badge-year"></span></button>
 </div>
 
-<!-- ═══ THREE-COLUMN LAYOUT ════════════════════════════════════ -->
-<div class="fw-layout">
+<!-- ═══ PANELS ════════════════════════════════════════════════════ -->
+<main>
+  <div class="tab-panel active" id="panel-day"></div>
+  <div class="tab-panel"       id="panel-week"></div>
+  <div class="tab-panel"       id="panel-month"></div>
+  <div class="tab-panel"       id="panel-halfyear"></div>
+  <div class="tab-panel"       id="panel-year"></div>
+</main>
 
-  <!-- Left sidebar: Team -->
-  <div class="fw-sidebar" id="sidebar-left">
-    <div class="sidebar-title">👥 Команда</div>
-    <span class="filter-clear" id="filter-clear" onclick="clearMemberFilter()">✕ Показать всех</span>
-    <div id="team-list"></div>
-  </div>
+<footer>
+  Filmway AI © 2026 &nbsp;·&nbsp;
+  <a href="https://github.com/filmway-team-bot/filmway-tasks" target="_blank" rel="noopener">GitHub</a>
+  &nbsp;·&nbsp; обновление каждые 2 мин
+</footer>
 
-  <!-- Main -->
-  <div class="fw-main">
-    <main>
-      <div class="tab-panel active" id="panel-day"     data-period="day"></div>
-      <div class="tab-panel"       id="panel-week"     data-period="week"></div>
-      <div class="tab-panel"       id="panel-month"    data-period="month"></div>
-      <div class="tab-panel"       id="panel-halfyear" data-period="halfyear"></div>
-      <div class="tab-panel"       id="panel-year"     data-period="year"></div>
-    </main>
-
-    <footer>
-      Filmway AI © 2026 &nbsp;·&nbsp;
-      <a href="https://github.com/filmway-team-bot/filmway-tasks" target="_blank" rel="noopener">GitHub</a>
-      &nbsp;·&nbsp; Автообновление каждые 2 минуты
-    </footer>
-  </div>
-
-  <!-- Right sidebar: Quick add + Activity -->
-  <div class="fw-sidebar right" id="sidebar-right">
-    <div class="sidebar-title">⚡ Быстро добавить</div>
-    <textarea class="qa-textarea" id="qa-text" placeholder="Текст задачи…&#10;Можно с именем: — Кирилл"></textarea>
-    <div class="qa-row">
-      <select class="qa-select" id="qa-period">
-        <option value="day">Сегодня</option>
-        <option value="week">Неделя</option>
-        <option value="month">Месяц</option>
-      </select>
-      <button class="qa-btn" onclick="quickAdd()">＋</button>
-    </div>
-    <div class="sidebar-title" style="margin-top:14px">🕐 Активность</div>
-    <div id="activity-log"></div>
-  </div>
-
-</div><!-- /fw-layout -->
+<!-- hidden file input -->
+<input type="file" id="global-file-input" class="file-input" multiple>
 
 <script>
-// ══════════════════════════════════════════════════════════════
-//  CONFIG & CONSTANTS
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════════════
 const REPO   = 'filmway-team-bot/filmway-tasks';
-const BRANCH = 'main';
-const BASE   = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/`;
-const EDITS_KEY    = 'fw-task-edits';
-const ACTIVITY_KEY = 'fw-activity';
+const BASE   = `https://raw.githubusercontent.com/${REPO}/main/`;
 
-const TEAM = [
-  { name: 'Кирилл',  key: 'кирилл',  color: '#c5d0f0', text: '#3355cc' },
-  { name: 'Эрадж',   key: 'эрадж',   color: '#c8e6c9', text: '#2e7d32' },
-  { name: 'Кира',    key: 'кира',     color: '#fce4ec', text: '#c62828' },
-  { name: 'Ульяна',  key: 'ульяна',  color: '#e8eaf6', text: '#5c35cc' },
-  { name: 'Катрина', key: 'катрина', color: '#fff3e0', text: '#e65100' },
-  { name: 'Полина',  key: 'полина',  color: '#e0f7fa', text: '#00695c' },
-  { name: 'Дима',    key: 'дима',    color: '#fffde7', text: '#f57f17' },
-  { name: 'Даша',    key: 'даша',    color: '#fbe9e7', text: '#bf360c' },
-  { name: 'Лера',    key: 'лера',    color: '#ede7f6', text: '#6a1b9a' },
-];
+const EDITS_KEY = 'fw-edits';
+const FILES_KEY = 'fw-files';   // {taskKey: [{name,size,dataUrl}]}
+const ACT_KEY   = 'fw-act';
 
 const PERIODS = {
-  day:      { label: 'День',    fn: () => `tasks/day/${todayStr()}.md` },
-  week:     { label: 'Неделя',  fn: () => `tasks/week/${weekStr()}.md` },
-  month:    { label: 'Месяц',   fn: () => `tasks/month/${monthStr()}.md` },
-  halfyear: { label: 'Полгода', fn: () => `tasks/halfyear/${halfyearStr()}.md` },
-  year:     { label: 'Год',     fn: () => `tasks/year/${yearStr()}.md` },
+  day:      { label: 'День',    fn: ()=>`tasks/day/${tdStr()}.md` },
+  week:     { label: 'Неделя',  fn: ()=>`tasks/week/${wkStr()}.md` },
+  month:    { label: 'Месяц',   fn: ()=>`tasks/month/${moStr()}.md` },
+  halfyear: { label: 'Полгода', fn: ()=>`tasks/halfyear/${hyStr()}.md` },
+  year:     { label: 'Год',     fn: ()=>`tasks/year/${yrStr()}.md` },
 };
 
-// ══════════════════════════════════════════════════════════════
+const TEAM = [
+  { name:'Кирилл',  k:'кирилл',  bg:'#2a2e50', tx:'#8899ee' },
+  { name:'Эрадж',   k:'эрадж',   bg:'#1e3028', tx:'#5ecc80' },
+  { name:'Кира',    k:'кира',    bg:'#301828', tx:'#ee6080' },
+  { name:'Ульяна',  k:'ульяна',  bg:'#24203a', tx:'#9980ee' },
+  { name:'Катрина', k:'катрина', bg:'#302010', tx:'#ee9040' },
+  { name:'Полина',  k:'полина',  bg:'#103028', tx:'#40ccb0' },
+  { name:'Дима',    k:'дима',    bg:'#2a2800', tx:'#ddcc20' },
+  { name:'Даша',    k:'даша',    bg:'#301c10', tx:'#ee7040' },
+  { name:'Лера',    k:'лера',    bg:'#220a30', tx:'#bb60ee' },
+];
+
+// ═══════════════════════════════════════════════════════════════
 //  DATE HELPERS
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 const pad = n => String(n).padStart(2,'0');
-function todayStr()    { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-function weekStr()     { const d=new Date(), j=new Date(d.getFullYear(),0,1), w=Math.ceil(((d-j)/864e5+j.getDay()+1)/7); return `${d.getFullYear()}-W${pad(w)}`; }
-function monthStr()    { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}`; }
-function halfyearStr() { const d=new Date(); return `${d.getFullYear()}-${d.getMonth()<6?'H1':'H2'}`; }
-function yearStr()     { return String(new Date().getFullYear()); }
+function tdStr() { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function wkStr() { const d=new Date(),j=new Date(d.getFullYear(),0,1),w=Math.ceil(((d-j)/864e5+j.getDay()+1)/7); return `${d.getFullYear()}-W${pad(w)}`; }
+function moStr() { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}`; }
+function hyStr() { const d=new Date(); return `${d.getFullYear()}-${d.getMonth()<6?'H1':'H2'}`; }
+function yrStr() { return String(new Date().getFullYear()); }
 
 function humanDate(s) {
   if (s.includes('-W'))  return `Неделя ${s.split('-W')[1]}, ${s.split('-')[0]}`;
-  if (s.includes('-H'))  return s.replace('H1','первое полугодие').replace('H2','второе полугодие');
+  if (s.includes('-H'))  return s.replace('H1','I полугодие').replace('H2','II полугодие');
   if (/^\d{4}$/.test(s)) return s;
   if (/\d{4}-\d{2}-\d{2}/.test(s)) {
-    const [y,m,dd]=s.split('-');
-    return `${+dd} ${['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][+m-1]} ${y}`;
+    const [y,m,dd]=s.split('-'), mn=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+    return `${+dd} ${mn[+m-1]} ${y}`;
   }
   if (/\d{4}-\d{2}/.test(s)) {
-    const [y,m]=s.split('-');
-    return `${['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'][+m-1]} ${y}`;
+    const [y,m]=s.split('-'), mn=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    return `${mn[+m-1]} ${y}`;
   }
   return s;
 }
 
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 //  UTILS
-// ══════════════════════════════════════════════════════════════
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function djb2(s) {
-  let h=5381;
-  for (let i=0;i<s.length;i++) h=((h<<5)+h)^s.charCodeAt(i);
-  return (h>>>0).toString(36);
-}
+// ═══════════════════════════════════════════════════════════════
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function djb2(s){ let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h)^s.charCodeAt(i); return (h>>>0).toString(36); }
+function loadLS(k,def){ try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(def))}catch{return def} }
+function saveLS(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
 
-function loadEdits()   { try { return JSON.parse(localStorage.getItem(EDITS_KEY)||'{}'); } catch { return {}; } }
-function saveEdits(d)  { localStorage.setItem(EDITS_KEY, JSON.stringify(d)); }
+function nowTime(){ const d=new Date(); return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
 
-// ══════════════════════════════════════════════════════════════
-//  FETCH + PARSE
-// ══════════════════════════════════════════════════════════════
-async function fetchMd(filename) {
-  const r = await fetch(BASE + filename + `?_=${Date.now()}`);
-  return r.ok ? r.text() : null;
+// ═══════════════════════════════════════════════════════════════
+//  FETCH + PARSE MARKDOWN
+// ═══════════════════════════════════════════════════════════════
+async function fetchMd(file){
+  try {
+    const r = await fetch(BASE+file+'?_='+Date.now());
+    return r.ok ? r.text() : null;
+  } catch { return null; }
 }
 
-function parseMd(md) {
-  const items = [];
-  let section = '';
-  for (const raw of md.split('\n')) {
+function parseMd(md){
+  const items = []; let section = '';
+  for(const raw of md.split('\n')){
     const line = raw.trimEnd();
-    if (/^#+\s/.test(line)) { section = line.replace(/^#+\s*/,'').trim(); continue; }
-    const mDone = line.match(/^[-*]\s+\[x\]\s+(.*)/i);
-    const mTodo = line.match(/^[-*]\s+\[ \]\s+(.*)/);
-    if (!mDone && !mTodo) continue;
-    const done = !!mDone;
-    const raw2 = (done ? mDone[1] : mTodo[1]).trim();
-    const pm = raw2.match(/—\s*([А-ЯЁа-яёA-Za-z][^\s,\(]*(?:\s+[А-ЯЁа-яёA-Za-z][^\s,\(]*)?)/u) || raw2.match(/@([\w\d_]+)/);
-    const dl = raw2.match(/до\s+(\d{1,2}\.\d{2})/);
+    if(/^#+\s/.test(line)){ section=line.replace(/^#+\s*/,'').trim(); continue; }
+    const mD = line.match(/^[-*]\s+\[x\]\s+(.*)/i);
+    const mT = line.match(/^[-*]\s+\[ \]\s+(.*)/);
+    if(!mD && !mT) continue;
+    const done = !!mD;
+    const raw2 = (done?mD[1]:mT[1]).trim();
+
+    // Extract time range: HH:MM-HH:MM or HH:MM–HH:MM
+    const timeM = raw2.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/);
+    const timeRange = timeM ? `${timeM[1]}–${timeM[2]}` : null;
+
+    // Extract person: — Имя
+    const personM = raw2.match(/—\s*([А-ЯЁ][а-яёА-ЯЁ]+(?:\s+[А-ЯЁ][а-яёА-ЯЁ]+)?)/u)
+                 || raw2.match(/@([\w\d_]+)/);
+    const person = personM ? personM[1]||personM[0] : null;
+
+    // Extract deadline: до ДД.ММ
+    const dlM = raw2.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
+    const deadline = dlM ? dlM[1] : null;
+
+    // Clean display text
     const clean = raw2
-      .replace(/—\s*[А-ЯЁа-яёA-Za-z][^\s,\(]*(?:\s+[А-ЯЁа-яёA-Za-z][^\s,\(]*)?/u,'')
-      .replace(/@[\w\d_]+/,'')
-      .replace(/до\s+\d{1,2}\.\d{2}/,'')
+      .replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'')
+      .replace(/—\s*[А-ЯЁ][а-яёА-ЯЁ]+(?:\s+[А-ЯЁ][а-яёА-ЯЁ]+)?/ug,'')
+      .replace(/@[\w\d_]+/g,'')
+      .replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'')
       .replace(/\s{2,}/g,' ').trim();
-    items.push({ done, text: clean||raw2, rawText: raw2, person: pm?.[0]?.replace(/^@/,'@')||null, deadline: dl?.[1]||null, section });
+
+    items.push({ done, text:clean||raw2, rawText:raw2, person, timeRange, deadline, section });
   }
   return items;
 }
 
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 //  RENDER
-// ══════════════════════════════════════════════════════════════
-function renderPanel(panelEl, period, filename, tasks) {
-  const total = tasks.length, done = tasks.filter(t=>t.done).length;
-  const pct   = total ? Math.round(done/total*100) : 0;
-  const base  = filename.split('/').pop();
+// ═══════════════════════════════════════════════════════════════
+function renderPanel(el, period, file, tasks){
+  const total=tasks.length, done=tasks.filter(t=>t.done).length;
+  const pct=total?Math.round(done/total*100):0;
+  const base=file.split('/').pop();
 
-  let html = `<div class="period-header">
+  let html=`<div class="period-hdr">
     <span class="period-title">${PERIODS[period].label}</span>
     <span class="period-date">${humanDate(base.replace('.md',''))}</span>
   </div>`;
 
-  if (total > 0) html += `<div class="progress-wrap">
-    <span class="progress-label">Прогресс</span>
-    <div class="progress-bar-outer"><div class="progress-bar-inner" id="pb-${period}"></div></div>
-    <span class="progress-pct">${pct}%</span>
-    <span class="progress-count">${done}/${total} выполнено</span>
+  if(total>0) html+=`<div class="prog-wrap">
+    <span class="prog-label">Прогресс</span>
+    <div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div>
+    <span class="prog-pct">${pct}%</span>
+    <span class="prog-cnt">${done}/${total}</span>
   </div>`;
 
-  html += `<div class="task-list">`;
-  const sections = [...new Set(tasks.map(t=>t.section))];
-  for (const sec of sections) {
-    if (sec) html += `<div class="section-heading">${esc(sec)}</div>`;
-    for (const task of tasks.filter(t=>t.section===sec)) html += renderCard(task);
+  html+=`<div class="task-list">`;
+  const secs=[...new Set(tasks.map(t=>t.section))];
+  for(const s of secs){
+    if(s) html+=`<div class="section-heading">${esc(s)}</div>`;
+    for(const t of tasks.filter(x=>x.section===s)) html+=renderCard(t);
   }
-  html += `</div>`;
+  html+=`</div>`;
 
-  panelEl.innerHTML = html;
-  requestAnimationFrame(() => { const pb=document.getElementById(`pb-${period}`); if(pb) pb.style.width=pct+'%'; });
+  el.innerHTML=html;
+  requestAnimationFrame(()=>{ const pb=document.getElementById('pb-'+period); if(pb) pb.style.width=pct+'%'; });
 
-  const badge = document.getElementById(`badge-${period}`);
-  if (badge && total > 0) { badge.textContent = total-done||'✓'; badge.classList.add('show'); }
+  const badge=document.getElementById('badge-'+period);
+  if(badge&&total>0){ badge.textContent=total-done||'✓'; badge.classList.add('show'); }
 
-  panelEl.querySelectorAll('.task-card').forEach(attachEdit);
-  applyAllFilters();
+  el.querySelectorAll('.task-card').forEach(card=>{
+    attachEdit(card);
+    attachFiles(card);
+  });
+  applyFilters();
+  renderTeam();
 }
 
-function renderCard(task) {
-  const edits = loadEdits();
-  const key   = djb2(task.rawText || task.text);
-  const disp  = edits[key] || task.text;
+function renderCard(task){
+  const edits=loadLS(EDITS_KEY,{});
+  const key=djb2(task.rawText||task.text);
+  const disp=edits[key]||task.text;
 
-  return `<div class="task-card${task.done?' done':''}" data-key="${key}" data-raw="${esc(task.rawText||task.text)}">
+  // team member color for left border hint
+  const memberInfo = TEAM.find(m=>task.rawText?.toLowerCase().includes(m.k));
+  const borderColor = memberInfo ? memberInfo.tx : null;
+
+  let meta='';
+  if(task.person)    meta+=`<span class="chip chip-person">👤 ${esc(task.person)}</span>`;
+  if(task.timeRange) meta+=`<span class="chip chip-time">🕐 ${esc(task.timeRange)}</span>`;
+  if(task.deadline)  meta+=`<span class="chip chip-deadline">📅 ${esc(task.deadline)}</span>`;
+
+  // files
+  const files=loadLS(FILES_KEY,{});
+  const taskFiles=files[key]||[];
+  let fileHtml='';
+  if(taskFiles.length>0){
+    fileHtml=`<div class="attach-row" id="ar-${key}">`;
+    taskFiles.forEach((f,i)=>{
+      fileHtml+=`<a class="file-chip" href="${esc(f.dataUrl)}" download="${esc(f.name)}" title="${esc(f.name)}">
+        📄 <span class="file-chip-name">${esc(f.name)}</span>
+        <span class="file-chip-del" data-key="${key}" data-idx="${i}" onclick="delFile(event)">×</span>
+      </a>`;
+    });
+    fileHtml+=`</div>`;
+  } else {
+    fileHtml=`<div class="attach-row" id="ar-${key}"></div>`;
+  }
+
+  return `<div class="task-card${task.done?' done':''}" data-key="${key}"
+    ${borderColor?`style="--accent:${borderColor}"`:''}>
     <div class="task-check${task.done?' checked':''}"></div>
     <div class="task-body">
       <div class="task-text">${esc(disp)}</div>
-      <textarea class="task-edit-area" rows="2">${esc(disp)}</textarea>
-      <div class="task-edit-btns">
+      <textarea class="edit-area" rows="2">${esc(disp)}</textarea>
+      <div class="edit-btns">
         <button class="btn-save">Сохранить</button>
         <button class="btn-cancel">Отмена</button>
       </div>
-      ${task.person||task.deadline ? `<div class="task-meta">
-        ${task.person   ? `<span class="meta-chip chip-person">👤 ${esc(task.person)}</span>` : ''}
-        ${task.deadline ? `<span class="meta-chip chip-deadline">📅 до ${esc(task.deadline)}</span>` : ''}
-      </div>` : ''}
+      ${meta?`<div class="task-meta">${meta}</div>`:''}
+      ${fileHtml}
+      <button class="attach-btn" data-key="${key}" onclick="openFileFor(event)">📎 Прикрепить файл</button>
     </div>
-    <button class="task-edit-btn" title="Редактировать">✏️</button>
+    <button class="edit-btn" title="Редактировать">✏️</button>
   </div>`;
 }
 
-function renderEmpty(panelEl, period, filename) {
-  const base = filename.split('/').pop();
-  panelEl.innerHTML = `<div class="period-header">
+function renderEmpty(el,period,file){
+  const base=file.split('/').pop();
+  el.innerHTML=`<div class="period-hdr">
     <span class="period-title">${PERIODS[period].label}</span>
     <span class="period-date">${humanDate(base.replace('.md',''))}</span>
   </div>
-  <div class="empty-state"><div class="empty-icon">📭</div><p>Задач нет</p>
-  <p style="margin-top:6px;font-size:.74rem">Файл <code>${filename}</code> не найден или пуст</p></div>`;
+  <div class="empty"><div class="empty-icon">📭</div><p>Нет задач</p>
+  <p style="margin-top:5px;font-size:.72rem">Файл <code>${file}</code> не найден</p></div>`;
 }
+function renderLoading(el){ el.innerHTML=`<div class="loading"><div class="spinner"></div>Загрузка…</div>`; }
 
-function renderLoading(el) {
-  el.innerHTML = `<div class="loading"><div class="spinner"></div>Загрузка…</div>`;
-}
-
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 //  TASK EDITING
-// ══════════════════════════════════════════════════════════════
-let editing = false;
+// ═══════════════════════════════════════════════════════════════
+let editing=false;
 
-function attachEdit(card) {
-  const editBtn  = card.querySelector('.task-edit-btn');
-  const textEl   = card.querySelector('.task-text');
-  const area     = card.querySelector('.task-edit-area');
-  const btns     = card.querySelector('.task-edit-btns');
-  const saveBtn  = card.querySelector('.btn-save');
-  const cancelBtn= card.querySelector('.btn-cancel');
-  const key      = card.dataset.key;
+function attachEdit(card){
+  const editBtn=card.querySelector('.edit-btn');
+  const textEl=card.querySelector('.task-text');
+  const area=card.querySelector('.edit-area');
+  const btns=card.querySelector('.edit-btns');
+  const key=card.dataset.key;
+  if(!editBtn) return;
 
-  if (!editBtn) return;
-
-  const open = () => {
-    if (editing) return;
-    editing = true;
-    area.value = textEl.textContent;
-    textEl.style.display = 'none';
-    area.classList.add('open'); btns.classList.add('open');
-    area.focus();
-    area.setSelectionRange(area.value.length, area.value.length);
+  const open=()=>{
+    if(editing) return; editing=true;
+    area.value=textEl.textContent;
+    textEl.style.display='none'; area.classList.add('open'); btns.classList.add('open');
+    area.focus(); area.setSelectionRange(area.value.length,area.value.length);
   };
-
-  const close = () => {
-    textEl.style.display = '';
-    area.classList.remove('open'); btns.classList.remove('open');
-    editing = false;
-  };
-
-  const save = () => {
-    const val = area.value.trim();
-    if (!val) return;
-    textEl.textContent = val;
-    const d = loadEdits(); d[key] = val; saveEdits(d);
-    logActivity(`✏️ Задача обновлена: ${val.slice(0,25)}…`);
+  const close=()=>{ textEl.style.display=''; area.classList.remove('open'); btns.classList.remove('open'); editing=false; };
+  const save=()=>{
+    const v=area.value.trim(); if(!v) return;
+    textEl.textContent=v;
+    const d=loadLS(EDITS_KEY,{}); d[key]=v; saveLS(EDITS_KEY,d);
+    logAct(`✏️ Обновлено: ${v.slice(0,22)}…`);
     close();
   };
 
-  editBtn.addEventListener('click', e => { e.stopPropagation(); open(); });
-  saveBtn.addEventListener('click', e => { e.stopPropagation(); save(); });
-  cancelBtn.addEventListener('click', e => { e.stopPropagation(); close(); });
-  area.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save(); }
-    if (e.key === 'Escape') close();
+  editBtn.addEventListener('click',e=>{ e.stopPropagation(); open(); });
+  btns.querySelector('.btn-save').addEventListener('click',e=>{ e.stopPropagation(); save(); });
+  btns.querySelector('.btn-cancel').addEventListener('click',e=>{ e.stopPropagation(); close(); });
+  area.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();save();} if(e.key==='Escape') close(); });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FILE ATTACHMENTS
+// ═══════════════════════════════════════════════════════════════
+let pendingFileKey=null;
+const globalFileInput=document.getElementById('global-file-input');
+
+function attachFiles(card){
+  // attachments are rendered inline via renderCard; this just wires the input
+}
+
+function openFileFor(e){
+  e.stopPropagation();
+  pendingFileKey=e.currentTarget.dataset.key;
+  globalFileInput.value='';
+  globalFileInput.click();
+}
+
+globalFileInput.addEventListener('change', ()=>{
+  const key=pendingFileKey; if(!key) return;
+  const fileArr=Array.from(globalFileInput.files);
+  let done=0;
+  fileArr.forEach(file=>{
+    if(file.size>5*1024*1024){ alert(`Файл ${file.name} больше 5 МБ, пропускаем`); done++; checkDone(); return; }
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const d=loadLS(FILES_KEY,{});
+      d[key]=d[key]||[];
+      d[key].push({ name:file.name, size:file.size, dataUrl:ev.target.result });
+      saveLS(FILES_KEY,d);
+      logAct(`📎 Прикреплён: ${file.name}`);
+      done++;
+      checkDone();
+    };
+    reader.readAsDataURL(file);
+  });
+  function checkDone(){ if(done===fileArr.length) refreshAttachRow(key); }
+});
+
+function refreshAttachRow(key){
+  const ar=document.getElementById('ar-'+key);
+  if(!ar) return;
+  const files=loadLS(FILES_KEY,{})[key]||[];
+  ar.innerHTML='';
+  files.forEach((f,i)=>{
+    const a=document.createElement('a');
+    a.className='file-chip'; a.href=f.dataUrl; a.download=f.name; a.title=f.name;
+    a.innerHTML=`📄 <span class="file-chip-name">${esc(f.name)}</span><span class="file-chip-del" data-key="${key}" data-idx="${i}" onclick="delFile(event)">×</span>`;
+    ar.appendChild(a);
   });
 }
 
-// ══════════════════════════════════════════════════════════════
+function delFile(e){
+  e.preventDefault(); e.stopPropagation();
+  const {key,idx}=e.currentTarget.dataset;
+  const d=loadLS(FILES_KEY,{});
+  if(d[key]) d[key].splice(+idx,1);
+  saveLS(FILES_KEY,d);
+  refreshAttachRow(key);
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  SEARCH
-// ══════════════════════════════════════════════════════════════
-let searchQ = '';
+// ═══════════════════════════════════════════════════════════════
+let searchQ='';
 
-const searchBtn   = document.getElementById('search-btn');
-const searchSlide = document.getElementById('search-slide');
-const searchInput = document.getElementById('search-input');
-const searchCount = document.getElementById('search-count');
+const searchBtn=document.getElementById('search-btn');
+const searchSlide=document.getElementById('search-slide');
+const searchInput=document.getElementById('search-input');
+const searchCount=document.getElementById('search-count');
 
-searchBtn.addEventListener('click', () => {
-  const open = searchSlide.classList.toggle('open');
-  searchBtn.classList.toggle('active', open);
-  if (open) { searchInput.focus(); }
-  else { searchInput.value=''; searchQ=''; applyAllFilters(); }
+searchBtn.addEventListener('click',()=>{
+  const open=searchSlide.classList.toggle('open');
+  searchBtn.classList.toggle('on',open);
+  if(open) searchInput.focus();
+  else { searchInput.value=''; searchQ=''; applyFilters(); }
 });
-
-searchInput.addEventListener('input', () => {
-  searchQ = searchInput.value.trim().toLowerCase();
-  applyAllFilters();
-});
-
-searchInput.addEventListener('keydown', e => { if(e.key==='Escape') searchBtn.click(); });
-
-document.addEventListener('keydown', e => {
-  if ((e.metaKey||e.ctrlKey) && e.key==='f') {
+searchInput.addEventListener('input',()=>{ searchQ=searchInput.value.trim().toLowerCase(); applyFilters(); });
+searchInput.addEventListener('keydown',e=>{ if(e.key==='Escape') searchBtn.click(); });
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='f'){
     e.preventDefault();
-    if (!searchSlide.classList.contains('open')) searchBtn.click(); else searchInput.focus();
+    if(!searchSlide.classList.contains('open')) searchBtn.click(); else searchInput.focus();
   }
 });
 
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 //  TEAM FILTER
-// ══════════════════════════════════════════════════════════════
-let activeMember = null;
+// ═══════════════════════════════════════════════════════════════
+let activeMember=null;
 
-function buildTeamList() {
-  const container = document.getElementById('team-list');
-  if (!container) return;
-  container.innerHTML = '';
-  TEAM.forEach(m => {
-    const el = document.createElement('div');
-    el.className = 'team-member' + (activeMember===m.key ? ' active' : '');
-    el.dataset.key = m.key;
-    const count = document.querySelectorAll('.task-card:not(.hidden-search)');
-    el.innerHTML = `
-      <div class="member-avatar" style="background:${m.color};color:${m.text}">${m.name[0]}</div>
-      <div>
-        <div class="member-name">${m.name}</div>
-        <div class="member-tasks">${countForMember(m.key)} задач</div>
-      </div>`;
-    el.onclick = () => {
-      activeMember = activeMember===m.key ? null : m.key;
-      applyAllFilters();
-      buildTeamList();
-      const fc = document.getElementById('filter-clear');
-      if (fc) fc.classList.toggle('show', !!activeMember);
+function renderTeam(){
+  const bar=document.getElementById('team-bar');
+  if(!bar) return;
+  // remove old chips
+  bar.querySelectorAll('.member-chip').forEach(el=>el.remove());
+  const label=bar.querySelector('.team-label');
+
+  TEAM.forEach(m=>{
+    const count=countForMember(m.k);
+    const chip=document.createElement('div');
+    chip.className='member-chip'+(activeMember===m.k?' active':'');
+    chip.innerHTML=`<div class="m-avatar" style="background:${m.bg};color:${m.tx}">${m.name[0]}</div>
+      <span class="m-name">${m.name}</span>
+      ${count>0?`<span class="m-count">${count}</span>`:''}`;
+    chip.onclick=()=>{
+      activeMember=activeMember===m.k?null:m.k;
+      document.getElementById('filter-clear').classList.toggle('show',!!activeMember);
+      applyFilters(); renderTeam();
     };
-    container.appendChild(el);
+    label.insertAdjacentElement('afterend',chip);
   });
 }
 
-function countForMember(key) {
-  let n = 0;
-  document.querySelectorAll('.task-card').forEach(c => {
-    if (c.textContent.toLowerCase().includes(key)) n++;
-  });
+function countForMember(k){
+  let n=0;
+  document.querySelectorAll('.task-card').forEach(c=>{ if(c.textContent.toLowerCase().includes(k)) n++; });
   return n;
 }
 
-function clearMemberFilter() {
-  activeMember = null;
-  applyAllFilters();
-  buildTeamList();
-  const fc = document.getElementById('filter-clear');
-  if (fc) fc.classList.remove('show');
+function clearMember(){
+  activeMember=null;
+  document.getElementById('filter-clear').classList.remove('show');
+  applyFilters(); renderTeam();
 }
 
-// ══════════════════════════════════════════════════════════════
-//  APPLY ALL FILTERS (search + member)
-// ══════════════════════════════════════════════════════════════
-function applyAllFilters() {
-  const cards  = document.querySelectorAll('.task-card');
-  let visible  = 0;
+// ═══════════════════════════════════════════════════════════════
+//  APPLY FILTERS (search + member)
+// ═══════════════════════════════════════════════════════════════
+function applyFilters(){
+  const cards=document.querySelectorAll('.task-card');
+  let vis=0;
+  cards.forEach(card=>{
+    const textEl=card.querySelector('.task-text');
+    const fullText=card.textContent.toLowerCase();
+    const origText=textEl?textEl.textContent:'';
 
-  cards.forEach(card => {
-    const text = card.querySelector('.task-text')?.textContent.toLowerCase() || '';
-    const fullText = card.textContent.toLowerCase();
-    const textEl   = card.querySelector('.task-text');
-
-    // Search highlight
-    if (textEl) {
-      const orig = textEl.textContent;
-      if (searchQ) {
-        const idx = orig.toLowerCase().indexOf(searchQ);
-        if (idx !== -1) {
-          textEl.innerHTML = esc(orig.slice(0,idx)) + `<mark>${esc(orig.slice(idx,idx+searchQ.length))}</mark>` + esc(orig.slice(idx+searchQ.length));
+    // highlight search
+    if(textEl){
+      if(searchQ){
+        const idx=origText.toLowerCase().indexOf(searchQ);
+        if(idx!==-1){
+          textEl.innerHTML=esc(origText.slice(0,idx))+`<mark>${esc(origText.slice(idx,idx+searchQ.length))}</mark>`+esc(origText.slice(idx+searchQ.length));
         } else {
-          textEl.innerHTML = esc(orig);
+          textEl.textContent=origText;
         }
       } else {
-        // restore plain text (avoid double-escaping if already plain)
-        if (textEl.innerHTML !== esc(orig)) textEl.textContent = orig;
+        // restore - only if innerHTML differs from textContent
+        if(textEl.innerHTML!==esc(origText)) textEl.textContent=origText;
       }
     }
 
-    const matchSearch = !searchQ || fullText.includes(searchQ);
-    const matchMember = !activeMember || fullText.includes(activeMember);
-    const hide = !matchSearch || !matchMember;
-
-    card.classList.toggle('hidden-search', !matchSearch);
-    card.classList.toggle('hidden-member', !matchMember);
-    card.classList.toggle('found', !hide && !!(searchQ || activeMember));
-    if (!hide) visible++;
+    const mSearch=!searchQ||fullText.includes(searchQ);
+    const mMember=!activeMember||fullText.includes(activeMember);
+    card.classList.toggle('h-search',!mSearch);
+    card.classList.toggle('h-member',!mMember);
+    card.classList.toggle('found',!!(searchQ||activeMember)&&mSearch&&mMember);
+    if(mSearch&&mMember) vis++;
   });
 
-  if (searchQ || activeMember) {
-    searchCount.textContent = `${visible} из ${cards.length}`;
-  } else {
-    searchCount.textContent = '';
-  }
+  searchCount.textContent=(searchQ||activeMember)?`${vis} из ${cards.length}`:'';
 }
 
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 //  QUICK ADD
-// ══════════════════════════════════════════════════════════════
-function quickAdd() {
-  const text = document.getElementById('qa-text')?.value.trim();
-  if (!text) return;
-  const period = document.getElementById('qa-period')?.value || 'day';
-  const pending = JSON.parse(localStorage.getItem('fw-pending')||'[]');
-  pending.push({ text, period, ts: Date.now() });
-  localStorage.setItem('fw-pending', JSON.stringify(pending));
-  document.getElementById('qa-text').value = '';
-  logActivity(`➕ ${text.slice(0,28)}${text.length>28?'…':''}`);
+// ═══════════════════════════════════════════════════════════════
+function quickAdd(){
+  const text=document.getElementById('qa-text')?.value.trim();
+  if(!text) return;
+  const period=document.getElementById('qa-period')?.value||'day';
+  const pending=loadLS('fw-pending',[]);
+  pending.push({text,period,ts:Date.now()});
+  saveLS('fw-pending',pending);
+  document.getElementById('qa-text').value='';
+  logAct(`➕ ${text.slice(0,26)}${text.length>26?'…':''}`);
 }
 
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 //  ACTIVITY LOG
-// ══════════════════════════════════════════════════════════════
-function logActivity(msg) {
-  const log = JSON.parse(localStorage.getItem(ACTIVITY_KEY)||'[]');
-  const now = new Date();
-  const t   = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  log.unshift({ msg, t });
-  if (log.length > 20) log.pop();
-  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log));
-  renderActivityLog();
+// ═══════════════════════════════════════════════════════════════
+function logAct(msg){
+  const log=loadLS(ACT_KEY,[]);
+  log.unshift({msg,t:nowTime()});
+  if(log.length>25) log.pop();
+  saveLS(ACT_KEY,log);
+  renderActLog();
 }
 
-function renderActivityLog() {
-  const el = document.getElementById('activity-log');
-  if (!el) return;
-  const log = JSON.parse(localStorage.getItem(ACTIVITY_KEY)||'[]');
-  if (!log.length) { el.innerHTML = '<div class="act-item" style="color:rgba(255,255,255,.2)">Нет активности</div>'; return; }
-  el.innerHTML = log.slice(0,10).map(e =>
-    `<div class="act-item">${esc(e.msg)}<span class="act-time">${e.t}</span></div>`
-  ).join('');
+function renderActLog(){
+  const el=document.getElementById('act-log');
+  if(!el) return;
+  const log=loadLS(ACT_KEY,[]);
+  if(!log.length){ el.innerHTML='<div class="act-item" style="color:rgba(255,255,255,.18)">Нет активности</div>'; return; }
+  el.innerHTML=log.slice(0,10).map(e=>`<div class="act-item">${esc(e.msg)}<span class="act-time">${e.t}</span></div>`).join('');
 }
 
-// ══════════════════════════════════════════════════════════════
-//  SIDEBAR TOGGLE
-// ══════════════════════════════════════════════════════════════
-function toggleSidebar(side) {
-  const sb  = document.getElementById('sidebar-'+side);
-  const btn = document.getElementById('toggle-'+(side==='left'?'left':'right'));
-  if (!sb) return;
-  sb.classList.toggle('collapsed');
-  btn?.classList.toggle('active', !sb.classList.contains('collapsed'));
+// ═══════════════════════════════════════════════════════════════
+//  TOGGLE ACTIONS PANEL
+// ═══════════════════════════════════════════════════════════════
+function toggleActions(){
+  const wrap=document.getElementById('actions-wrap');
+  const btn=document.getElementById('actions-toggle');
+  wrap.classList.toggle('open');
+  btn.classList.toggle('on',wrap.classList.contains('open'));
 }
 
-// ══════════════════════════════════════════════════════════════
-//  LOAD ALL PERIODS
-// ══════════════════════════════════════════════════════════════
-async function loadAll() {
-  if (editing) return;
+// ═══════════════════════════════════════════════════════════════
+//  LOAD ALL
+// ═══════════════════════════════════════════════════════════════
+async function loadAll(){
+  if(editing) return;
 
-  const now = new Date();
-  document.getElementById('last-updated').innerHTML =
-    `Обновлено: <strong>${now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</strong>`;
+  const rr=document.getElementById('refresh-row');
+  if(rr) rr.classList.add('refreshing');
 
-  const rs = document.getElementById('refresh-status');
-  if (rs) rs.classList.add('refreshing');
+  const now=new Date();
+  document.getElementById('last-updated').innerHTML=
+    `<strong>${now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</strong>`;
 
-  for (const [period, cfg] of Object.entries(PERIODS)) {
-    const panel = document.getElementById(`panel-${period}`);
-    const file  = cfg.fn();
+  for(const [period,cfg] of Object.entries(PERIODS)){
+    const panel=document.getElementById('panel-'+period);
+    const file=cfg.fn();
     renderLoading(panel);
-    const md = await fetchMd(file);
-    if (!md) { renderEmpty(panel, period, file); continue; }
-    const tasks = parseMd(md);
-    if (!tasks.length) renderEmpty(panel, period, file);
-    else renderPanel(panel, period, file, tasks);
+    const md=await fetchMd(file);
+    if(!md){ renderEmpty(panel,period,file); continue; }
+    const tasks=parseMd(md);
+    if(!tasks.length) renderEmpty(panel,period,file);
+    else renderPanel(panel,period,file,tasks);
   }
 
-  buildTeamList();
-  renderActivityLog();
-  if (rs) rs.classList.remove('refreshing');
-
-  const rt = document.getElementById('refresh-time');
-  if (rt) rt.textContent = `обновлено ${new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}`;
+  renderTeam();
+  renderActLog();
+  if(rr) rr.classList.remove('refreshing');
+  const rt=document.getElementById('refresh-time');
+  if(rt) rt.textContent=`обновлено ${now.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}`;
 }
 
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 //  TABS
-// ══════════════════════════════════════════════════════════════
-document.getElementById('tabs-bar').addEventListener('click', e => {
-  const btn = e.target.closest('.tab-btn');
-  if (!btn) return;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('tabs-bar').addEventListener('click',e=>{
+  const btn=e.target.closest('.tab-btn');
+  if(!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+  document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
 });
 
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 //  INIT
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 loadAll();
-setInterval(loadAll, 2 * 60 * 1000);
+setInterval(loadAll, 2*60*1000);
 </script>
 </body>
 </html>
