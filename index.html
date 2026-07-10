@@ -5,21 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Filmway AI — Task Dashboard</title>
   <style>
-    /* ── Reset & Base ────────────────────────────────────────── */
+    /* ── Reset ────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --bg:        #0a0a0a;
+      --bg2:       #0d0d1a;
       --card:      #1a1a2e;
-      --card2:     #16213e;
       --accent:    #e94560;
       --accent2:   #c73652;
       --text:      #ffffff;
-      --text-muted:#8892a4;
+      --muted:     #8892a4;
       --done:      #2ecc71;
-      --border:    rgba(233,69,96,.25);
+      --border:    rgba(233,69,96,.2);
+      --border2:   rgba(255,255,255,.07);
       --shadow:    0 8px 32px rgba(0,0,0,.6);
       --radius:    12px;
+      --sidebar-w: 210px;
     }
 
     html { scroll-behavior: smooth; }
@@ -32,575 +34,592 @@
       overflow-x: hidden;
     }
 
-    /* ── Noise overlay ───────────────────────────────────────── */
     body::before {
       content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
       background-size: 180px;
-      pointer-events: none;
     }
 
-    /* ── Header ─────────────────────────────────────────────── */
+    /* ── Header ───────────────────────────────────────────────── */
     header {
-      position: relative; z-index: 10;
-      padding: 24px 32px 18px;
+      position: relative; z-index: 20;
+      padding: 18px 20px 14px;
       background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 60%, #0a0a0a 100%);
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 14px;
-      flex-wrap: wrap;
+      display: flex; align-items: center; gap: 12px;
     }
 
     .logo-wrap {
-      display: flex; align-items: center; gap: 14px;
-      flex: 1;
-      min-width: 0;
+      display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;
     }
-
     .logo-icon {
-      width: 44px; height: 44px;
+      width: 40px; height: 40px; flex-shrink: 0;
       background: linear-gradient(135deg, var(--accent), #ff6b6b);
       border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 0 20px rgba(233,69,96,.45);
-      flex-shrink: 0;
+      font-size: 20px;
+      box-shadow: 0 0 18px rgba(233,69,96,.4);
     }
-
     h1 {
-      font-size: clamp(1.1rem, 3.5vw, 1.6rem);
-      font-weight: 700;
-      letter-spacing: -.5px;
-      line-height: 1.2;
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      font-weight: 700; letter-spacing: -.4px; line-height: 1.2;
     }
     h1 span { color: var(--accent); }
 
-    /* ── Search toggle ───────────────────────────────────────── */
-    .header-right {
-      display: flex; align-items: center; gap: 8px;
-      margin-left: auto;
-      flex-shrink: 0;
+    /* ── Search toggle (in header) ────────────────────────────── */
+    .hdr-right {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
     }
-
-    .search-toggle-btn {
-      width: 36px; height: 36px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,.1);
-      background: rgba(255,255,255,.05);
-      color: var(--text-muted);
-      font-size: 16px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background .15s, border-color .15s, color .15s;
-      flex-shrink: 0;
-    }
-    .search-toggle-btn:hover,
-    .search-toggle-btn.active {
-      background: rgba(233,69,96,.15);
-      border-color: rgba(233,69,96,.4);
-      color: var(--accent);
-    }
-
     .search-slide {
-      overflow: hidden;
-      max-width: 0;
-      opacity: 0;
-      transition: max-width .28s ease, opacity .2s ease;
-      display: flex; align-items: center; gap: 8px;
+      overflow: hidden; max-width: 0; opacity: 0;
+      transition: max-width .28s ease, opacity .22s ease;
+      display: flex; align-items: center; gap: 7px;
     }
-    .search-slide.open {
-      max-width: 300px;
-      opacity: 1;
-    }
+    .search-slide.open { max-width: 280px; opacity: 1; }
 
     .search-input {
-      width: 220px;
-      padding: 7px 14px;
+      width: 200px; padding: 6px 14px;
       background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 20px;
-      color: var(--text);
-      font-size: .85rem;
-      outline: none;
-      transition: border-color .15s;
-      font-family: inherit;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 18px;
+      color: var(--text); font-size: .83rem; font-family: inherit;
+      outline: none; transition: border-color .15s;
     }
-    .search-input::placeholder { color: var(--text-muted); }
+    .search-input::placeholder { color: var(--muted); }
     .search-input:focus { border-color: rgba(233,69,96,.5); }
 
     .search-count {
-      font-size: .75rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-      min-width: 48px;
+      font-size: .72rem; color: var(--muted); white-space: nowrap; min-width: 52px;
     }
 
-    .header-meta {
-      font-size: .75rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-      text-align: right;
+    .btn-icon {
+      width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      color: var(--muted); font-size: 15px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .14s, border-color .14s, color .14s;
+    }
+    .btn-icon:hover, .btn-icon.active {
+      background: rgba(233,69,96,.15);
+      border-color: rgba(233,69,96,.4); color: var(--accent);
+    }
+
+    .hdr-meta { font-size: .72rem; color: var(--muted); line-height: 1.5; text-align: right; }
+    .hdr-meta strong { color: var(--text); }
+
+    /* ── Three-column layout ──────────────────────────────────── */
+    .fw-layout {
+      display: flex; min-height: calc(100vh - 130px);
+      position: relative; z-index: 5;
+    }
+
+    /* ── Sidebars ─────────────────────────────────────────────── */
+    .fw-sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--bg2);
+      padding: 14px 10px;
+      overflow-y: auto; overflow-x: hidden;
+      transition: width .22s ease, min-width .22s ease, padding .22s ease, opacity .15s;
+      border-right: 1px solid var(--border2);
+      font-size: 12.5px;
+    }
+    .fw-sidebar.right { border-right: none; border-left: 1px solid var(--border2); }
+    .fw-sidebar.collapsed {
+      width: 0 !important; min-width: 0 !important; padding: 0 !important; opacity: 0;
+    }
+
+    .sidebar-title {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: var(--muted);
+      margin: 0 0 10px 2px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--border2);
+    }
+
+    /* Team members */
+    .team-member {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 5px; border-radius: 8px; cursor: pointer;
+      transition: background .12s; margin-bottom: 2px;
+    }
+    .team-member:hover { background: rgba(255,255,255,.05); }
+    .team-member.active { background: rgba(233,69,96,.12); }
+
+    .member-avatar {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+    .member-name  { font-size: 12px; font-weight: 600; color: var(--text); }
+    .member-tasks { font-size: 10px; color: var(--muted); }
+
+    .filter-clear {
+      font-size: 10px; color: var(--accent); cursor: pointer;
+      padding: 2px 5px; margin-top: 4px; display: none; border-radius: 5px;
+    }
+    .filter-clear:hover { background: rgba(233,69,96,.1); }
+    .filter-clear.show { display: inline-block; }
+
+    /* Quick add */
+    .qa-textarea {
+      width: 100%; min-height: 52px; resize: vertical;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px; padding: 6px 8px;
+      font-size: 11.5px; font-family: inherit;
+      color: var(--text); outline: none;
+    }
+    .qa-textarea::placeholder { color: var(--muted); }
+    .qa-textarea:focus { border-color: rgba(233,69,96,.4); }
+
+    .qa-row { display: flex; gap: 4px; margin-top: 5px; }
+    .qa-select {
+      font-size: 11px; padding: 3px 5px; flex: 1;
+      background: rgba(255,255,255,.06); color: var(--text);
+      border: 1px solid rgba(255,255,255,.1); border-radius: 6px;
+      font-family: inherit;
+    }
+    .qa-btn {
+      font-size: 11px; padding: 3px 9px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;
+    }
+    .qa-btn:hover { background: var(--accent2); }
+
+    /* Activity log */
+    .act-item {
+      font-size: 11px; padding: 4px 2px;
+      border-bottom: 1px solid var(--border2);
+      color: var(--muted); line-height: 1.4;
+    }
+    .act-time { color: rgba(255,255,255,.25); margin-left: 4px; font-size: 10px; }
+
+    /* Sidebar toggle buttons (in topbar) */
+    .fw-topbar {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px 0;
+      background: var(--bg2);
+    }
+
+    .sidebar-toggle-btn {
+      font-size: 11px; padding: 4px 10px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border2);
+      border-radius: 7px; cursor: pointer; color: var(--muted);
+      transition: background .12s, color .12s;
       white-space: nowrap;
     }
-    .header-meta strong { color: var(--text); }
+    .sidebar-toggle-btn:hover { background: rgba(233,69,96,.1); color: var(--text); }
+    .sidebar-toggle-btn.active { background: rgba(233,69,96,.12); color: var(--accent); border-color: rgba(233,69,96,.3); }
 
-    /* ── Tabs ───────────────────────────────────────────────── */
+    .topbar-spacer { flex: 1; }
+
+    .refresh-status {
+      font-size: 10px; color: var(--muted);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .refresh-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--done);
+      animation: pdot 2.5s infinite;
+    }
+    @keyframes pdot { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+    .refreshing .refresh-dot { background: #ff9800; }
+
+    /* ── Tabs ─────────────────────────────────────────────────── */
     .tabs-bar {
       position: relative; z-index: 10;
-      display: flex; gap: 4px;
-      padding: 14px 32px 0;
-      background: #0d0d1a;
-      overflow-x: auto;
-      scrollbar-width: none;
+      display: flex; gap: 2px;
+      padding: 10px 14px 0;
+      background: var(--bg2);
+      overflow-x: auto; scrollbar-width: none;
     }
     .tabs-bar::-webkit-scrollbar { display: none; }
 
     .tab-btn {
-      padding: 10px 22px;
-      border: none; background: transparent;
-      color: var(--text-muted);
-      font-size: .88rem; font-weight: 600;
-      cursor: pointer;
-      border-radius: var(--radius) var(--radius) 0 0;
-      transition: color .2s, background .2s;
-      white-space: nowrap;
+      padding: 9px 18px; border: none; background: transparent;
+      color: var(--muted); font-size: .86rem; font-weight: 600;
+      cursor: pointer; border-radius: var(--radius) var(--radius) 0 0;
+      transition: color .18s, background .18s; white-space: nowrap;
       position: relative;
     }
     .tab-btn::after {
-      content: '';
-      position: absolute; bottom: 0; left: 50%; right: 50%;
-      height: 2px;
-      background: var(--accent);
-      transition: left .25s, right .25s;
-      border-radius: 2px 2px 0 0;
+      content: ''; position: absolute; bottom: 0; left: 50%; right: 50%;
+      height: 2px; background: var(--accent);
+      transition: left .22s, right .22s; border-radius: 2px 2px 0 0;
     }
     .tab-btn:hover { color: var(--text); background: rgba(255,255,255,.04); }
-    .tab-btn.active {
-      color: var(--text);
-      background: rgba(233,69,96,.08);
-    }
-    .tab-btn.active::after { left: 12px; right: 12px; }
+    .tab-btn.active { color: var(--text); background: rgba(233,69,96,.08); }
+    .tab-btn.active::after { left: 10px; right: 10px; }
 
-    .tab-btn .badge {
-      display: inline-block;
-      margin-left: 6px;
-      padding: 1px 7px;
-      border-radius: 999px;
-      font-size: .68rem;
-      background: var(--accent);
-      color: #fff;
-      vertical-align: middle;
-      opacity: 0;
-      transform: scale(.7);
+    .tab-badge {
+      display: inline-block; margin-left: 5px; padding: 1px 6px;
+      border-radius: 999px; font-size: .66rem;
+      background: var(--accent); color: #fff; vertical-align: middle;
+      opacity: 0; transform: scale(.7);
       transition: opacity .2s, transform .2s;
     }
-    .tab-btn .badge.visible { opacity: 1; transform: scale(1); }
+    .tab-badge.show { opacity: 1; transform: scale(1); }
 
-    /* ── Main ────────────────────────────────────────────────── */
+    /* ── Main content ─────────────────────────────────────────── */
+    .fw-main {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column;
+    }
+
     main {
-      position: relative; z-index: 5;
-      padding: 28px 32px 48px;
-      max-width: 1200px;
-      margin: 0 auto;
+      padding: 22px 24px 48px;
+      flex: 1;
     }
 
     .tab-panel { display: none; }
-    .tab-panel.active { display: block; animation: fadeUp .3s ease both; }
+    .tab-panel.active { display: block; animation: fadeUp .28s ease both; }
 
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
+      from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── Period header ───────────────────────────────────────── */
+    /* ── Period header ────────────────────────────────────────── */
     .period-header {
-      display: flex; align-items: center; gap: 12px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+      display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
     }
     .period-title {
-      font-size: 1rem; font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
+      font-size: .9rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1.5px;
     }
     .period-date {
-      font-size: .78rem;
-      color: var(--accent);
-      background: rgba(233,69,96,.1);
-      padding: 3px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(233,69,96,.3);
+      font-size: .74rem; color: var(--accent);
+      background: rgba(233,69,96,.1); padding: 3px 10px;
+      border-radius: 999px; border: 1px solid rgba(233,69,96,.28);
     }
 
-    /* ── Progress bar ────────────────────────────────────────── */
+    /* ── Progress ─────────────────────────────────────────────── */
     .progress-wrap {
-      background: rgba(255,255,255,.05);
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      margin-bottom: 22px;
+      background: rgba(255,255,255,.04);
+      border-radius: var(--radius); padding: 14px 18px; margin-bottom: 20px;
       border: 1px solid var(--border);
-      display: flex; align-items: center; gap: 16px;
-      flex-wrap: wrap;
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
     }
-    .progress-label {
-      font-size: .82rem; color: var(--text-muted); min-width: 100px;
-    }
+    .progress-label { font-size: .78rem; color: var(--muted); min-width: 90px; }
     .progress-bar-outer {
-      flex: 1; min-width: 100px;
-      height: 7px;
-      background: rgba(255,255,255,.08);
-      border-radius: 999px;
-      overflow: hidden;
+      flex: 1; min-width: 90px; height: 6px;
+      background: rgba(255,255,255,.07); border-radius: 999px; overflow: hidden;
     }
     .progress-bar-inner {
       height: 100%;
       background: linear-gradient(90deg, var(--accent), #ff6b6b);
       border-radius: 999px;
-      transition: width .7s cubic-bezier(.4,0,.2,1);
-      width: 0%;
-      box-shadow: 0 0 10px rgba(233,69,96,.5);
+      transition: width .65s cubic-bezier(.4,0,.2,1); width: 0%;
+      box-shadow: 0 0 8px rgba(233,69,96,.45);
     }
-    .progress-pct {
-      font-size: .95rem; font-weight: 700;
-      color: var(--text); min-width: 42px; text-align: right;
-    }
-    .progress-count { font-size: .78rem; color: var(--text-muted); }
+    .progress-pct { font-size: .9rem; font-weight: 700; color: var(--text); min-width: 38px; text-align: right; }
+    .progress-count { font-size: .75rem; color: var(--muted); }
 
-    /* ── Task list ───────────────────────────────────────────── */
-    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    /* ── Task list ────────────────────────────────────────────── */
+    .task-list { display: flex; flex-direction: column; gap: 7px; }
 
-    /* ── Task card ───────────────────────────────────────────── */
+    /* ── Task card ────────────────────────────────────────────── */
     .task-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex; align-items: flex-start; gap: 12px;
-      transition: transform .18s, box-shadow .18s, border-color .18s;
-      animation: cardIn .28s ease both;
-      position: relative;
-      overflow: hidden;
+      padding: 12px 14px;
+      display: flex; align-items: flex-start; gap: 11px;
+      transition: transform .16s, box-shadow .16s, border-color .16s;
+      animation: cardIn .25s ease both;
+      position: relative; overflow: hidden;
     }
     .task-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0;
-      width: 3px; height: 100%;
-      background: var(--accent);
-      opacity: 0;
-      transition: opacity .18s;
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%; background: var(--accent);
+      opacity: 0; transition: opacity .16s;
     }
-    .task-card:hover {
-      transform: translateX(3px);
-      box-shadow: var(--shadow);
-      border-color: rgba(233,69,96,.35);
-    }
+    .task-card:hover { transform: translateX(3px); box-shadow: var(--shadow); border-color: rgba(233,69,96,.32); }
     .task-card:hover::before { opacity: 1; }
-    .task-card.done { opacity: .6; }
-    .task-card.done::before { background: var(--done); opacity: .5; }
+    .task-card.done { opacity: .58; }
+    .task-card.done::before { background: var(--done); opacity: .45; }
 
-    /* Highlight search match */
-    .task-card.search-match { border-color: rgba(233,69,96,.55); }
-    .task-card.search-hidden { display: none !important; }
+    /* Search filtering */
+    .task-card.found { border-color: rgba(233,69,96,.48); }
+    .task-card.hidden-search { display: none !important; }
+    .task-card.hidden-member { display: none !important; }
 
     @keyframes cardIn {
-      from { opacity: 0; transform: translateX(-8px); }
+      from { opacity: 0; transform: translateX(-7px); }
       to   { opacity: 1; transform: translateX(0); }
     }
     .task-card:nth-child(1)  { animation-delay: .02s; }
     .task-card:nth-child(2)  { animation-delay: .05s; }
-    .task-card:nth-child(3)  { animation-delay: .08s; }
-    .task-card:nth-child(4)  { animation-delay: .11s; }
-    .task-card:nth-child(5)  { animation-delay: .14s; }
-    .task-card:nth-child(6)  { animation-delay: .17s; }
-    .task-card:nth-child(7)  { animation-delay: .20s; }
-    .task-card:nth-child(8)  { animation-delay: .23s; }
-    .task-card:nth-child(9)  { animation-delay: .26s; }
-    .task-card:nth-child(10) { animation-delay: .29s; }
+    .task-card:nth-child(3)  { animation-delay: .07s; }
+    .task-card:nth-child(4)  { animation-delay: .09s; }
+    .task-card:nth-child(5)  { animation-delay: .11s; }
+    .task-card:nth-child(6)  { animation-delay: .13s; }
+    .task-card:nth-child(7)  { animation-delay: .15s; }
+    .task-card:nth-child(8)  { animation-delay: .17s; }
+    .task-card:nth-child(9)  { animation-delay: .19s; }
+    .task-card:nth-child(10) { animation-delay: .21s; }
 
-    /* ── Checkbox ────────────────────────────────────────────── */
+    /* ── Checkbox ─────────────────────────────────────────────── */
     .task-check {
-      width: 19px; height: 19px; flex-shrink: 0;
-      border: 2px solid rgba(255,255,255,.18);
-      border-radius: 5px;
-      margin-top: 2px;
+      width: 18px; height: 18px; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,.15);
+      border-radius: 5px; margin-top: 2px;
       display: flex; align-items: center; justify-content: center;
-      transition: background .18s, border-color .18s;
-      cursor: pointer;
+      transition: background .15s, border-color .15s; cursor: pointer;
     }
-    .task-check.checked {
-      background: var(--done);
-      border-color: var(--done);
-    }
+    .task-check.checked { background: var(--done); border-color: var(--done); }
     .task-check.checked::after {
-      content: '';
-      display: block;
-      width: 5px; height: 9px;
-      border: 2px solid #fff;
-      border-top: none; border-left: none;
+      content: ''; display: block;
+      width: 4px; height: 8px;
+      border: 2px solid #fff; border-top: none; border-left: none;
       transform: rotate(45deg) translate(-1px, -1px);
     }
 
-    /* ── Task body ───────────────────────────────────────────── */
+    /* ── Task body ────────────────────────────────────────────── */
     .task-body { flex: 1; min-width: 0; }
 
     .task-text {
-      font-size: .91rem;
-      line-height: 1.5;
-      word-break: break-word;
+      font-size: .89rem; line-height: 1.5; word-break: break-word;
     }
-    .task-card.done .task-text { text-decoration: line-through; color: var(--text-muted); }
+    .task-card.done .task-text { text-decoration: line-through; color: var(--muted); }
 
-    /* ── Pencil edit button ──────────────────────────────────── */
+    mark {
+      background: rgba(233,69,96,.32); color: inherit;
+      border-radius: 3px; padding: 0 1px;
+    }
+
+    .task-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .meta-chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: .7rem; padding: 2px 8px; border-radius: 999px; font-weight: 600;
+    }
+    .chip-person { background: rgba(233,69,96,.1); color: var(--accent); border: 1px solid rgba(233,69,96,.22); }
+    .chip-deadline { background: rgba(255,190,11,.1); color: #ffbe0b; border: 1px solid rgba(255,190,11,.22); }
+
+    /* ── Pencil edit button ───────────────────────────────────── */
     .task-edit-btn {
-      opacity: 0;
-      flex-shrink: 0;
-      width: 28px; height: 28px;
-      border-radius: 7px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.04);
-      color: var(--text-muted);
-      font-size: 13px;
-      cursor: pointer;
+      opacity: 0; flex-shrink: 0;
+      width: 26px; height: 26px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.03);
+      color: var(--muted); font-size: 12px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: opacity .15s, background .15s, color .15s, border-color .15s;
-      margin-top: 1px;
+      transition: opacity .13s, background .13s, color .13s, border-color .13s;
+      margin-top: 1px; flex-shrink: 0;
     }
     .task-card:hover .task-edit-btn { opacity: 1; }
     .task-edit-btn:hover {
-      background: rgba(233,69,96,.15);
-      border-color: rgba(233,69,96,.35);
-      color: var(--accent);
+      background: rgba(233,69,96,.14); border-color: rgba(233,69,96,.32); color: var(--accent);
     }
 
-    /* ── Inline edit input ───────────────────────────────────── */
-    .task-edit-input {
-      display: none;
-      width: 100%;
-      background: rgba(255,255,255,.07);
-      border: 1px solid rgba(233,69,96,.45);
-      border-radius: 7px;
-      padding: 5px 10px;
-      color: var(--text);
-      font-size: .91rem;
-      font-family: inherit;
-      line-height: 1.5;
-      outline: none;
-      resize: none;
+    /* ── Inline edit ──────────────────────────────────────────── */
+    .task-edit-area {
+      display: none; width: 100%;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(233,69,96,.4);
+      border-radius: 7px; padding: 5px 9px;
+      color: var(--text); font-size: .89rem; font-family: inherit;
+      line-height: 1.5; outline: none; resize: none;
     }
-    .task-edit-input.active { display: block; }
-    .task-edit-actions {
-      display: none;
-      gap: 5px;
-      margin-top: 6px;
-    }
-    .task-edit-actions.active { display: flex; }
-    .task-edit-save, .task-edit-cancel {
-      font-size: .78rem;
-      padding: 4px 12px;
-      border-radius: 6px;
-      border: 1px solid;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .task-edit-save {
-      background: var(--accent); color: #fff; border-color: var(--accent);
-    }
-    .task-edit-save:hover { background: var(--accent2); }
-    .task-edit-cancel {
-      background: rgba(255,255,255,.05); color: var(--text-muted);
-      border-color: rgba(255,255,255,.1);
-    }
-    .task-edit-cancel:hover { background: rgba(255,255,255,.1); }
+    .task-edit-area.open { display: block; }
 
-    /* ── Task meta chips ─────────────────────────────────────── */
-    .task-meta {
-      display: flex; flex-wrap: wrap; gap: 6px;
-      margin-top: 7px;
+    .task-edit-btns {
+      display: none; gap: 5px; margin-top: 5px;
     }
-    .meta-chip {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: .72rem;
-      padding: 2px 9px;
-      border-radius: 999px;
-      font-weight: 600;
-    }
-    .chip-person {
-      background: rgba(233,69,96,.12);
-      color: var(--accent);
-      border: 1px solid rgba(233,69,96,.25);
-    }
-    .chip-deadline {
-      background: rgba(255,190,11,.1);
-      color: #ffbe0b;
-      border: 1px solid rgba(255,190,11,.25);
-    }
+    .task-edit-btns.open { display: flex; }
 
-    /* ── Search highlight mark ───────────────────────────────── */
-    mark {
-      background: rgba(233,69,96,.35);
-      color: inherit;
-      border-radius: 3px;
-      padding: 0 1px;
+    .btn-save, .btn-cancel {
+      font-size: .75rem; padding: 3px 11px;
+      border-radius: 6px; border: 1px solid; cursor: pointer; font-family: inherit;
     }
+    .btn-save { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-save:hover { background: var(--accent2); }
+    .btn-cancel { background: rgba(255,255,255,.05); color: var(--muted); border-color: rgba(255,255,255,.1); }
+    .btn-cancel:hover { background: rgba(255,255,255,.1); }
 
-    /* ── Empty / loading ─────────────────────────────────────── */
-    .empty-state {
-      text-align: center; padding: 56px 20px; color: var(--text-muted);
-    }
-    .empty-icon { font-size: 2.8rem; margin-bottom: 10px; opacity: .4; }
-    .empty-state p { font-size: .92rem; }
+    /* ── Empty / loading ──────────────────────────────────────── */
+    .empty-state { text-align: center; padding: 50px 20px; color: var(--muted); }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: .4; }
     .loading {
       display: flex; align-items: center; justify-content: center;
-      gap: 12px; padding: 50px 20px;
-      color: var(--text-muted); font-size: .88rem;
+      gap: 12px; padding: 45px 20px; color: var(--muted); font-size: .86rem;
     }
     .spinner {
-      width: 20px; height: 20px;
-      border: 3px solid rgba(233,69,96,.2);
+      width: 19px; height: 19px;
+      border: 3px solid rgba(233,69,96,.18);
       border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
+      border-radius: 50%; animation: spin .65s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Section heading ─────────────────────────────────────── */
     .section-heading {
-      font-size: .76rem; font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--text-muted);
-      margin: 16px 0 7px;
-      padding-left: 10px;
+      font-size: .73rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.4px; color: var(--muted);
+      margin: 15px 0 6px; padding-left: 9px;
       border-left: 3px solid var(--accent);
     }
 
-    /* ── Footer ──────────────────────────────────────────────── */
+    /* ── Footer ───────────────────────────────────────────────── */
     footer {
       position: relative; z-index: 10;
-      text-align: center; padding: 14px;
-      font-size: .73rem; color: var(--text-muted);
-      border-top: 1px solid var(--border);
+      text-align: center; padding: 12px;
+      font-size: .7rem; color: var(--muted);
+      border-top: 1px solid var(--border2);
     }
     footer a { color: var(--accent); text-decoration: none; }
 
-    /* ── Responsive ──────────────────────────────────────────── */
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      :root { --sidebar-w: 170px; }
+    }
     @media (max-width: 640px) {
-      header { padding: 16px 14px 14px; }
-      .tabs-bar { padding: 10px 14px 0; }
-      main { padding: 16px 14px 36px; }
-      .tab-btn { padding: 8px 14px; font-size: .82rem; }
-      .search-input { width: 160px; }
-      .header-meta { display: none; }
+      .fw-sidebar { display: none !important; }
+      header { padding: 14px 12px; }
+      main { padding: 14px 12px 32px; }
+      .hdr-meta { display: none; }
     }
   </style>
 </head>
 <body>
 
-<!-- ── Header ──────────────────────────────────────────────── -->
+<!-- ═══ HEADER ══════════════════════════════════════════════════ -->
 <header>
   <div class="logo-wrap">
     <div class="logo-icon">🎬</div>
     <h1>Filmway AI — <span>Task Dashboard</span></h1>
   </div>
-
-  <div class="header-right">
-    <!-- Поиск: кнопка + скрывающееся поле -->
+  <div class="hdr-right">
+    <!-- Search: slide-out field + toggle button -->
     <div class="search-slide" id="search-slide">
-      <input
-        class="search-input"
-        id="search-input"
-        type="search"
-        placeholder="Поиск задач…"
-        autocomplete="off"
-      />
+      <input class="search-input" id="search-input" type="search"
+             placeholder="Поиск задач…" autocomplete="off" />
       <span class="search-count" id="search-count"></span>
     </div>
-    <button class="search-toggle-btn" id="search-toggle-btn" title="Поиск (⌘F)">🔍</button>
-
-    <div class="header-meta" id="last-updated">Обновление…</div>
+    <button class="btn-icon" id="search-btn" title="Поиск (⌘F)">🔍</button>
+    <div class="hdr-meta" id="last-updated">Обновление…</div>
   </div>
 </header>
 
-<!-- ── Tabs ────────────────────────────────────────────────── -->
-<div class="tabs-bar" id="tabs-bar">
-  <button class="tab-btn active" data-tab="day">День <span class="badge" id="badge-day"></span></button>
-  <button class="tab-btn" data-tab="week">Неделя <span class="badge" id="badge-week"></span></button>
-  <button class="tab-btn" data-tab="month">Месяц <span class="badge" id="badge-month"></span></button>
-  <button class="tab-btn" data-tab="halfyear">Полгода <span class="badge" id="badge-halfyear"></span></button>
-  <button class="tab-btn" data-tab="year">Год <span class="badge" id="badge-year"></span></button>
+<!-- ═══ TOPBAR (sidebar toggles + refresh) ══════════════════════ -->
+<div class="fw-topbar">
+  <button class="sidebar-toggle-btn active" id="toggle-left" onclick="toggleSidebar('left')">☰ Команда</button>
+  <span class="topbar-spacer"></span>
+  <div class="refresh-status" id="refresh-status">
+    <span class="refresh-dot"></span>
+    <span id="refresh-time">авто-обновление каждые 2 мин</span>
+  </div>
+  <span class="topbar-spacer"></span>
+  <button class="sidebar-toggle-btn active" id="toggle-right" onclick="toggleSidebar('right')">⚡ Действия</button>
 </div>
 
-<!-- ── Panels ──────────────────────────────────────────────── -->
-<main>
-  <div class="tab-panel active" id="panel-day"     data-period="day"></div>
-  <div class="tab-panel"       id="panel-week"     data-period="week"></div>
-  <div class="tab-panel"       id="panel-month"    data-period="month"></div>
-  <div class="tab-panel"       id="panel-halfyear" data-period="halfyear"></div>
-  <div class="tab-panel"       id="panel-year"     data-period="year"></div>
-</main>
+<!-- ═══ TABS ════════════════════════════════════════════════════ -->
+<div class="tabs-bar" id="tabs-bar">
+  <button class="tab-btn active" data-tab="day">День <span class="tab-badge" id="badge-day"></span></button>
+  <button class="tab-btn" data-tab="week">Неделя <span class="tab-badge" id="badge-week"></span></button>
+  <button class="tab-btn" data-tab="month">Месяц <span class="tab-badge" id="badge-month"></span></button>
+  <button class="tab-btn" data-tab="halfyear">Полгода <span class="tab-badge" id="badge-halfyear"></span></button>
+  <button class="tab-btn" data-tab="year">Год <span class="tab-badge" id="badge-year"></span></button>
+</div>
 
-<footer>
-  Filmway AI © 2026 &nbsp;·&nbsp;
-  <a href="https://github.com/filmway-team-bot/filmway-tasks" target="_blank" rel="noopener">GitHub</a>
-  &nbsp;·&nbsp; Автообновление каждые 5 минут
-</footer>
+<!-- ═══ THREE-COLUMN LAYOUT ════════════════════════════════════ -->
+<div class="fw-layout">
+
+  <!-- Left sidebar: Team -->
+  <div class="fw-sidebar" id="sidebar-left">
+    <div class="sidebar-title">👥 Команда</div>
+    <span class="filter-clear" id="filter-clear" onclick="clearMemberFilter()">✕ Показать всех</span>
+    <div id="team-list"></div>
+  </div>
+
+  <!-- Main -->
+  <div class="fw-main">
+    <main>
+      <div class="tab-panel active" id="panel-day"     data-period="day"></div>
+      <div class="tab-panel"       id="panel-week"     data-period="week"></div>
+      <div class="tab-panel"       id="panel-month"    data-period="month"></div>
+      <div class="tab-panel"       id="panel-halfyear" data-period="halfyear"></div>
+      <div class="tab-panel"       id="panel-year"     data-period="year"></div>
+    </main>
+
+    <footer>
+      Filmway AI © 2026 &nbsp;·&nbsp;
+      <a href="https://github.com/filmway-team-bot/filmway-tasks" target="_blank" rel="noopener">GitHub</a>
+      &nbsp;·&nbsp; Автообновление каждые 2 минуты
+    </footer>
+  </div>
+
+  <!-- Right sidebar: Quick add + Activity -->
+  <div class="fw-sidebar right" id="sidebar-right">
+    <div class="sidebar-title">⚡ Быстро добавить</div>
+    <textarea class="qa-textarea" id="qa-text" placeholder="Текст задачи…&#10;Можно с именем: — Кирилл"></textarea>
+    <div class="qa-row">
+      <select class="qa-select" id="qa-period">
+        <option value="day">Сегодня</option>
+        <option value="week">Неделя</option>
+        <option value="month">Месяц</option>
+      </select>
+      <button class="qa-btn" onclick="quickAdd()">＋</button>
+    </div>
+    <div class="sidebar-title" style="margin-top:14px">🕐 Активность</div>
+    <div id="activity-log"></div>
+  </div>
+
+</div><!-- /fw-layout -->
 
 <script>
 // ══════════════════════════════════════════════════════════════
-//  CONFIG
+//  CONFIG & CONSTANTS
 // ══════════════════════════════════════════════════════════════
 const REPO   = 'filmway-team-bot/filmway-tasks';
 const BRANCH = 'main';
 const BASE   = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/`;
-const EDITS_KEY = 'fw-task-edits';   // localStorage: {hash: editedText}
+const EDITS_KEY    = 'fw-task-edits';
+const ACTIVITY_KEY = 'fw-activity';
+
+const TEAM = [
+  { name: 'Кирилл',  key: 'кирилл',  color: '#c5d0f0', text: '#3355cc' },
+  { name: 'Эрадж',   key: 'эрадж',   color: '#c8e6c9', text: '#2e7d32' },
+  { name: 'Кира',    key: 'кира',     color: '#fce4ec', text: '#c62828' },
+  { name: 'Ульяна',  key: 'ульяна',  color: '#e8eaf6', text: '#5c35cc' },
+  { name: 'Катрина', key: 'катрина', color: '#fff3e0', text: '#e65100' },
+  { name: 'Полина',  key: 'полина',  color: '#e0f7fa', text: '#00695c' },
+  { name: 'Дима',    key: 'дима',    color: '#fffde7', text: '#f57f17' },
+  { name: 'Даша',    key: 'даша',    color: '#fbe9e7', text: '#bf360c' },
+  { name: 'Лера',    key: 'лера',    color: '#ede7f6', text: '#6a1b9a' },
+];
 
 const PERIODS = {
-  day:      { label: 'День',    getFilename: () => `tasks/day/${todayStr()}.md` },
-  week:     { label: 'Неделя',  getFilename: () => `tasks/week/${weekStr()}.md` },
-  month:    { label: 'Месяц',   getFilename: () => `tasks/month/${monthStr()}.md` },
-  halfyear: { label: 'Полгода', getFilename: () => `tasks/halfyear/${halfyearStr()}.md` },
-  year:     { label: 'Год',     getFilename: () => `tasks/year/${yearStr()}.md` },
+  day:      { label: 'День',    fn: () => `tasks/day/${todayStr()}.md` },
+  week:     { label: 'Неделя',  fn: () => `tasks/week/${weekStr()}.md` },
+  month:    { label: 'Месяц',   fn: () => `tasks/month/${monthStr()}.md` },
+  halfyear: { label: 'Полгода', fn: () => `tasks/halfyear/${halfyearStr()}.md` },
+  year:     { label: 'Год',     fn: () => `tasks/year/${yearStr()}.md` },
 };
 
 // ══════════════════════════════════════════════════════════════
 //  DATE HELPERS
 // ══════════════════════════════════════════════════════════════
-function pad(n) { return String(n).padStart(2, '0'); }
-
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-}
-function weekStr() {
-  const d = new Date();
-  const jan1 = new Date(d.getFullYear(), 0, 1);
-  const week = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
-  return `${d.getFullYear()}-W${pad(week)}`;
-}
-function monthStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-}
-function halfyearStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth() < 6 ? 'H1' : 'H2'}`;
-}
-function yearStr() { return String(new Date().getFullYear()); }
+const pad = n => String(n).padStart(2,'0');
+function todayStr()    { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function weekStr()     { const d=new Date(), j=new Date(d.getFullYear(),0,1), w=Math.ceil(((d-j)/864e5+j.getDay()+1)/7); return `${d.getFullYear()}-W${pad(w)}`; }
+function monthStr()    { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}`; }
+function halfyearStr() { const d=new Date(); return `${d.getFullYear()}-${d.getMonth()<6?'H1':'H2'}`; }
+function yearStr()     { return String(new Date().getFullYear()); }
 
 function humanDate(s) {
-  if (s.includes('-W')) return `Неделя ${s.split('-W')[1]}, ${s.split('-')[0]}`;
-  if (s.includes('-H')) return s.replace('H1','первое полугодие').replace('H2','второе полугодие');
+  if (s.includes('-W'))  return `Неделя ${s.split('-W')[1]}, ${s.split('-')[0]}`;
+  if (s.includes('-H'))  return s.replace('H1','первое полугодие').replace('H2','второе полугодие');
   if (/^\d{4}$/.test(s)) return s;
   if (/\d{4}-\d{2}-\d{2}/.test(s)) {
-    const [y,m,dd] = s.split('-');
-    const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-    return `${parseInt(dd,10)} ${months[parseInt(m,10)-1]} ${y}`;
+    const [y,m,dd]=s.split('-');
+    return `${+dd} ${['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][+m-1]} ${y}`;
   }
   if (/\d{4}-\d{2}/.test(s)) {
-    const [y,m] = s.split('-');
-    const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-    return `${months[parseInt(m,10)-1]} ${y}`;
+    const [y,m]=s.split('-');
+    return `${['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'][+m-1]} ${y}`;
   }
   return s;
 }
@@ -608,69 +627,45 @@ function humanDate(s) {
 // ══════════════════════════════════════════════════════════════
 //  UTILS
 // ══════════════════════════════════════════════════════════════
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// djb2 hash for stable task key
-function djb2(str) {
-  let h = 5381;
-  for (let i = 0; i < str.length; i++) h = ((h<<5)+h) ^ str.charCodeAt(i);
+function djb2(s) {
+  let h=5381;
+  for (let i=0;i<s.length;i++) h=((h<<5)+h)^s.charCodeAt(i);
   return (h>>>0).toString(36);
 }
 
-function loadEdits() {
-  try { return JSON.parse(localStorage.getItem(EDITS_KEY) || '{}'); }
-  catch { return {}; }
-}
-function saveEdits(e) { localStorage.setItem(EDITS_KEY, JSON.stringify(e)); }
+function loadEdits()   { try { return JSON.parse(localStorage.getItem(EDITS_KEY)||'{}'); } catch { return {}; } }
+function saveEdits(d)  { localStorage.setItem(EDITS_KEY, JSON.stringify(d)); }
 
 // ══════════════════════════════════════════════════════════════
-//  FETCH MARKDOWN
+//  FETCH + PARSE
 // ══════════════════════════════════════════════════════════════
-async function fetchMarkdown(filename) {
-  const res = await fetch(BASE + filename + `?_=${Date.now()}`);
-  if (!res.ok) return null;
-  return res.text();
+async function fetchMd(filename) {
+  const r = await fetch(BASE + filename + `?_=${Date.now()}`);
+  return r.ok ? r.text() : null;
 }
 
-// ══════════════════════════════════════════════════════════════
-//  PARSE MARKDOWN
-// ══════════════════════════════════════════════════════════════
-function parseMarkdown(md) {
-  const items  = [];
-  let section  = '';
+function parseMd(md) {
+  const items = [];
+  let section = '';
   for (const raw of md.split('\n')) {
     const line = raw.trimEnd();
-    if (/^#+\s/.test(line)) {
-      section = line.replace(/^#+\s*/, '').trim();
-      continue;
-    }
-    const matchDone = line.match(/^[-*]\s+\[x\]\s+(.*)/i);
-    const matchTodo = line.match(/^[-*]\s+\[ \]\s+(.*)/);
-    if (!matchDone && !matchTodo) continue;
-
-    const done = !!matchDone;
-    const raw2 = (done ? matchDone[1] : matchTodo[1]).trim();
-
-    let person = null;
-    const pm = raw2.match(/—\s*([А-ЯЁа-яёA-Za-z][^\s,\(]*(?:\s+[А-ЯЁа-яёA-Za-z][^\s,\(]*)?)/u)
-             || raw2.match(/@([\w\d_]+)/);
-    if (pm) person = pm[0].replace(/^@/, '@');
-
-    let deadline = null;
+    if (/^#+\s/.test(line)) { section = line.replace(/^#+\s*/,'').trim(); continue; }
+    const mDone = line.match(/^[-*]\s+\[x\]\s+(.*)/i);
+    const mTodo = line.match(/^[-*]\s+\[ \]\s+(.*)/);
+    if (!mDone && !mTodo) continue;
+    const done = !!mDone;
+    const raw2 = (done ? mDone[1] : mTodo[1]).trim();
+    const pm = raw2.match(/—\s*([А-ЯЁа-яёA-Za-z][^\s,\(]*(?:\s+[А-ЯЁа-яёA-Za-z][^\s,\(]*)?)/u) || raw2.match(/@([\w\d_]+)/);
     const dl = raw2.match(/до\s+(\d{1,2}\.\d{2})/);
-    if (dl) deadline = dl[1];
-
-    const cleanText = raw2
-      .replace(/—\s*[А-ЯЁа-яёA-Za-z][^\s,\(]*(?:\s+[А-ЯЁа-яёA-Za-z][^\s,\(]*)?/u, '')
-      .replace(/@[\w\d_]+/, '')
-      .replace(/до\s+\d{1,2}\.\d{2}/, '')
+    const clean = raw2
+      .replace(/—\s*[А-ЯЁа-яёA-Za-z][^\s,\(]*(?:\s+[А-ЯЁа-яёA-Za-z][^\s,\(]*)?/u,'')
+      .replace(/@[\w\d_]+/,'')
+      .replace(/до\s+\d{1,2}\.\d{2}/,'')
       .replace(/\s{2,}/g,' ').trim();
-
-    items.push({ done, text: cleanText || raw2, rawText: raw2, person, deadline, section });
+    items.push({ done, text: clean||raw2, rawText: raw2, person: pm?.[0]?.replace(/^@/,'@')||null, deadline: dl?.[1]||null, section });
   }
   return items;
 }
@@ -679,74 +674,57 @@ function parseMarkdown(md) {
 //  RENDER
 // ══════════════════════════════════════════════════════════════
 function renderPanel(panelEl, period, filename, tasks) {
-  const total = tasks.length;
-  const done  = tasks.filter(t => t.done).length;
-  const pct   = total ? Math.round((done / total) * 100) : 0;
-  const fileBase = filename.split('/').pop();
+  const total = tasks.length, done = tasks.filter(t=>t.done).length;
+  const pct   = total ? Math.round(done/total*100) : 0;
+  const base  = filename.split('/').pop();
 
-  let html = `
-    <div class="period-header">
-      <span class="period-title">${PERIODS[period].label}</span>
-      <span class="period-date">${humanDate(fileBase.replace('.md',''))}</span>
-    </div>`;
+  let html = `<div class="period-header">
+    <span class="period-title">${PERIODS[period].label}</span>
+    <span class="period-date">${humanDate(base.replace('.md',''))}</span>
+  </div>`;
 
-  if (total > 0) {
-    html += `
-    <div class="progress-wrap">
-      <span class="progress-label">Прогресс</span>
-      <div class="progress-bar-outer">
-        <div class="progress-bar-inner" id="pb-${period}" style="width:0%"></div>
-      </div>
-      <span class="progress-pct">${pct}%</span>
-      <span class="progress-count">${done}/${total} выполнено</span>
-    </div>`;
-  }
+  if (total > 0) html += `<div class="progress-wrap">
+    <span class="progress-label">Прогресс</span>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="pb-${period}"></div></div>
+    <span class="progress-pct">${pct}%</span>
+    <span class="progress-count">${done}/${total} выполнено</span>
+  </div>`;
 
-  html += `<div class="task-list" id="tl-${period}">`;
-  const sections = [...new Set(tasks.map(t => t.section))];
+  html += `<div class="task-list">`;
+  const sections = [...new Set(tasks.map(t=>t.section))];
   for (const sec of sections) {
-    const group = tasks.filter(t => t.section === sec);
-    if (sec) html += `<div class="section-heading">${escHtml(sec)}</div>`;
-    for (const task of group) {
-      html += renderCard(task);
-    }
+    if (sec) html += `<div class="section-heading">${esc(sec)}</div>`;
+    for (const task of tasks.filter(t=>t.section===sec)) html += renderCard(task);
   }
   html += `</div>`;
 
   panelEl.innerHTML = html;
-  requestAnimationFrame(() => {
-    const pb = document.getElementById(`pb-${period}`);
-    if (pb) pb.style.width = pct + '%';
-  });
+  requestAnimationFrame(() => { const pb=document.getElementById(`pb-${period}`); if(pb) pb.style.width=pct+'%'; });
 
   const badge = document.getElementById(`badge-${period}`);
-  if (badge && total > 0) {
-    badge.textContent = total - done || '✓';
-    badge.classList.add('visible');
-  }
+  if (badge && total > 0) { badge.textContent = total-done||'✓'; badge.classList.add('show'); }
 
-  // Attach edit handlers
-  panelEl.querySelectorAll('.task-card').forEach(card => attachEdit(card));
+  panelEl.querySelectorAll('.task-card').forEach(attachEdit);
+  applyAllFilters();
 }
 
 function renderCard(task) {
-  const edits   = loadEdits();
-  const key     = djb2(task.rawText || task.text);
-  const display = edits[key] || task.text;
+  const edits = loadEdits();
+  const key   = djb2(task.rawText || task.text);
+  const disp  = edits[key] || task.text;
 
-  return `
-  <div class="task-card${task.done ? ' done' : ''}" data-task-key="${key}">
-    <div class="task-check${task.done ? ' checked' : ''}"></div>
+  return `<div class="task-card${task.done?' done':''}" data-key="${key}" data-raw="${esc(task.rawText||task.text)}">
+    <div class="task-check${task.done?' checked':''}"></div>
     <div class="task-body">
-      <div class="task-text">${escHtml(display)}</div>
-      <textarea class="task-edit-input" rows="2">${escHtml(display)}</textarea>
-      <div class="task-edit-actions">
-        <button class="task-edit-save">Сохранить</button>
-        <button class="task-edit-cancel">Отмена</button>
+      <div class="task-text">${esc(disp)}</div>
+      <textarea class="task-edit-area" rows="2">${esc(disp)}</textarea>
+      <div class="task-edit-btns">
+        <button class="btn-save">Сохранить</button>
+        <button class="btn-cancel">Отмена</button>
       </div>
-      ${task.person || task.deadline ? `<div class="task-meta">
-        ${task.person   ? `<span class="meta-chip chip-person">👤 ${escHtml(task.person)}</span>` : ''}
-        ${task.deadline ? `<span class="meta-chip chip-deadline">📅 до ${escHtml(task.deadline)}</span>` : ''}
+      ${task.person||task.deadline ? `<div class="task-meta">
+        ${task.person   ? `<span class="meta-chip chip-person">👤 ${esc(task.person)}</span>` : ''}
+        ${task.deadline ? `<span class="meta-chip chip-deadline">📅 до ${esc(task.deadline)}</span>` : ''}
       </div>` : ''}
     </div>
     <button class="task-edit-btn" title="Редактировать">✏️</button>
@@ -754,149 +732,186 @@ function renderCard(task) {
 }
 
 function renderEmpty(panelEl, period, filename) {
-  const fileBase = filename.split('/').pop();
-  panelEl.innerHTML = `
-    <div class="period-header">
-      <span class="period-title">${PERIODS[period].label}</span>
-      <span class="period-date">${humanDate(fileBase.replace('.md',''))}</span>
-    </div>
-    <div class="empty-state">
-      <div class="empty-icon">📭</div>
-      <p>Задач нет</p>
-      <p style="margin-top:6px;font-size:.78rem">Файл <code>${filename}</code> не найден или пуст</p>
-    </div>`;
+  const base = filename.split('/').pop();
+  panelEl.innerHTML = `<div class="period-header">
+    <span class="period-title">${PERIODS[period].label}</span>
+    <span class="period-date">${humanDate(base.replace('.md',''))}</span>
+  </div>
+  <div class="empty-state"><div class="empty-icon">📭</div><p>Задач нет</p>
+  <p style="margin-top:6px;font-size:.74rem">Файл <code>${filename}</code> не найден или пуст</p></div>`;
 }
 
-function renderLoading(panelEl) {
-  panelEl.innerHTML = `<div class="loading"><div class="spinner"></div>Загрузка задач…</div>`;
+function renderLoading(el) {
+  el.innerHTML = `<div class="loading"><div class="spinner"></div>Загрузка…</div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
-//  EDIT HANDLERS
+//  TASK EDITING
 // ══════════════════════════════════════════════════════════════
+let editing = false;
+
 function attachEdit(card) {
-  const editBtn    = card.querySelector('.task-edit-btn');
-  const textEl     = card.querySelector('.task-text');
-  const inputEl    = card.querySelector('.task-edit-input');
-  const actionsEl  = card.querySelector('.task-edit-actions');
-  const saveBtn    = card.querySelector('.task-edit-save');
-  const cancelBtn  = card.querySelector('.task-edit-cancel');
-  const key        = card.dataset.taskKey;
+  const editBtn  = card.querySelector('.task-edit-btn');
+  const textEl   = card.querySelector('.task-text');
+  const area     = card.querySelector('.task-edit-area');
+  const btns     = card.querySelector('.task-edit-btns');
+  const saveBtn  = card.querySelector('.btn-save');
+  const cancelBtn= card.querySelector('.btn-cancel');
+  const key      = card.dataset.key;
 
   if (!editBtn) return;
 
-  function openEdit() {
-    inputEl.value = textEl.textContent;
+  const open = () => {
+    if (editing) return;
+    editing = true;
+    area.value = textEl.textContent;
     textEl.style.display = 'none';
-    inputEl.classList.add('active');
-    actionsEl.classList.add('active');
-    // Stop auto-refresh while editing
-    window._editingTask = true;
-    inputEl.focus();
-    inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
-  }
+    area.classList.add('open'); btns.classList.add('open');
+    area.focus();
+    area.setSelectionRange(area.value.length, area.value.length);
+  };
 
-  function closeEdit() {
+  const close = () => {
     textEl.style.display = '';
-    inputEl.classList.remove('active');
-    actionsEl.classList.remove('active');
-    window._editingTask = false;
-  }
+    area.classList.remove('open'); btns.classList.remove('open');
+    editing = false;
+  };
 
-  function saveEdit() {
-    const newText = inputEl.value.trim();
-    if (!newText) return;
-    textEl.textContent = newText;
-    const edits = loadEdits();
-    edits[key] = newText;
-    saveEdits(edits);
-    closeEdit();
-  }
+  const save = () => {
+    const val = area.value.trim();
+    if (!val) return;
+    textEl.textContent = val;
+    const d = loadEdits(); d[key] = val; saveEdits(d);
+    logActivity(`✏️ Задача обновлена: ${val.slice(0,25)}…`);
+    close();
+  };
 
-  editBtn.addEventListener('click', e => { e.stopPropagation(); openEdit(); });
-  saveBtn.addEventListener('click', e => { e.stopPropagation(); saveEdit(); });
-  cancelBtn.addEventListener('click', e => { e.stopPropagation(); closeEdit(); });
-  inputEl.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(); }
-    if (e.key === 'Escape') closeEdit();
+  editBtn.addEventListener('click', e => { e.stopPropagation(); open(); });
+  saveBtn.addEventListener('click', e => { e.stopPropagation(); save(); });
+  cancelBtn.addEventListener('click', e => { e.stopPropagation(); close(); });
+  area.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save(); }
+    if (e.key === 'Escape') close();
   });
 }
 
 // ══════════════════════════════════════════════════════════════
 //  SEARCH
 // ══════════════════════════════════════════════════════════════
-let searchQuery = '';
+let searchQ = '';
 
-const searchToggleBtn = document.getElementById('search-toggle-btn');
-const searchSlide     = document.getElementById('search-slide');
-const searchInput     = document.getElementById('search-input');
-const searchCount     = document.getElementById('search-count');
+const searchBtn   = document.getElementById('search-btn');
+const searchSlide = document.getElementById('search-slide');
+const searchInput = document.getElementById('search-input');
+const searchCount = document.getElementById('search-count');
 
-searchToggleBtn.addEventListener('click', () => {
-  const isOpen = searchSlide.classList.toggle('open');
-  searchToggleBtn.classList.toggle('active', isOpen);
-  if (isOpen) {
-    searchInput.focus();
-  } else {
-    searchInput.value = '';
-    searchQuery = '';
-    applySearch('');
-  }
+searchBtn.addEventListener('click', () => {
+  const open = searchSlide.classList.toggle('open');
+  searchBtn.classList.toggle('active', open);
+  if (open) { searchInput.focus(); }
+  else { searchInput.value=''; searchQ=''; applyAllFilters(); }
 });
 
 searchInput.addEventListener('input', () => {
-  searchQuery = searchInput.value.trim().toLowerCase();
-  applySearch(searchQuery);
+  searchQ = searchInput.value.trim().toLowerCase();
+  applyAllFilters();
 });
 
-searchInput.addEventListener('keydown', e => {
-  if (e.key === 'Escape') searchToggleBtn.click();
-});
+searchInput.addEventListener('keydown', e => { if(e.key==='Escape') searchBtn.click(); });
 
 document.addEventListener('keydown', e => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+  if ((e.metaKey||e.ctrlKey) && e.key==='f') {
     e.preventDefault();
-    if (!searchSlide.classList.contains('open')) {
-      searchToggleBtn.click();
-    } else {
-      searchInput.focus();
-    }
+    if (!searchSlide.classList.contains('open')) searchBtn.click(); else searchInput.focus();
   }
 });
 
-function applySearch(q) {
-  const cards = document.querySelectorAll('.task-card');
-  let visible = 0;
+// ══════════════════════════════════════════════════════════════
+//  TEAM FILTER
+// ══════════════════════════════════════════════════════════════
+let activeMember = null;
+
+function buildTeamList() {
+  const container = document.getElementById('team-list');
+  if (!container) return;
+  container.innerHTML = '';
+  TEAM.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'team-member' + (activeMember===m.key ? ' active' : '');
+    el.dataset.key = m.key;
+    const count = document.querySelectorAll('.task-card:not(.hidden-search)');
+    el.innerHTML = `
+      <div class="member-avatar" style="background:${m.color};color:${m.text}">${m.name[0]}</div>
+      <div>
+        <div class="member-name">${m.name}</div>
+        <div class="member-tasks">${countForMember(m.key)} задач</div>
+      </div>`;
+    el.onclick = () => {
+      activeMember = activeMember===m.key ? null : m.key;
+      applyAllFilters();
+      buildTeamList();
+      const fc = document.getElementById('filter-clear');
+      if (fc) fc.classList.toggle('show', !!activeMember);
+    };
+    container.appendChild(el);
+  });
+}
+
+function countForMember(key) {
+  let n = 0;
+  document.querySelectorAll('.task-card').forEach(c => {
+    if (c.textContent.toLowerCase().includes(key)) n++;
+  });
+  return n;
+}
+
+function clearMemberFilter() {
+  activeMember = null;
+  applyAllFilters();
+  buildTeamList();
+  const fc = document.getElementById('filter-clear');
+  if (fc) fc.classList.remove('show');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  APPLY ALL FILTERS (search + member)
+// ══════════════════════════════════════════════════════════════
+function applyAllFilters() {
+  const cards  = document.querySelectorAll('.task-card');
+  let visible  = 0;
 
   cards.forEach(card => {
-    const textEl = card.querySelector('.task-text');
-    if (!textEl) return;
-    const text = textEl.textContent;
+    const text = card.querySelector('.task-text')?.textContent.toLowerCase() || '';
+    const fullText = card.textContent.toLowerCase();
+    const textEl   = card.querySelector('.task-text');
 
-    if (!q) {
-      card.classList.remove('search-hidden', 'search-match');
-      textEl.innerHTML = escHtml(text);
-      visible++;
-      return;
+    // Search highlight
+    if (textEl) {
+      const orig = textEl.textContent;
+      if (searchQ) {
+        const idx = orig.toLowerCase().indexOf(searchQ);
+        if (idx !== -1) {
+          textEl.innerHTML = esc(orig.slice(0,idx)) + `<mark>${esc(orig.slice(idx,idx+searchQ.length))}</mark>` + esc(orig.slice(idx+searchQ.length));
+        } else {
+          textEl.innerHTML = esc(orig);
+        }
+      } else {
+        // restore plain text (avoid double-escaping if already plain)
+        if (textEl.innerHTML !== esc(orig)) textEl.textContent = orig;
+      }
     }
 
-    const idx = text.toLowerCase().indexOf(q);
-    if (idx === -1) {
-      card.classList.add('search-hidden');
-      card.classList.remove('search-match');
-    } else {
-      card.classList.remove('search-hidden');
-      card.classList.add('search-match');
-      // Highlight match
-      const before = escHtml(text.slice(0, idx));
-      const match  = escHtml(text.slice(idx, idx + q.length));
-      const after  = escHtml(text.slice(idx + q.length));
-      textEl.innerHTML = `${before}<mark>${match}</mark>${after}`;
-      visible++;
-    }
+    const matchSearch = !searchQ || fullText.includes(searchQ);
+    const matchMember = !activeMember || fullText.includes(activeMember);
+    const hide = !matchSearch || !matchMember;
+
+    card.classList.toggle('hidden-search', !matchSearch);
+    card.classList.toggle('hidden-member', !matchMember);
+    card.classList.toggle('found', !hide && !!(searchQ || activeMember));
+    if (!hide) visible++;
   });
 
-  if (q) {
+  if (searchQ || activeMember) {
     searchCount.textContent = `${visible} из ${cards.length}`;
   } else {
     searchCount.textContent = '';
@@ -904,32 +919,83 @@ function applySearch(q) {
 }
 
 // ══════════════════════════════════════════════════════════════
+//  QUICK ADD
+// ══════════════════════════════════════════════════════════════
+function quickAdd() {
+  const text = document.getElementById('qa-text')?.value.trim();
+  if (!text) return;
+  const period = document.getElementById('qa-period')?.value || 'day';
+  const pending = JSON.parse(localStorage.getItem('fw-pending')||'[]');
+  pending.push({ text, period, ts: Date.now() });
+  localStorage.setItem('fw-pending', JSON.stringify(pending));
+  document.getElementById('qa-text').value = '';
+  logActivity(`➕ ${text.slice(0,28)}${text.length>28?'…':''}`);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ACTIVITY LOG
+// ══════════════════════════════════════════════════════════════
+function logActivity(msg) {
+  const log = JSON.parse(localStorage.getItem(ACTIVITY_KEY)||'[]');
+  const now = new Date();
+  const t   = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  log.unshift({ msg, t });
+  if (log.length > 20) log.pop();
+  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log));
+  renderActivityLog();
+}
+
+function renderActivityLog() {
+  const el = document.getElementById('activity-log');
+  if (!el) return;
+  const log = JSON.parse(localStorage.getItem(ACTIVITY_KEY)||'[]');
+  if (!log.length) { el.innerHTML = '<div class="act-item" style="color:rgba(255,255,255,.2)">Нет активности</div>'; return; }
+  el.innerHTML = log.slice(0,10).map(e =>
+    `<div class="act-item">${esc(e.msg)}<span class="act-time">${e.t}</span></div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SIDEBAR TOGGLE
+// ══════════════════════════════════════════════════════════════
+function toggleSidebar(side) {
+  const sb  = document.getElementById('sidebar-'+side);
+  const btn = document.getElementById('toggle-'+(side==='left'?'left':'right'));
+  if (!sb) return;
+  sb.classList.toggle('collapsed');
+  btn?.classList.toggle('active', !sb.classList.contains('collapsed'));
+}
+
+// ══════════════════════════════════════════════════════════════
 //  LOAD ALL PERIODS
 // ══════════════════════════════════════════════════════════════
 async function loadAll() {
-  if (window._editingTask) return;   // don't refresh while editing
+  if (editing) return;
 
   const now = new Date();
-  const timeStr = now.toLocaleString('ru-RU', {
-    day:'2-digit', month:'2-digit', year:'numeric',
-    hour:'2-digit', minute:'2-digit'
-  });
   document.getElementById('last-updated').innerHTML =
-    `Последнее обновление: <strong>${timeStr}</strong>`;
+    `Обновлено: <strong>${now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</strong>`;
+
+  const rs = document.getElementById('refresh-status');
+  if (rs) rs.classList.add('refreshing');
 
   for (const [period, cfg] of Object.entries(PERIODS)) {
-    const panelEl  = document.getElementById(`panel-${period}`);
-    const filename = cfg.getFilename();
-    renderLoading(panelEl);
-    const md = await fetchMarkdown(filename);
-    if (!md) { renderEmpty(panelEl, period, filename); continue; }
-    const tasks = parseMarkdown(md);
-    if (tasks.length === 0) { renderEmpty(panelEl, period, filename); }
-    else { renderPanel(panelEl, period, filename, tasks); }
+    const panel = document.getElementById(`panel-${period}`);
+    const file  = cfg.fn();
+    renderLoading(panel);
+    const md = await fetchMd(file);
+    if (!md) { renderEmpty(panel, period, file); continue; }
+    const tasks = parseMd(md);
+    if (!tasks.length) renderEmpty(panel, period, file);
+    else renderPanel(panel, period, file, tasks);
   }
 
-  // Re-apply search if open
-  if (searchQuery) applySearch(searchQuery);
+  buildTeamList();
+  renderActivityLog();
+  if (rs) rs.classList.remove('refreshing');
+
+  const rt = document.getElementById('refresh-time');
+  if (rt) rt.textContent = `обновлено ${new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}`;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -938,18 +1004,17 @@ async function loadAll() {
 document.getElementById('tabs-bar').addEventListener('click', e => {
   const btn = e.target.closest('.tab-btn');
   if (!btn) return;
-  const tab = btn.dataset.tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById(`panel-${tab}`).classList.add('active');
+  document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
 });
 
 // ══════════════════════════════════════════════════════════════
-//  INIT + AUTO-REFRESH (every 5 min)
+//  INIT
 // ══════════════════════════════════════════════════════════════
 loadAll();
-setInterval(loadAll, 5 * 60 * 1000);
+setInterval(loadAll, 2 * 60 * 1000);
 </script>
 </body>
 </html>
