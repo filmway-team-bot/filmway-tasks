@@ -45,6 +45,7 @@
     .m-av { width:20px; height:20px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
     .m-name { font-size:11.5px; font-weight:600; }
     .m-cnt { font-size:9.5px; color:var(--muted); margin-left:1px; }
+    .m-mtg { font-size:9px; background:rgba(91,157,245,.18); color:#89b4ff; border-radius:6px; padding:1px 5px; margin-left:1px; }
     .team-spacer { flex:1; }
     .filter-clear { font-size:9px; color:var(--acc); cursor:pointer; padding:2px 7px; border-radius:5px; border:1px solid rgba(233,69,96,.22); display:none; background:rgba(233,69,96,.05); }
     .filter-clear:hover { background:rgba(233,69,96,.12); }
@@ -516,7 +517,8 @@ function isOffDay(dateStr){
   if(dow===0||dow===6)return'weekend';
   return null;
 }
-let _weekDayTasks={};  // задачи из day-файлов для каждой даты текущей недели
+let _weekDayTasks={};       // задачи из day-файлов для каждой даты текущей недели
+let _allMeetingsByDate={};  // все загруженные встречи {dateStr: []} для тим-бара
 
 const TEAM = [
   {name:'Кирилл',k:'кирилл',bg:'#2a2e50',tx:'#8899ee'},
@@ -1097,15 +1099,25 @@ function renderTeam(){
   bar.querySelectorAll('.member-chip').forEach(el=>el.remove());
   const label=bar.querySelector('.team-label');
   TEAM.forEach(m=>{
-    const cnt=countForMember(m.k);
+    const taskCnt=countForMember(m.k);
+    const mtgCnt=meetingCountForMember(m.k);
     const chip=document.createElement('div');
     chip.className='member-chip'+(activeMember===m.k?' active':'');
-    chip.innerHTML=`<div class="m-av" style="background:${m.bg};color:${m.tx}">${m.name[0]}</div><span class="m-name">${m.name}</span>${cnt>0?`<span class="m-cnt">${cnt}</span>`:''}`;
+    chip.innerHTML=`<div class="m-av" style="background:${m.bg};color:${m.tx}">${m.name[0]}</div><span class="m-name">${m.name}</span>${taskCnt>0?`<span class="m-cnt">${taskCnt}</span>`:''}${mtgCnt>0?`<span class="m-mtg">📅${mtgCnt}</span>`:''}`;
     chip.onclick=()=>{activeMember=activeMember===m.k?null:m.k;document.getElementById('filter-clear').classList.toggle('show',!!activeMember);applyFilters();renderTeam();};
     label.insertAdjacentElement('afterend',chip);
   });
 }
+// Задачи из DOM (день-вид)
 function countForMember(k){let n=0;document.querySelectorAll('.task-card').forEach(c=>{if(c.textContent.toLowerCase().includes(k))n++;});return n;}
+// Предстоящие встречи из накопленного _allMeetingsByDate
+function meetingCountForMember(k){
+  const today=tdStr();let n=0;
+  Object.entries(_allMeetingsByDate).forEach(([ds,mtgs])=>{
+    if(ds>=today)mtgs.forEach(m=>{if(m.persons.some(p=>p.toLowerCase().includes(k)))n++;});
+  });
+  return n;
+}
 function clearMember(){activeMember=null;document.getElementById('filter-clear').classList.remove('show');applyFilters();renderTeam();}
 
 function applyFilters(){
@@ -1315,6 +1327,7 @@ async function loadAll(){
   const now=new Date();
   document.getElementById('last-updated').innerHTML=`<strong>${now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</strong>`;
   let dayTasks=[],dayMeetings=[];
+  _allMeetingsByDate={};  // сброс перед загрузкой
   for(const [period,cfg] of Object.entries(PERIODS)){
     const panel=document.getElementById('panel-'+period);
     const file=cfg.fn();renderLoading(panel);
@@ -1364,6 +1377,9 @@ async function loadAll(){
       for(let mo=0;mo<12;mo++){const days=new Date(yr3,mo+1,0).getDate();for(let d=1;d<=days;d++){const ds=`${yr3}-${pad(mo+1)}-${pad(d)}`;fx3.push(fetchMd(`tasks/meetings/${ds}.md`).then(mmd=>{if(mmd)mMap3[ds]=parseMeetingsMd(mmd);}));}}
       await Promise.all(fx3);meetings=mMap3;
     }
+    // Накапливаем встречи для тим-бара
+    if(Array.isArray(meetings)){if(meetings.length&&period==='day')_allMeetingsByDate[tdStr()]=meetings;}
+    else{Object.entries(meetings).forEach(([ds,mtgs])=>{_allMeetingsByDate[ds]=mtgs;});}
     // Проверяем есть ли встречи (meetings может быть массивом или объектом-картой)
     const hasMtgs=Array.isArray(meetings)
       ?meetings.length>0
