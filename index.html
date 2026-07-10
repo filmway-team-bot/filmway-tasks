@@ -283,6 +283,40 @@
       .projects-panel { width:140px; }
       .files-grid { grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
     }
+
+    /* ══ WEEK CALENDAR ═══════════════════════════════════════════ */
+    .cal-week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; overflow-x:auto; }
+    @media(max-width:900px){ .cal-week-grid { grid-template-columns:repeat(5,1fr); } }
+    @media(max-width:560px){ .cal-week-grid { grid-template-columns:repeat(3,minmax(120px,1fr)); padding-bottom:8px; } }
+    .cal-week-col { background:rgba(255,255,255,.03); border:1px solid var(--b2); border-radius:var(--r); padding:8px 6px 10px; min-width:110px; }
+    .cal-week-col.cal-today-col { border-color:rgba(233,69,96,.32); background:rgba(233,69,96,.04); }
+    .cal-week-hdr { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; padding:0 2px 5px; border-bottom:1px solid var(--b2); }
+    .cal-week-col.cal-today-col .cal-week-hdr { color:var(--acc); border-bottom-color:rgba(233,69,96,.2); }
+    .cal-day-count { font-size:9px; background:rgba(255,255,255,.07); padding:1px 5px; border-radius:8px; }
+    .cal-empty-day { padding:10px 0; text-align:center; color:rgba(255,255,255,.15); font-size:.75rem; }
+    .cal-week-col .task-card { font-size:.78rem; padding:7px 8px; }
+    .cal-week-col .task-text { font-size:.78rem; }
+    .cal-week-col .chip { font-size:.59rem; padding:1px 5px; }
+    .cal-week-col .edit-area { font-size:.78rem; }
+
+    /* ══ MONTH CALENDAR ══════════════════════════════════════════ */
+    .cal-month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:12px; }
+    .cal-dow { font-size:9.5px; font-weight:700; text-align:center; color:var(--muted); padding:4px 0; text-transform:uppercase; letter-spacing:.06em; }
+    .cal-day-cell { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); border-radius:7px; padding:5px 6px; min-height:52px; cursor:pointer; transition:background .12s,border-color .12s; }
+    .cal-day-cell:hover { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.12); }
+    .cal-day-cell.cal-today { border-color:var(--acc); background:rgba(233,69,96,.08); }
+    .cal-day-cell.cal-weekend .cal-day-num { color:var(--muted); }
+    .cal-day-cell.cal-day-empty { background:transparent; border-color:transparent; cursor:default; pointer-events:none; }
+    .cal-day-cell.cal-day-active { border-color:rgba(233,69,96,.5); background:rgba(233,69,96,.13); }
+    .cal-day-num { font-size:11.5px; font-weight:700; color:var(--text); line-height:1.2; }
+    .cal-day-cell.cal-today .cal-day-num { color:var(--acc); }
+    .cal-day-dots { display:flex; flex-wrap:wrap; gap:2px; margin-top:4px; }
+    .cal-dot { display:inline-block; width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .cal-month-detail { background:rgba(255,255,255,.03); border:1px solid rgba(233,69,96,.22); border-radius:var(--r); padding:14px 14px 10px; margin-bottom:16px; animation:fup .2s ease; }
+    .cal-detail-hdr { display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+    .cal-close-btn { margin-left:auto; background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; line-height:1; padding:2px 4px; transition:color .12s; }
+    .cal-close-btn:hover { color:var(--acc); }
+    .cal-section-tasks { margin-top:16px; }
   </style>
 </head>
 <body>
@@ -427,6 +461,7 @@ const K_PFILES= 'fw-pfiles';     // project files [{id,name,dataUrl,size,projId,
 const K_KB    = 'fw-kb';         // kanban state {cardId: colId}
 const K_KB_CARDS = 'fw-kb-cards'; // manual cards [{id,text,col}]
 const K_ACT   = 'fw-act';
+const K_CHECKS= 'fw-checks';    // manual checkbox overrides {taskKey: bool}
 
 const PERIODS = {
   day:      { label:'День',    fn:()=>`tasks/day/${tdStr()}.md` },
@@ -518,12 +553,17 @@ function parseMd(md){
     const done=!!mD;const raw2=(done?mD[1]:mT[1]).trim();
     const timeM=raw2.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/);
     const timeRange=timeM?`${timeM[1]}–${timeM[2]}`:null;
-    const pM=raw2.match(/—\s*([А-ЯЁ][а-яёА-ЯЁ]+(?:\s+[А-ЯЁ][а-яёА-ЯЁ]+)?)/u)||raw2.match(/@([\w\d_]+)/);
-    const person=pM?pM[1]||pM[0]:null;
+    // Multiple persons: "— Кирилл, Эрадж" / "— Кирилл / Эрадж" / "@mention"
+    const personsArr=[];
+    const pmAll=[...raw2.matchAll(/—\s*([А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*)/gu)];
+    pmAll.forEach(m=>m[1].split(/[,\/]/).forEach(p=>{const tr=p.trim();if(tr)personsArr.push(tr);}));
+    [...raw2.matchAll(/@([\w\d_]+)/g)].forEach(m=>personsArr.push(m[1]));
+    const persons=[...new Set(personsArr)];
+    const person=persons[0]||null;
     const dlM=raw2.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
     const deadline=dlM?dlM[1]:null;
-    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁ][а-яёА-ЯЁ]+(?:\s+[А-ЯЁ][а-яёА-ЯЁ]+)?/ug,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\s{2,}/g,' ').trim();
-    items.push({done,text:clean||raw2,rawText:raw2,person,timeRange,deadline,section});
+    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\s{2,}/g,' ').trim();
+    items.push({done,text:clean||raw2,rawText:raw2,person,persons,timeRange,deadline,section});
   }
   return items;
 }
@@ -531,7 +571,8 @@ function parseMd(md){
 // ═══════════════════════════════════════════════════════════════
 //  RENDER TASK PANELS
 // ═══════════════════════════════════════════════════════════════
-function renderPanel(el,period,file,tasks){
+// Базовый список-рендер (день / полгода / год)
+function renderPanelList(el,period,file,tasks){
   const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
   const base=file.split('/').pop();
   let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
@@ -552,14 +593,173 @@ function renderPanel(el,period,file,tasks){
   renderTeam();
 }
 
+// Роутер: week/month → календарный вид, остальное → список
+function renderPanel(el,period,file,tasks){
+  if(period==='week'){renderWeekCalendar(el,period,file,tasks);return;}
+  if(period==='month'){renderMonthCalendar(el,period,file,tasks);return;}
+  renderPanelList(el,period,file,tasks);
+}
+
+// ─── НЕДЕЛЯ: сетка по дням ───────────────────────────────────
+const WEEK_DAYS=[
+  {ru:'понедельник',short:'Пн',dow:0},{ru:'вторник',short:'Вт',dow:1},
+  {ru:'среда',short:'Ср',dow:2},{ru:'четверг',short:'Чт',dow:3},
+  {ru:'пятница',short:'Пт',dow:4},{ru:'суббота',short:'Сб',dow:5},
+  {ru:'воскресенье',short:'Вс',dow:6},
+];
+
+function renderWeekCalendar(el,period,file,tasks){
+  // Если нет секций с названиями дней — обычный список
+  const hasDaySections=tasks.some(t=>t.section&&WEEK_DAYS.some(d=>t.section.toLowerCase().includes(d.ru)));
+  if(!hasDaySections){renderPanelList(el,period,file,tasks);return;}
+
+  const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
+  const base=file.split('/').pop();
+  const todayDow=(new Date().getDay()+6)%7; // Mon=0
+
+  let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
+  if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
+  html+=`<div class="cal-week-grid">`;
+
+  WEEK_DAYS.forEach(d=>{
+    const dayTasks=tasks.filter(t=>t.section&&t.section.toLowerCase().includes(d.ru));
+    const dayDone=dayTasks.filter(t=>t.done).length;
+    const isToday=d.dow===todayDow;
+    html+=`<div class="cal-week-col${isToday?' cal-today-col':''}">
+      <div class="cal-week-hdr">
+        <span>${d.short}</span>
+        ${dayTasks.length?`<span class="cal-day-count">${dayDone}/${dayTasks.length}</span>`:''}
+      </div>
+      <div class="task-list">`;
+    if(!dayTasks.length)html+=`<div class="cal-empty-day">—</div>`;
+    dayTasks.forEach(t=>html+=renderCard(t));
+    html+=`</div></div>`;
+  });
+
+  html+=`</div>`;
+  el.innerHTML=html;
+  requestAnimationFrame(()=>{const pb=document.getElementById('pb-'+period);if(pb)pb.style.width=pct+'%';});
+  const badge=document.getElementById('badge-'+period);
+  if(badge&&total>0){badge.textContent=total-done||'✓';badge.classList.add('show');}
+  el.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+  applyFilters();renderTeam();
+}
+
+// ─── МЕСЯЦ: сетка-календарь + список задач ───────────────────
+function renderMonthCalendar(el,period,file,tasks){
+  const now=new Date();
+  const year=now.getFullYear(),month=now.getMonth();
+  const firstDay=new Date(year,month,1);
+  const lastDay=new Date(year,month+1,0);
+  const startDow=(firstDay.getDay()+6)%7; // Пн=0
+  const todayStr=tdStr();
+
+  const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
+  const base=file.split('/').pop();
+
+  let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
+  if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
+
+  html+=`<div class="cal-month-grid">
+    <div class="cal-dow">Пн</div><div class="cal-dow">Вт</div><div class="cal-dow">Ср</div>
+    <div class="cal-dow">Чт</div><div class="cal-dow">Пт</div><div class="cal-dow">Сб</div>
+    <div class="cal-dow">Вс</div>`;
+
+  for(let i=0;i<startDow;i++)html+=`<div class="cal-day-cell cal-day-empty"></div>`;
+
+  for(let d=1;d<=lastDay.getDate();d++){
+    const dateStr=`${year}-${pad(month+1)}-${pad(d)}`;
+    const isToday=dateStr===todayStr;
+    const dow=(new Date(year,month,d).getDay()+6)%7;
+    const isWeekend=dow>=5;
+    html+=`<div class="cal-day-cell${isToday?' cal-today':''}${isWeekend?' cal-weekend':''}" data-date="${dateStr}" onclick="calMonthDayClick('${dateStr}')">
+      <div class="cal-day-num">${d}</div>
+      <div id="cal-d-${dateStr}" class="cal-day-dots"></div>
+    </div>`;
+  }
+  html+=`</div>`;
+  html+=`<div id="cal-month-detail" class="cal-month-detail" style="display:none" data-date=""></div>`;
+
+  // Секция со всеми задачами месяца ниже календаря
+  if(tasks.length>0){
+    html+=`<div class="cal-section-tasks">`;
+    const secs=[...new Set(tasks.map(t=>t.section))];
+    for(const s of secs){
+      if(s)html+=`<div class="sec-heading">${esc(s)}</div>`;
+      html+=`<div class="task-list">`;
+      for(const t of tasks.filter(x=>x.section===s))html+=renderCard(t);
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+  }
+
+  el.innerHTML=html;
+  requestAnimationFrame(()=>{const pb=document.getElementById('pb-'+period);if(pb)pb.style.width=pct+'%';});
+  const badge=document.getElementById('badge-'+period);
+  if(badge&&total>0){badge.textContent=total-done||'✓';badge.classList.add('show');}
+  el.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+
+  // Подсветка сегодня — показываем сводку из уже загруженных задач
+  // (dayTasks из loadAll не доступны здесь, но после загрузки calMonthDayClick подтянет)
+  applyFilters();renderTeam();
+}
+
+async function calMonthDayClick(dateStr){
+  const detail=document.getElementById('cal-month-detail');
+  if(!detail)return;
+
+  // Тоггл: кликнули на уже открытый день → закрываем
+  if(detail.dataset.date===dateStr&&detail.style.display!=='none'){
+    detail.style.display='none';detail.dataset.date='';
+    document.querySelectorAll('.cal-day-cell').forEach(c=>c.classList.remove('cal-day-active'));
+    return;
+  }
+
+  document.querySelectorAll('.cal-day-cell').forEach(c=>c.classList.remove('cal-day-active'));
+  const cell=document.querySelector(`.cal-day-cell[data-date="${dateStr}"]`);
+  if(cell){cell.classList.add('cal-day-active');cell.scrollIntoView({behavior:'smooth',block:'nearest'});}
+
+  detail.dataset.date=dateStr;
+  detail.style.display='block';
+  detail.innerHTML=`<div class="loading"><div class="spinner"></div>Загрузка ${humanDate(dateStr)}…</div>`;
+
+  const md=await fetchMd(`tasks/day/${dateStr}.md`);
+  if(!md){detail.innerHTML=`<div class="cal-detail-hdr"><span class="period-date">${humanDate(dateStr)}</span><button class="cal-close-btn" onclick="document.getElementById('cal-month-detail').style.display='none';document.querySelectorAll('.cal-day-cell').forEach(c=>c.classList.remove('cal-day-active'))">✕</button></div><div class="empty"><div class="empty-icon">📭</div><p>Нет задач</p></div>`;return;}
+  const dayTasks=parseMd(md);
+  if(!dayTasks.length){detail.innerHTML=`<div class="cal-detail-hdr"><span class="period-date">${humanDate(dateStr)}</span><button class="cal-close-btn" onclick="document.getElementById('cal-month-detail').style.display='none';document.querySelectorAll('.cal-day-cell').forEach(c=>c.classList.remove('cal-day-active'))">✕</button></div><div class="empty"><div class="empty-icon">📭</div><p>Нет задач</p></div>`;return;}
+
+  const doneC=dayTasks.filter(t=>t.done).length;
+  const pctD=Math.round(doneC/dayTasks.length*100);
+
+  let html=`<div class="cal-detail-hdr">
+    <span class="period-date">${humanDate(dateStr)}</span>
+    <span style="font-size:.71rem;color:var(--muted)">${doneC}/${dayTasks.length} · ${pctD}%</span>
+    <button class="cal-close-btn" onclick="document.getElementById('cal-month-detail').style.display='none';document.querySelectorAll('.cal-day-cell').forEach(c=>c.classList.remove('cal-day-active'))">✕</button>
+  </div>
+  <div class="task-list">`;
+  dayTasks.forEach(t=>html+=renderCard(t));
+  html+=`</div>`;
+  detail.innerHTML=html;
+  detail.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+
+  // Точка на клетке
+  const dotEl=document.getElementById(`cal-d-${dateStr}`);
+  if(dotEl)dotEl.innerHTML=`<span class="cal-dot" style="background:${doneC===dayTasks.length?'var(--done)':'var(--acc)'}"></span>`;
+}
+
 function renderCard(task){
   const edits=ls(K_EDITS,{});
+  const checks=ls(K_CHECKS,{});
   const key=djb2(task.rawText||task.text);
   const disp=edits[key]||task.text;
+  // localStorage check override takes priority over markdown state
+  const isDone=checks.hasOwnProperty(key)?checks[key]:task.done;
   const mi=TEAM.find(m=>task.rawText?.toLowerCase().includes(m.k));
   const borderC=mi?mi.tx:null;
   let meta='';
-  if(task.person)meta+=`<span class="chip cp">👤 ${esc(task.person)}</span>`;
+  // multiple persons support
+  const pList=task.persons?.length?task.persons:task.person?[task.person]:[];
+  pList.forEach(p=>{ meta+=`<span class="chip cp">👤 ${esc(p)}</span>`; });
   if(task.timeRange)meta+=`<span class="chip ct">🕐 ${esc(task.timeRange)}</span>`;
   if(task.deadline)meta+=`<span class="chip cd">📅 ${esc(task.deadline)}</span>`;
   const files=ls(K_FILES,{});
@@ -567,7 +767,7 @@ function renderCard(task){
   let fhtml='';
   if(tf.length>0){fhtml=`<div class="attach-row" id="ar-${key}">`;tf.forEach((f,i)=>{fhtml+=`<a class="file-chip" href="${esc(f.dataUrl)}" download="${esc(f.name)}" title="${esc(f.name)}">📄 <span class="fcn">${esc(f.name)}</span><span class="fcd" data-key="${key}" data-idx="${i}" onclick="delTaskFile(event)">×</span></a>`;});fhtml+=`</div>`;}
   else fhtml=`<div class="attach-row" id="ar-${key}"></div>`;
-  return `<div class="task-card${task.done?' done':''}" data-key="${key}"${borderC?` style="--acc:${borderC}"`:''}><div class="task-check${task.done?' checked':''}"></div><div class="task-body"><div class="task-text">${esc(disp)}</div><textarea class="edit-area" rows="2">${esc(disp)}</textarea><div class="edit-btns"><button class="btn-save">Сохранить</button><button class="btn-cancel">Отмена</button></div>${meta?`<div class="task-meta">${meta}</div>`:''}${fhtml}<button class="attach-btn" data-key="${key}" onclick="openTaskFile(event)">📎 Прикрепить</button></div><button class="edit-btn" title="Редактировать">✏️</button></div>`;
+  return `<div class="task-card${isDone?' done':''}" data-key="${key}"${borderC?` style="--acc:${borderC}"`:''}><div class="task-check${isDone?' checked':''}" onclick="toggleCheck(event,'${key}')"></div><div class="task-body"><div class="task-text">${esc(disp)}</div><textarea class="edit-area" rows="2">${esc(disp)}</textarea><div class="edit-btns"><button class="btn-save">Сохранить</button><button class="btn-cancel">Отмена</button></div>${meta?`<div class="task-meta">${meta}</div>`:''}${fhtml}<button class="attach-btn" data-key="${key}" onclick="openTaskFile(event)">📎 Прикрепить</button></div><button class="edit-btn" title="Редактировать">✏️</button></div>`;
 }
 
 function renderEmpty(el,period,file){const base=file.split('/').pop();el.innerHTML=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div><div class="empty"><div class="empty-icon">📭</div><p>Нет задач</p><p style="margin-top:5px;font-size:.7rem">Файл <code>${file}</code> не найден</p></div>`;}
@@ -587,6 +787,20 @@ function attachEdit(card){
   btns.querySelector('.btn-save').addEventListener('click',e=>{e.stopPropagation();save();});
   btns.querySelector('.btn-cancel').addEventListener('click',e=>{e.stopPropagation();close();});
   area.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();save();}if(e.key==='Escape')close();});
+}
+
+// Toggle checkbox state (persists in localStorage, overrides markdown)
+function toggleCheck(e,key){
+  e.stopPropagation();
+  const checkEl=e.currentTarget;
+  const card=checkEl.closest('.task-card');
+  const newDone=!checkEl.classList.contains('checked');
+  checkEl.classList.toggle('checked',newDone);
+  card.classList.toggle('done',newDone);
+  const textEl=card.querySelector('.task-text');
+  if(textEl)textEl.style.textDecoration=newDone?'line-through':'';
+  const checks=ls(K_CHECKS,{});checks[key]=newDone;sv(K_CHECKS,checks);
+  logAct(newDone?'✅ Выполнено':'↩️ Возвращено');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -667,8 +881,9 @@ function kbBuildFromTasks(tasks){
   kbAllCards=[];
   tasks.forEach(t=>{
     const id='kbt_'+djb2(t.rawText||t.text);
-    const defCol=t.done?'done':'todo';
-    kbAllCards.push({id,text:t.text,person:t.person,time:t.timeRange,col:state[id]||defCol,manual:false});
+    // Tasks with a time slot default to "in progress" (они запланированы на конкретное время)
+    const defCol=t.done?'done':(t.timeRange?'prog':'todo');
+    kbAllCards.push({id,text:t.text,person:t.person,persons:t.persons,time:t.timeRange,col:state[id]||defCol,manual:false});
   });
   manual.forEach(m=>{
     if(!kbAllCards.find(c=>c.id===m.id))
@@ -701,7 +916,8 @@ function kbRender(){
     cards.forEach(card=>{
       const el=document.createElement('div');
       el.className='kb-card';el.draggable=true;el.dataset.id=card.id;
-      el.innerHTML=`<div class="kb-card-text">${esc(card.text)}</div><div class="kb-tags">${card.person?`<span class="kb-tag kt-p">👤 ${esc(card.person)}</span>`:''} ${card.time?`<span class="kb-tag kt-t">🕐 ${esc(card.time)}</span>`:''}</div>`;
+      const pTags=(card.persons?.length?card.persons:card.person?[card.person]:[]).map(p=>`<span class="kb-tag kt-p">👤 ${esc(p)}</span>`).join('');
+      el.innerHTML=`<div class="kb-card-text">${esc(card.text)}</div><div class="kb-tags">${pTags}${card.time?`<span class="kb-tag kt-t">🕐 ${esc(card.time)}</span>`:''}</div>`;
 
       el.addEventListener('dragstart',e=>{dragId=card.id;el.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
       el.addEventListener('dragend',()=>{el.classList.remove('dragging');dragId=null;});
