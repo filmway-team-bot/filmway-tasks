@@ -412,6 +412,51 @@
     @media (prefers-color-scheme: dark) {
       .site-logo { filter: brightness(0.9); }
     }
+  
+    /* ── Прикреплённые ссылки к задачам ──────────────────────── */
+    .task-attach-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; opacity: 0.4; padding: 0 2px;
+      transition: opacity .15s; vertical-align: middle;
+      line-height: 1;
+    }
+    .task-attach-btn:hover { opacity: 1; }
+    .task-links {
+      display: flex; flex-wrap: wrap; gap: 4px;
+      margin: 3px 0 2px 22px;
+    }
+    .task-link-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #f0f4ff; border: 1px solid #c5d0f0;
+      border-radius: 12px; padding: 2px 8px;
+      font-size: 11px; color: #3355cc; text-decoration: none;
+      max-width: 280px; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .task-link-chip:hover { background: #dde6ff; }
+    .task-link-chip .del-link {
+      color: #999; cursor: pointer; font-size: 13px;
+      line-height: 1; margin-left: 2px; flex-shrink: 0;
+    }
+    .task-link-chip .del-link:hover { color: #c00; }
+    .attach-input-row {
+      display: none; margin: 3px 0 4px 22px; gap: 4px;
+    }
+    .attach-input-row.open { display: flex; }
+    .attach-input-row input {
+      flex: 1; font-size: 12px; padding: 3px 7px;
+      border: 1px solid #c5d0f0; border-radius: 8px; outline: none;
+      min-width: 0;
+    }
+    .attach-input-row input:focus { border-color: #3355cc; }
+    .attach-input-row button {
+      font-size: 12px; padding: 3px 10px;
+      background: #3355cc; color: #fff; border: none;
+      border-radius: 8px; cursor: pointer; white-space: nowrap;
+    }
+    .attach-input-row button:hover { background: #2244bb; }
+    .attach-cancel { background: #eee !important; color: #555 !important; }
+    .attach-cancel:hover { background: #ddd !important; }
   </style>
 </head>
 <body>
@@ -906,5 +951,129 @@ function esc(s) {
 loadAll();
 setInterval(loadAll, 5 * 60 * 1000);
 </script>
+  <script>
+
+  /* ══ Прикреплённые ссылки (filmway-attachments v1) ════════════════════════ */
+  const ATTACH_KEY = 'filmway-attachments';
+
+  function loadAttachments() {
+    try { return JSON.parse(localStorage.getItem(ATTACH_KEY) || '{}'); }
+    catch { return {}; }
+  }
+  function saveAttachments(data) {
+    localStorage.setItem(ATTACH_KEY, JSON.stringify(data));
+  }
+
+  function renderLinks(taskKey, container) {
+    const data = loadAttachments();
+    const links = data[taskKey] || [];
+    let linksEl = container.querySelector('.task-links');
+    if (!linksEl) {
+      linksEl = document.createElement('div');
+      linksEl.className = 'task-links';
+      container.appendChild(linksEl);
+    }
+    linksEl.innerHTML = links.map((l, i) => {
+      const label = l.title || (l.url.length > 40 ? l.url.slice(0,37)+'…' : l.url);
+      return `<a class="task-link-chip" href="${escHtml(l.url)}" target="_blank" rel="noopener">
+        🔗 ${escHtml(label)}<span class="del-link" data-idx="${i}" data-key="${escHtml(taskKey)}" title="Удалить">×</span>
+      </a>`;
+    }).join('');
+    linksEl.querySelectorAll('.del-link').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        const d = loadAttachments();
+        const k = btn.dataset.key;
+        d[k] = (d[k] || []).filter((_, idx) => idx != btn.dataset.idx);
+        saveAttachments(d);
+        renderLinks(k, container);
+      });
+    });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function addAttachButton(taskEl, taskKey) {
+    if (taskEl.querySelector('.task-attach-btn')) return;
+
+    // Кнопка 📎
+    const btn = document.createElement('button');
+    btn.className = 'task-attach-btn';
+    btn.title = 'Прикрепить ссылку';
+    btn.textContent = '📎';
+
+    // Строка ввода
+    const inputRow = document.createElement('div');
+    inputRow.className = 'attach-input-row';
+    inputRow.innerHTML = `
+      <input type="url" placeholder="https://… или любая ссылка" />
+      <button class="attach-save">Добавить</button>
+      <button class="attach-cancel">✕</button>`;
+
+    const input = inputRow.querySelector('input');
+    const saveBtn = inputRow.querySelector('.attach-save');
+    const cancelBtn = inputRow.querySelector('.attach-cancel');
+
+    btn.addEventListener('click', () => {
+      inputRow.classList.toggle('open');
+      if (inputRow.classList.contains('open')) input.focus();
+    });
+
+    saveBtn.addEventListener('click', () => {
+      const url = input.value.trim();
+      if (!url) return;
+      const data = loadAttachments();
+      data[taskKey] = data[taskKey] || [];
+      data[taskKey].push({ url, title: '' });
+      saveAttachments(data);
+      input.value = '';
+      inputRow.classList.remove('open');
+      renderLinks(taskKey, taskEl.parentElement || taskEl);
+    });
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveBtn.click();
+      if (e.key === 'Escape') cancelBtn.click();
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      input.value = '';
+      inputRow.classList.remove('open');
+    });
+
+    // Вставляем кнопку и поле
+    taskEl.appendChild(btn);
+    const parent = taskEl.parentElement || taskEl.closest('li') || taskEl;
+    parent.insertAdjacentElement('afterend', inputRow);
+
+    renderLinks(taskKey, parent.parentElement || parent);
+  }
+
+  function initAttachments() {
+    // Ищем все элементы задач: label внутри .task-item, или li с checkbox
+    document.querySelectorAll('.task-item, li').forEach(item => {
+      const label = item.querySelector('label') || item;
+      const text = label.textContent.trim();
+      if (!text || text.length < 3) return;
+      // djb2 hash как ключ (тот же что используется для чекбоксов)
+      let hash = 5381;
+      for (let i = 0; i < text.length; i++) hash = ((hash << 5) + hash) ^ text.charCodeAt(i);
+      const key = 'attach_' + (hash >>> 0).toString(36);
+      addAttachButton(label, key);
+    });
+  }
+
+  // Запускаем после рендера контента
+  document.addEventListener('DOMContentLoaded', () => {
+    // Если контент загружается динамически — наблюдаем за изменениями
+    const target = document.getElementById('main-content') || document.body;
+    const obs = new MutationObserver(() => initAttachments());
+    obs.observe(target, { childList: true, subtree: true });
+    initAttachments();
+  });
+  /* ══ end filmway-attachments ═══════════════════════════════════════════════ */
+  </script>
 </body>
 </html>
