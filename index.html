@@ -705,6 +705,153 @@
       display: flex; align-items: center; gap: 5px;
       padding: 2px 10px 4px;
     }
+  
+    /* ══ Канбан-вкладка ════════════════════════════════════════ */
+    #fw-kanban-tab-content { padding: 8px 4px; }
+
+    .kb-board {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 4px 2px 16px;
+      overflow-x: auto;
+      min-height: 300px;
+    }
+
+    .kb-col {
+      flex: 1;
+      min-width: 220px;
+      max-width: 340px;
+      background: var(--col-bg, #f3f4f6);
+      border-radius: 12px;
+      padding: 10px 8px 12px;
+      box-sizing: border-box;
+    }
+    .kb-col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 0 2px;
+    }
+    .kb-col-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .kb-col-count {
+      font-size: 11px;
+      background: rgba(0,0,0,.08);
+      border-radius: 10px;
+      padding: 1px 7px;
+      color: #555;
+    }
+
+    /* Цвета колонок */
+    .kb-col.col-todo    .kb-col-title { color: #555; }
+    .kb-col.col-progress .kb-col-title { color: #1565c0; }
+    .kb-col.col-done    .kb-col-title { color: #2e7d32; }
+    .kb-col.col-blocked .kb-col-title { color: #c62828; }
+    .kb-col.col-todo    { border-top: 3px solid #bbb; }
+    .kb-col.col-progress { border-top: 3px solid #1565c0; }
+    .kb-col.col-done    { border-top: 3px solid #2e7d32; }
+    .kb-col.col-blocked { border-top: 3px solid #c62828; }
+
+    /* Карточки */
+    .kb-card {
+      background: var(--card-bg, #fff);
+      border-radius: 8px;
+      padding: 9px 11px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      line-height: 1.4;
+      border: 1px solid var(--border, #e5e7eb);
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      cursor: grab;
+      transition: box-shadow .15s, transform .12s;
+      user-select: none;
+      position: relative;
+    }
+    .kb-card:active { cursor: grabbing; }
+    .kb-card.dragging {
+      opacity: .5;
+      box-shadow: 0 6px 20px rgba(0,0,0,.18);
+      transform: rotate(1.5deg) scale(1.02);
+    }
+    .kb-card.drag-over { outline: 2px dashed #3355cc; }
+
+    .kb-card-text { margin-bottom: 4px; }
+    .kb-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 5px;
+    }
+    .kb-tag {
+      font-size: 10px;
+      border-radius: 8px;
+      padding: 1px 7px;
+      white-space: nowrap;
+    }
+    .kb-tag.person {
+      background: #e8f0fe;
+      color: #3355cc;
+    }
+    .kb-tag.time {
+      background: #fff3e0;
+      color: #e65100;
+    }
+    .kb-tag.project {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    /* Зона дропа */
+    .kb-drop-zone {
+      min-height: 48px;
+      border-radius: 8px;
+      border: 2px dashed transparent;
+      transition: border-color .15s, background .15s;
+      margin-top: 2px;
+    }
+    .kb-drop-zone.drag-over {
+      border-color: #3355cc;
+      background: #e8f0fe44;
+    }
+
+    /* Кнопка добавить карточку */
+    .kb-add-btn {
+      width: 100%;
+      background: none;
+      border: 1px dashed var(--border, #ccc);
+      border-radius: 8px;
+      padding: 6px;
+      font-size: 12px;
+      color: #888;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background .12s, color .12s;
+    }
+    .kb-add-btn:hover { background: #e8f0fe; color: #3355cc; border-color: #3355cc; }
+
+    .kb-add-form { display: none; margin-top: 4px; }
+    .kb-add-form.open { display: block; }
+    .kb-add-form textarea {
+      width: 100%; box-sizing: border-box; resize: none;
+      border: 1px solid #3355cc; border-radius: 7px;
+      padding: 6px 8px; font-size: 12px; font-family: inherit;
+      background: var(--input-bg, #fff); color: var(--text, #222);
+    }
+    .kb-add-form-btns { display: flex; gap: 5px; margin-top: 4px; }
+    .kb-add-form-btns button {
+      font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid;
+      cursor: pointer;
+    }
+    .kb-add-save  { background: #3355cc; color: #fff; border-color: #3355cc; }
+    .kb-add-save:hover  { background: #2244bb; }
+    .kb-add-cancel { background: #eee; color: #555; border-color: #ccc; }
+
   </style>
 </head>
 <body>
@@ -757,6 +904,11 @@
   <div class="tab-panel"       id="panel-year"      data-period="year"></div>
   <div class="tab-panel"       id="panel-team"></div>
   <div class="tab-panel"       id="panel-files"></div>
+
+  <!-- Канбан-вкладка -->
+  <div id="fw-kanban-tab-content" class="tab-content" data-tab-content="kanban" style="display:none">
+    <div id="kb-board" class="kb-board"></div>
+  </div>
 </main>
 
 <footer>
@@ -1340,8 +1492,7 @@ setInterval(loadAll, 5 * 60 * 1000);
   /* ══ end filmway-attachments ═══════════════════════════════════════════════ */
   </script>
 
-  <!-- Канбан-доска -->
-  <div id="kanban-board" class="kanban-board" style="display:none;padding:8px"></div>
+  
 
     </div><!-- /fw-main -->
     <div class="fw-sidebar-right" id="fw-sidebar-right"></div>
@@ -1729,6 +1880,248 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   document.addEventListener('DOMContentLoaded', initSearchToggle);
   /* ── end search toggle ──────────────────────────────────────────────────── */
+  </script>
+  <script>
+
+/* ══ Filmway Kanban v1 ══════════════════════════════════════════════════════ */
+
+const KB_STATE_KEY  = 'fw-kanban-state';   // { cardId: colId }
+const KB_CARDS_KEY  = 'fw-kanban-cards';   // [ { id, text, person, time } ]
+const RAW_BASE_KB   = 'https://raw.githubusercontent.com/filmway-team-bot/filmway-tasks/main/';
+
+const KB_COLS = [
+  { id: 'todo',     label: '📋 К выполнению', cls: 'col-todo'     },
+  { id: 'progress', label: '🔄 В процессе',   cls: 'col-progress' },
+  { id: 'done',     label: '✅ Готово',        cls: 'col-done'     },
+  { id: 'blocked',  label: '❌ Заблокировано', cls: 'col-blocked'  },
+];
+
+// ── Состояние ─────────────────────────────────────────────────────────────────
+function kbLoadState()  { try { return JSON.parse(localStorage.getItem(KB_STATE_KEY) || '{}'); } catch { return {}; } }
+function kbSaveState(s) { localStorage.setItem(KB_STATE_KEY, JSON.stringify(s)); }
+function kbLoadCards()  { try { return JSON.parse(localStorage.getItem(KB_CARDS_KEY) || '[]'); } catch { return []; } }
+function kbSaveCards(c) { localStorage.setItem(KB_CARDS_KEY, JSON.stringify(c)); }
+
+// ── Парсинг markdown → карточки ───────────────────────────────────────────────
+function kbParseMarkdown(md, source) {
+  const cards = [];
+  let section = 'todo';
+  md.split('\n').forEach(line => {
+    if (/в процессе/i.test(line))               section = 'progress';
+    else if (/выполнено|готово/i.test(line))     section = 'done';
+    else if (/не выполнено|заблокир/i.test(line)) section = 'blocked';
+    else if (/^##\s/.test(line))                 section = 'todo';
+
+    if (!line.match(/^\s*-\s*\[/)) return;
+    const done   = /\[x\]/i.test(line);
+    const text   = line.replace(/^\s*-\s*\[[x\s]\]\s*/i, '').trim();
+    if (!text) return;
+
+    const personM  = text.match(/—\s*([\wА-яЁё]+)\s*(?:—|$|\d)/i);
+    const timeM    = text.match(/(\d{1,2}:\d{2}(?:[-–]\d{1,2}:\d{2})?)/);
+    const cleanText = text
+      .replace(/—\s*[\wА-яЁё]+\s*(?=—|\d|$)/i, '')
+      .replace(/\d{1,2}:\d{2}[-–]\d{1,2}:\d{2}/, '')
+      .replace(/\s{2,}/g, ' ').trim();
+
+    // Стабильный ID
+    let h = 5381;
+    for (let i = 0; i < text.length; i++) h = ((h<<5)+h) ^ text.charCodeAt(i);
+    const id = 'kb_' + (h>>>0).toString(36);
+
+    cards.push({
+      id, text: cleanText,
+      person: personM?.[1] || '',
+      time:   timeM?.[1]   || '',
+      source,
+      defaultCol: done ? 'done' : section,
+    });
+  });
+  return cards;
+}
+
+// ── Рендер доски ──────────────────────────────────────────────────────────────
+function kbRender(allCards) {
+  const board = document.getElementById('kb-board');
+  if (!board) return;
+  const state = kbLoadState();
+
+  // Распределяем карточки по колонкам
+  const cols = {};
+  KB_COLS.forEach(c => cols[c.id] = []);
+  allCards.forEach(card => {
+    const col = state[card.id] || card.defaultCol || 'todo';
+    if (!cols[col]) cols['todo'] = [];
+    (cols[col] || cols['todo']).push(card);
+  });
+
+  board.innerHTML = '';
+  let dragSrc = null;
+
+  KB_COLS.forEach(colDef => {
+    const cards = cols[colDef.id] || [];
+    const col = document.createElement('div');
+    col.className = `kb-col ${colDef.cls}`;
+    col.dataset.col = colDef.id;
+    col.innerHTML = `
+      <div class="kb-col-header">
+        <span class="kb-col-title">${colDef.label}</span>
+        <span class="kb-col-count" id="kbc-${colDef.id}">${cards.length}</span>
+      </div>`;
+
+    const dropZone = document.createElement('div');
+    dropZone.className = 'kb-drop-zone';
+    dropZone.dataset.col = colDef.id;
+
+    // Drag-over на колонку
+    [col, dropZone].forEach(el => {
+      el.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+      el.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+      el.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const cardId = e.dataTransfer.getData('text/plain');
+        if (!cardId) return;
+        const s = kbLoadState();
+        s[cardId] = colDef.id;
+        kbSaveState(s);
+        kbRender(allCards);
+        logActivity && logActivity(`📋 Карточка перемещена → ${colDef.label}`);
+      });
+    });
+
+    cards.forEach(card => {
+      const el = document.createElement('div');
+      el.className = 'kb-card';
+      el.draggable = true;
+      el.dataset.id = card.id;
+      el.innerHTML = `
+        <div class="kb-card-text">${escHtml ? escHtml(card.text) : card.text}</div>
+        <div class="kb-card-meta">
+          ${card.person ? `<span class="kb-tag person">👤 ${card.person}</span>` : ''}
+          ${card.time   ? `<span class="kb-tag time">🕐 ${card.time}</span>`     : ''}
+          ${card.source ? `<span class="kb-tag project">${card.source}</span>`   : ''}
+        </div>`;
+
+      el.addEventListener('dragstart', e => {
+        dragSrc = el;
+        el.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', card.id);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      el.addEventListener('dragend', () => {
+        el.classList.remove('dragging');
+        dragSrc = null;
+      });
+      // Drop между карточками
+      el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+      el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+      el.addEventListener('drop', e => {
+        e.preventDefault(); e.stopPropagation();
+        el.classList.remove('drag-over');
+        const cardId = e.dataTransfer.getData('text/plain');
+        if (!cardId || cardId === card.id) return;
+        const s = kbLoadState();
+        s[cardId] = colDef.id;
+        kbSaveState(s);
+        kbRender(allCards);
+      });
+
+      dropZone.appendChild(el);
+    });
+
+    col.appendChild(dropZone);
+
+    // Кнопка добавить карточку вручную
+    const addBtn = document.createElement('button');
+    addBtn.className = 'kb-add-btn';
+    addBtn.textContent = '+ Добавить карточку';
+    const addForm = document.createElement('div');
+    addForm.className = 'kb-add-form';
+    addForm.innerHTML = `
+      <textarea rows="2" placeholder="Текст задачи…"></textarea>
+      <div class="kb-add-form-btns">
+        <button class="kb-add-save">Добавить</button>
+        <button class="kb-add-cancel">Отмена</button>
+      </div>`;
+
+    addBtn.onclick = () => { addForm.classList.toggle('open'); addForm.querySelector('textarea').focus(); };
+    addForm.querySelector('.kb-add-cancel').onclick = () => addForm.classList.remove('open');
+    addForm.querySelector('.kb-add-save').onclick = () => {
+      const text = addForm.querySelector('textarea').value.trim();
+      if (!text) return;
+      let h = 5381 + Date.now();
+      for (let i = 0; i < text.length; i++) h = ((h<<5)+h) ^ text.charCodeAt(i);
+      const id = 'kb_manual_' + (h>>>0).toString(36);
+      const cards2 = kbLoadCards();
+      cards2.push({ id, text, person: '', time: '', source: 'вручную', defaultCol: colDef.id });
+      kbSaveCards(cards2);
+      const s = kbLoadState(); s[id] = colDef.id; kbSaveState(s);
+      addForm.classList.remove('open');
+      allCards.push({ id, text, person: '', time: '', source: 'вручную', defaultCol: colDef.id });
+      kbRender(allCards);
+      logActivity && logActivity(`➕ Карточка добавлена: ${text.slice(0,25)}`);
+    };
+
+    col.appendChild(addBtn);
+    col.appendChild(addForm);
+    board.appendChild(col);
+  });
+}
+
+// ── Загрузка задач из GitHub ──────────────────────────────────────────────────
+async function kbLoadTasks() {
+  const board = document.getElementById('kb-board');
+  if (board) board.innerHTML = '<div style="padding:20px;color:#aaa;text-align:center">Загрузка…</div>';
+
+  const today = new Date().toISOString().slice(0,10);
+  const urls = [
+    { url: RAW_BASE_KB + 'tasks/day/'  + today + '.md?_=' + Date.now(), label: 'сегодня' },
+    { url: RAW_BASE_KB + 'tasks/week/' + getWeekFile() + '.md?_=' + Date.now(), label: 'неделя' },
+  ];
+
+  let allCards = [];
+
+  // Добавляем вручную добавленные карточки
+  allCards = allCards.concat(kbLoadCards());
+
+  for (const { url, label } of urls) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      const md = await r.text();
+      const parsed = kbParseMarkdown(md, label);
+      // Не дублируем карточки с теми же ID
+      parsed.forEach(c => { if (!allCards.find(x => x.id === c.id)) allCards.push(c); });
+    } catch {}
+  }
+
+  kbRender(allCards);
+  window._kbAllCards = allCards;
+}
+
+function getWeekFile() {
+  const d = new Date();
+  const mon = new Date(d); mon.setDate(d.getDate() - d.getDay() + 1);
+  return mon.toISOString().slice(0,10);
+}
+
+// ── Инициализация вкладки ─────────────────────────────────────────────────────
+function initKanbanTab() {
+  const tab = document.getElementById('tab-kanban');
+  if (!tab) return;
+  // Ставим обработчик на вкладку
+  tab.addEventListener('click', () => {
+    // небольшая задержка чтобы вкладка успела стать активной
+    setTimeout(kbLoadTasks, 80);
+  });
+  // Если канбан уже активен при загрузке
+  if (tab.classList.contains('active')) kbLoadTasks();
+}
+
+document.addEventListener('DOMContentLoaded', initKanbanTab);
+/* ══ end Filmway Kanban ══════════════════════════════════════════════════════ */
+
   </script>
 </body>
 </html>
