@@ -317,6 +317,23 @@
     .cal-mini-done { opacity:.35; }
     .cal-noday-section { margin-top:20px; }
     .cal-noday-hdr { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--b2); }
+    /* ══ OVERVIEW CALENDAR (halfyear / year) ════════════════════ */
+    .overview-grid { display:grid; gap:10px; margin-bottom:16px; }
+    .overview-grid.hy { grid-template-columns:repeat(3,1fr); }
+    .overview-grid.yr { grid-template-columns:repeat(4,1fr); }
+    @media(max-width:900px){ .overview-grid.yr { grid-template-columns:repeat(3,1fr); } }
+    @media(max-width:600px){ .overview-grid { grid-template-columns:repeat(2,1fr); } }
+    .mini-month { background:rgba(255,255,255,.02); border:1px solid var(--b2); border-radius:var(--r); padding:10px 8px 8px; }
+    .mini-month-hdr { font-size:.75rem; font-weight:700; color:var(--text); text-align:center; margin-bottom:6px; letter-spacing:-.2px; }
+    .mini-month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; }
+    .mini-dow { font-size:6.5px; color:var(--muted); text-align:center; padding:2px 0 3px; text-transform:uppercase; }
+    .mini-cell { font-size:8px; text-align:center; padding:2px 1px; border-radius:3px; cursor:pointer; line-height:1.7; color:rgba(255,255,255,.3); transition:background .1s,color .1s; position:relative; }
+    .mini-cell:hover { background:rgba(255,255,255,.08); color:var(--text); }
+    .mini-cell.mc-today { color:var(--acc); font-weight:800; }
+    .mini-cell.mc-meeting { background:rgba(91,157,245,.2); color:#89b4ff; font-weight:700; border-radius:50%; }
+    .mini-cell.mc-meeting.mc-today { background:rgba(233,69,96,.3); color:var(--acc); }
+    .mini-cell.mc-empty { cursor:default; pointer-events:none; }
+    .mini-detail { background:rgba(255,255,255,.03); border:1px solid rgba(233,69,96,.22); border-radius:var(--r); padding:14px; margin-bottom:16px; animation:fup .2s ease; }
     .cal-month-detail { background:rgba(255,255,255,.03); border:1px solid rgba(233,69,96,.22); border-radius:var(--r); padding:14px 14px 10px; margin-bottom:16px; animation:fup .2s ease; }
     .cal-detail-hdr { display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
     .cal-close-btn { margin-left:auto; background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; line-height:1; padding:2px 4px; transition:color .12s; }
@@ -712,10 +729,90 @@ function renderPanelList(el,period,file,tasks,meetings=[]){
   renderTeam();
 }
 
-// Роутер: week/month → календарный вид, остальное → список
+// ─── OVERVIEW: мини-месяц (общий компонент) ───────────────────
+const MONTHS_RU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const DOW_MIN=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+function renderMiniMonth(year,month,meetingsByDate={}){
+  const todayStr=tdStr();
+  const firstDay=new Date(year,month,1);
+  const lastDay=new Date(year,month+1,0);
+  const startDow=(firstDay.getDay()+6)%7;
+  let html=`<div class="mini-month"><div class="mini-month-hdr">${MONTHS_RU[month]}</div><div class="mini-month-grid">`;
+  DOW_MIN.forEach(d=>{html+=`<div class="mini-dow">${d}</div>`;});
+  for(let i=0;i<startDow;i++)html+=`<div class="mini-cell mc-empty"></div>`;
+  for(let d=1;d<=lastDay.getDate();d++){
+    const ds=`${year}-${pad(month+1)}-${pad(d)}`;
+    const isToday=ds===todayStr;
+    const hasMtg=(meetingsByDate[ds]||[]).length>0;
+    const cls='mini-cell'+(hasMtg?' mc-meeting':'')+(isToday?' mc-today':'');
+    html+=`<div class="${cls}" onclick="miniDayClick('${ds}')" title="${ds}">${d}</div>`;
+  }
+  html+=`</div></div>`;
+  return html;
+}
+
+function renderHalfYearCalendar(el,period,file,tasks,meetings={}){
+  const now=new Date(),yr=now.getFullYear();
+  const startMo=now.getMonth()<6?0:6;
+  const mtgs=Array.isArray(meetings)?{}:meetings;
+  const base=file.split('/').pop();
+  const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
+  let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${base.replace('.md','')}</span></div>`;
+  if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
+  html+=`<div class="overview-grid hy">`;
+  for(let m=startMo;m<startMo+6;m++)html+=renderMiniMonth(yr,m,mtgs);
+  html+=`</div><div id="mini-detail" class="mini-detail" style="display:none" data-date=""></div>`;
+  if(tasks.length){html+=`<div class="cal-noday-section"><div class="cal-noday-hdr">📋 Задачи полугодия</div><div class="task-list">`;tasks.forEach(t=>html+=renderCard(t));html+=`</div></div>`;}
+  el.innerHTML=html;
+  requestAnimationFrame(()=>{const pb=document.getElementById('pb-'+period);if(pb)pb.style.width=pct+'%';});
+  el.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+  applyFilters();renderTeam();
+}
+
+function renderYearCalendar(el,period,file,tasks,meetings={}){
+  const yr=new Date().getFullYear();
+  const mtgs=Array.isArray(meetings)?{}:meetings;
+  const base=file.split('/').pop();
+  const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
+  let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${base.replace('.md','')}</span></div>`;
+  if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
+  html+=`<div class="overview-grid yr">`;
+  for(let m=0;m<12;m++)html+=renderMiniMonth(yr,m,mtgs);
+  html+=`</div><div id="mini-detail-yr" class="mini-detail" style="display:none" data-date=""></div>`;
+  if(tasks.length){html+=`<div class="cal-noday-section"><div class="cal-noday-hdr">📋 Задачи года</div><div class="task-list">`;tasks.forEach(t=>html+=renderCard(t));html+=`</div></div>`;}
+  el.innerHTML=html;
+  requestAnimationFrame(()=>{const pb=document.getElementById('pb-'+period);if(pb)pb.style.width=pct+'%';});
+  el.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+  applyFilters();renderTeam();
+}
+
+async function miniDayClick(dateStr){
+  // Ищем detail-панель в активной вкладке
+  const detail=document.querySelector('#mini-detail[data-date],#mini-detail-yr[data-date]')||document.getElementById('mini-detail')||document.getElementById('mini-detail-yr');
+  if(!detail)return;
+  const CLOSE=`this.closest('.mini-detail').style.display='none'`;
+  if(detail.dataset.date===dateStr&&detail.style.display!=='none'){detail.style.display='none';detail.dataset.date='';return;}
+  detail.dataset.date=dateStr;detail.style.display='block';
+  detail.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="period-date">${humanDate(dateStr)}</span><button class="cal-close-btn" onclick="${CLOSE}">✕</button></div><div class="loading"><div class="spinner"></div>Загрузка…</div>`;
+  const [md,mmd]=await Promise.all([fetchMd(`tasks/day/${dateStr}.md`),fetchMd(`tasks/meetings/${dateStr}.md`)]);
+  const dayTasks=md?parseMd(md):[];const dayMtgs=mmd?parseMeetingsMd(mmd):[];
+  let html=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="period-date">${humanDate(dateStr)}</span><button class="cal-close-btn" onclick="${CLOSE}">✕</button></div>`;
+  if(!dayTasks.length&&!dayMtgs.length){html+=`<div class="empty"><div class="empty-icon">📭</div><p>Нет задач и встреч</p></div>`;}
+  else{
+    if(dayMtgs.length){html+=`<div class="meetings-section">`;dayMtgs.forEach(m=>html+=renderMeetingCard(m));html+=`</div>`;}
+    if(dayTasks.length){html+=`<div class="task-list">`;dayTasks.forEach(t=>html+=renderCard(t));html+=`</div>`;}
+  }
+  detail.innerHTML=html;
+  detail.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+}
+
+// Роутер: week/month/halfyear/year → календарный вид, остальное → список
 function renderPanel(el,period,file,tasks,meetings=[]){
   if(period==='week'){renderWeekCalendar(el,period,file,tasks,meetings);return;}
   if(period==='month'){renderMonthCalendar(el,period,file,tasks,meetings);return;}
+  if(period==='halfyear'){renderHalfYearCalendar(el,period,file,tasks,meetings);return;}
+  if(period==='year'){renderYearCalendar(el,period,file,tasks,meetings);return;}
   renderPanelList(el,period,file,tasks,meetings);
 }
 
@@ -1104,6 +1201,20 @@ function moveCard(id,colId){
   const c=kbAllCards.find(x=>x.id===id);if(!c)return;
   c.col=colId;
   const state=ls(K_KB,{});state[id]=colId;sv(K_KB,state);
+  // Синхронизируем с чекбоксами дневного вида
+  if(!c.manual&&id.startsWith('kbt_')){
+    const checkKey=id.slice(4);
+    const checks=ls(K_CHECKS,{});
+    if(colId==='done')checks[checkKey]=true;
+    else delete checks[checkKey];
+    sv(K_CHECKS,checks);
+    const dayCard=document.querySelector(`.task-card[data-key="${checkKey}"]`);
+    if(dayCard){
+      dayCard.classList.toggle('done',colId==='done');
+      const cb=dayCard.querySelector('.task-check');
+      if(cb)cb.classList.toggle('checked',colId==='done');
+    }
+  }
   kbRender();
   logAct(`📋 → ${KB_COLS.find(x=>x.id===colId)?.label||colId}`);
 }
@@ -1304,12 +1415,26 @@ async function loadAll(){
       }));
       meetings=mMap;
     }
+    if(period==='halfyear'){
+      const now2=new Date(),yr2=now2.getFullYear(),startMo2=now2.getMonth()<6?0:6;
+      const mMap2={};const fx2=[];
+      for(let mo=startMo2;mo<startMo2+6;mo++){const days=new Date(yr2,mo+1,0).getDate();for(let d=1;d<=days;d++){const ds=`${yr2}-${pad(mo+1)}-${pad(d)}`;fx2.push(fetchMd(`tasks/meetings/${ds}.md`).then(mmd=>{if(mmd)mMap2[ds]=parseMeetingsMd(mmd);}));}}
+      await Promise.all(fx2);meetings=mMap2;
+    }
+    if(period==='year'){
+      const yr3=new Date().getFullYear();
+      const mMap3={};const fx3=[];
+      for(let mo=0;mo<12;mo++){const days=new Date(yr3,mo+1,0).getDate();for(let d=1;d<=days;d++){const ds=`${yr3}-${pad(mo+1)}-${pad(d)}`;fx3.push(fetchMd(`tasks/meetings/${ds}.md`).then(mmd=>{if(mmd)mMap3[ds]=parseMeetingsMd(mmd);}));}}
+      await Promise.all(fx3);meetings=mMap3;
+    }
     // Проверяем есть ли встречи (meetings может быть массивом или объектом-картой)
     const hasMtgs=Array.isArray(meetings)
       ?meetings.length>0
       :Object.values(meetings).some(a=>a.length>0);
     if(!md){
-      if(hasMtgs)renderPanel(panel,period,file,[],meetings);
+      if(period==='week')renderPanel(panel,period,file,[],meetings); // неделя всегда показывает сетку
+      else if(hasMtgs)renderPanel(panel,period,file,[],meetings);
+      else if(period==='halfyear'||period==='year')renderPanel(panel,period,file,[],meetings); // обзорные виды всегда рендерятся
       else renderEmpty(panel,period,file);
       continue;
     }
