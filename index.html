@@ -525,6 +525,8 @@ function sv(k,v){ try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert('
 // ═══════════════════════════════════════════════════════════════
 const pad=n=>String(n).padStart(2,'0');
 function tdStr(){const d=new Date();return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
+// Возвращает массив из 7 дат (Пн–Вс) текущей недели
+function weekDates(){const d=new Date(),dow=(d.getDay()+6)%7,mon=new Date(d);mon.setDate(d.getDate()-dow);return Array.from({length:7},(_,i)=>{const dd=new Date(mon);dd.setDate(mon.getDate()+i);return`${dd.getFullYear()}-${pad(dd.getMonth()+1)}-${pad(dd.getDate())}`;});}
 function wkStr(){const d=new Date(),j=new Date(d.getFullYear(),0,1),w=Math.ceil(((d-j)/864e5+j.getDay()+1)/7);return`${d.getFullYear()}-W${pad(w)}`;}
 function moStr(){const d=new Date();return`${d.getFullYear()}-${pad(d.getMonth()+1)}`;}
 function hyStr(){const d=new Date();return`${d.getFullYear()}-${d.getMonth()<6?'H1':'H2'}`;}
@@ -723,21 +725,24 @@ const WEEK_DAYS=[
 function renderWeekCalendar(el,period,file,tasks,meetings=[]){
   // Если нет секций с названиями дней — обычный список
   const hasDaySections=tasks.some(t=>t.section&&WEEK_DAYS.some(d=>t.section.toLowerCase().includes(d.ru)));
-  if(!hasDaySections){renderPanelList(el,period,file,tasks,meetings);return;}
+  if(!hasDaySections){renderPanelList(el,period,file,tasks,Array.isArray(meetings)?meetings:[]);return;}
 
   const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
   const base=file.split('/').pop();
   const todayDow=(new Date().getDay()+6)%7; // Mon=0
+  const wDates=weekDates(); // ['2026-07-13',...,'2026-07-19']
+  // meetings может быть массивом (day) или объектом {dateStr: []} (week)
+  const meetingsByDate=Array.isArray(meetings)?{}:meetings;
 
   let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
   if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
   html+=`<div class="cal-week-grid">`;
 
-  WEEK_DAYS.forEach(d=>{
+  WEEK_DAYS.forEach((d,i)=>{
     const dayTasks=tasks.filter(t=>t.section&&t.section.toLowerCase().includes(d.ru));
-    // Встречи в этот день недели (только если есть даты в meeting.title или секции)
-    // Пока показываем встречи только в столбце сегодняшнего дня
-    const dayMeetings=d.dow===todayDow?meetings:[];
+    // Встречи для конкретной даты этого столбца
+    const colDate=wDates[i];
+    const dayMeetings=meetingsByDate[colDate]||[];
     const dayDone=dayTasks.filter(t=>t.done).length;
     const isToday=d.dow===todayDow;
     const conflicts=detectConflicts(dayTasks,dayMeetings);
@@ -1248,6 +1253,16 @@ async function loadAll(){
       const mmd=await fetchMd(`tasks/meetings/${tdStr()}.md`);
       meetings=mmd?parseMeetingsMd(mmd):[];
       dayMeetings=meetings;
+    }
+    if(period==='week'){
+      // Загружаем встречи для каждого дня текущей недели
+      const wDates=weekDates();
+      const wMap={};
+      await Promise.all(wDates.map(async ds=>{
+        const mmd=await fetchMd(`tasks/meetings/${ds}.md`);
+        if(mmd)wMap[ds]=parseMeetingsMd(mmd);
+      }));
+      meetings=wMap; // объект {dateStr: meetings[]}
     }
     if(!md){
       if(meetings.length)renderPanel(panel,period,file,[],meetings);
