@@ -312,6 +312,19 @@
 
     .task-card.done .task-text { text-decoration: line-through; color: var(--text-muted); }
 
+    .meeting-card {
+      border-left: 3px solid #7b68ee;
+      background: linear-gradient(135deg, rgba(123,104,238,.08) 0%, var(--card) 100%);
+    }
+    .meeting-card::before { background: #7b68ee; }
+    .meeting-icon { font-size: 1.1rem; flex-shrink: 0; width: 24px; text-align: center; margin-top: 2px; }
+    .meetings-section { margin-bottom: 4px; }
+    .chip-time { background: rgba(123,104,238,.2); color: #b8a9ff; }
+    .chip-link { background: rgba(46,204,113,.15); color: #2ecc71; text-decoration: none; border-radius: 12px; }
+    .chip-link:hover { background: rgba(46,204,113,.3); }
+    .task-link { color: #9d8fff; text-decoration: underline; }
+    .task-link:hover { color: #c4b5ff; }
+
     .task-meta {
       display: flex; flex-wrap: wrap; gap: 8px;
       margin-top: 8px;
@@ -566,7 +579,23 @@ function parseMarkdown(md) {
         .replace(/\s{2,}/g, ' ')
         .trim();
 
-      items.push({ done, text: cleanText || text, person, deadline, section });
+      const isMeeting = text.startsWith('📅');
+      items.push({ done, text: cleanText || text, person, deadline, section, isMeeting });
+    }
+
+    const matchBullet = line.match(/^[-*]\s+(.*)/);
+    const isMeetingSection = section.toLowerCase().includes('встреч');
+    if (matchBullet && !matchDone && !matchTodo) {
+      const bt = matchBullet[1].trim();
+      if (bt.startsWith('📅') || isMeetingSection) {
+        const timeMatch = bt.match(/(\d{1,2}:\d{2})/);
+        const linkMatch = bt.match(/\[([^\]]+)\]\(([^)]+)\)/);
+        const link = linkMatch ? { label: linkMatch[1], url: linkMatch[2] } : null;
+        const cleanBt = bt.replace(/^📅\s*/, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').trim();
+        items.push({ done: false, text: cleanBt, person: null, deadline: null,
+                     section, isMeeting: true,
+                     time: timeMatch ? timeMatch[1] : null, link });
+      }
     }
   }
 
@@ -600,12 +629,21 @@ function renderPanel(panelEl, period, filename, tasks) {
     </div>`;
   }
 
+  const meetings = tasks.filter(t => t.isMeeting);
+  const todos    = tasks.filter(t => !t.isMeeting);
+
+  if (meetings.length > 0) {
+    html += `<div class="section-heading meetings-section">📅 Встречи и созвоны</div>`;
+    html += `<div class="task-list">`;
+    for (const m of meetings) html += renderCard(m);
+    html += `</div>`;
+  }
+
   html += `<div class="task-list">`;
 
-  // group by section
-  const sections = [...new Set(tasks.map(t => t.section))];
+  const sections = [...new Set(todos.map(t => t.section))];
   for (const sec of sections) {
-    const group = tasks.filter(t => t.section === sec);
+    const group = todos.filter(t => t.section === sec);
     if (sec) html += `<div class="section-heading">${escHtml(sec)}</div>`;
     for (const task of group) {
       html += renderCard(task);
@@ -629,7 +667,30 @@ function renderPanel(panelEl, period, filename, tasks) {
   }
 }
 
+function renderTextWithLinks(text) {
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
+  return parts.map(part => {
+    const m = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (m) return `<a href="${escHtml(m[2])}" target="_blank" class="task-link">${escHtml(m[1])}</a>`;
+    return escHtml(part);
+  }).join('');
+}
+
 function renderCard(task) {
+  if (task.isMeeting) {
+    let meta = '';
+    if (task.time) meta += `<span class="meta-chip chip-time">⏰ ${escHtml(task.time)}</span>`;
+    if (task.link) meta += `<a href="${escHtml(task.link.url)}" target="_blank" class="meta-chip chip-link">🔗 ${escHtml(task.link.label)}</a>`;
+    return `
+  <div class="task-card meeting-card">
+    <div class="meeting-icon">📅</div>
+    <div class="task-body">
+      <div class="task-text">${renderTextWithLinks(task.text)}</div>
+      ${meta ? `<div class="task-meta">${meta}</div>` : ''}
+    </div>
+  </div>`;
+  }
+
   const checkClass = task.done ? 'task-check checked' : 'task-check';
   const cardClass  = task.done ? 'task-card done' : 'task-card';
 
@@ -638,14 +699,14 @@ function renderCard(task) {
     meta += `<span class="meta-chip chip-person">👤 ${escHtml(task.person)}</span>`;
   }
   if (task.deadline) {
-    meta += `<span class="meta-chip chip-deadline">📅 до ${escHtml(task.deadline)}</span>`;
+    meta += `<span class="meta-chip chip-deadline">🗓 до ${escHtml(task.deadline)}</span>`;
   }
 
   return `
   <div class="${cardClass}">
     <div class="${checkClass}"></div>
     <div class="task-body">
-      <div class="task-text">${escHtml(task.text)}</div>
+      <div class="task-text">${renderTextWithLinks(task.text)}</div>
       ${meta ? `<div class="task-meta">${meta}</div>` : ''}
     </div>
   </div>`;
