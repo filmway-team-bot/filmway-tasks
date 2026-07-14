@@ -597,9 +597,6 @@ function parseMd(md){
     const done=!!mD;const raw2=(done?mD[1]:mT[1]).trim();
     const timeM=raw2.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/);
     const timeRange=timeM?`${timeM[1]}–${timeM[2]}`:null;
-    // Parenthetical time: (до 17:00), (до конца дня), (2 часа), (16:00) etc.
-    const parenM=!timeM?raw2.match(/\(([^)]+)\)\s*$/):null;
-    const parenTime=parenM?parenM[1].trim():null;
     // Multiple persons: "— Кирилл, Эрадж" / "— Кирилл / Эрадж" / "@mention"
     const personsArr=[];
     const pmAll=[...raw2.matchAll(/—\s*([А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*)/gu)];
@@ -609,8 +606,8 @@ function parseMd(md){
     const person=persons[0]||null;
     const dlM=raw2.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
     const deadline=dlM?dlM[1]:null;
-    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\([^)]+\)\s*$/,'').replace(/\s{2,}/g,' ').trim();
-    items.push({done,text:clean||raw2,rawText:raw2,person,persons,timeRange,parenTime,deadline,section});
+    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\s{2,}/g,' ').trim();
+    items.push({done,text:clean||raw2,rawText:raw2,person,persons,timeRange,deadline,section});
   }
   return items;
 }
@@ -1054,6 +1051,27 @@ function attachEdit(card){
 }
 
 // Toggle checkbox state (persists in localStorage, overrides markdown)
+function updatePanelProgress(card){
+  const panel=card.closest('[id^="panel-"]');
+  if(!panel)return;
+  const list=panel.querySelector('.task-list');
+  if(!list)return;
+  const all=list.querySelectorAll('.task-card');
+  const done=list.querySelectorAll('.task-card.done');
+  const total=all.length,doneN=done.length;
+  const pct=total?Math.round(doneN/total*100):0;
+  const pb=panel.querySelector('.prog-inner');
+  if(pb)pb.style.width=pct+'%';
+  const pctEl=panel.querySelector('.prog-pct');
+  if(pctEl)pctEl.textContent=pct+'%';
+  const cntEl=panel.querySelector('.prog-cnt');
+  if(cntEl)cntEl.textContent=doneN+'/'+total;
+  // badge
+  const pid=panel.id.replace('panel-','');
+  const badge=document.getElementById('badge-'+pid);
+  if(badge){badge.textContent=total-doneN||'✓';badge.classList.toggle('show',total>0);}
+}
+
 function toggleCheck(e,key){
   e.stopPropagation();
   const checkEl=e.currentTarget;
@@ -1064,6 +1082,7 @@ function toggleCheck(e,key){
   const textEl=card.querySelector('.task-text');
   if(textEl)textEl.style.textDecoration=newDone?'line-through':'';
   const checks=ls(K_CHECKS,{});checks[key]=newDone;sv(K_CHECKS,checks);
+  updatePanelProgress(card);
   logAct(newDone?'✅ Выполнено':'↩️ Возвращено');
 }
 
