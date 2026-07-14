@@ -638,7 +638,15 @@ function parseMeetingsMd(md){
     let persons=[],link=null,desc=null;
     for(const l of lines.slice(1)){
       const ll=l.toLowerCase();
-      if(ll.startsWith('участники:'))persons=l.replace(/участники:\s*/i,'').split(',').map(p=>p.trim()).filter(Boolean);
+      if(ll.startsWith('участники:')){
+        const _raw=l.replace(/участники:\s*/i,'').trim();
+        const _all=['вся команда','все','all team','all','вся'];
+        if(_all.some(x=>_raw.toLowerCase().includes(x))){
+          persons=TEAM.map(m=>m.name);
+        } else {
+          persons=_raw.split(',').map(p=>p.trim()).filter(Boolean);
+        }
+      }
       else if(ll.startsWith('ссылка:'))link=l.replace(/ссылка:\s*/i,'').trim();
       else if(ll.startsWith('описание:'))desc=l.replace(/описание:\s*/i,'').trim();
     }
