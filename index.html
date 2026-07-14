@@ -328,6 +328,7 @@
     .meetings-section { margin-bottom:16px; }
     .meetings-hdr { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:#5b9df5; margin:12px 0 6px; padding-left:8px; border-left:3px solid #5b9df5; display:flex; align-items:center; gap:6px; }
     .meetings-hdr .mhdr-cnt { font-size:.65rem; background:rgba(91,157,245,.12); border:1px solid rgba(91,157,245,.22); border-radius:8px; padding:0 6px; color:#5b9df5; }
+    .meeting-card.done { opacity:.45; }
     .meeting-card { background:rgba(91,157,245,.07); border:1px solid rgba(91,157,245,.22); border-radius:var(--r); padding:10px 12px; display:flex; gap:10px; animation:cin .22s ease both; position:relative; overflow:hidden; margin-bottom:6px; }
     .meeting-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:#5b9df5; }
     .meeting-time-col { display:flex; flex-direction:column; align-items:center; flex-shrink:0; gap:3px; padding-top:2px; }
@@ -655,8 +656,8 @@ function parseMeetingsMd(md){
 }
 
 function renderMeetingCard(m){
-  const pChips=m.persons.map(p=>`<span class="chip cp">👤 ${esc(p)}</span>`).join('');
-  return `<div class="meeting-card">
+  const pChips=(m.persons||[]).map(p=>`<span class="chip cp">👤 ${esc(p)}</span>`).join('');
+  return `<div class="meeting-card${m.done?' done':''}">
     <div class="meeting-time-col">
       <span class="meeting-icon">📅</span>
       <span class="meeting-time">${esc(m.timeRange)}</span>
@@ -697,6 +698,23 @@ function detectConflicts(tasks,meetings){
 // ═══════════════════════════════════════════════════════════════
 // Базовый список-рендер (день / полгода / год)
 function renderPanelList(el,period,file,tasks,meetings=[]){
+  // Встречи из day-файла → в синий блок
+  const _ms=['встречи','meetings'];
+  const _dm=tasks.filter(t=>
+    _ms.includes((t.section||'').toLowerCase())||
+    (t.rawText||'').trimStart().startsWith('📅'));
+  tasks=tasks.filter(t=>
+    !_ms.includes((t.section||'').toLowerCase())&&
+    !(t.rawText||'').trimStart().startsWith('📅'));
+  const _extra=_dm.map(t=>({
+    type:'meeting',title:t.text,timeRange:t.timeRange||'',
+    persons:t.persons||(t.person?[t.person]:[]),
+    link:t.links&&t.links.length?t.links[0].url:null,
+    sortKey:(t.timeRange||'99:99').split(/[–\-]/)[0],
+    done:t.done,desc:''
+  }));
+  meetings=[...(meetings||[]),..._extra];
+  meetings.sort((a,b)=>(a.sortKey||'99:99').localeCompare(b.sortKey||'99:99'));
   const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
   const base=file.split('/').pop();
   let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
