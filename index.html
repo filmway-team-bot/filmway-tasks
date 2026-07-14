@@ -139,7 +139,6 @@
     .cp { background:rgba(233,69,96,.1); color:var(--acc); border:1px solid rgba(233,69,96,.2); }
     .ct { background:rgba(255,190,11,.09); color:#ffbe0b; border:1px solid rgba(255,190,11,.2); }
     .cd { background:rgba(80,180,80,.09); color:#5db867; border:1px solid rgba(80,180,80,.18); }
-    .cl { background:rgba(91,157,245,.1); color:#5b9df5; border:1px solid rgba(91,157,245,.25); text-decoration:none; cursor:pointer; }
     .edit-btn { opacity:0; flex-shrink:0; width:24px; height:24px; border-radius:5px; border:1px solid rgba(255,255,255,.07); background:rgba(255,255,255,.03); color:var(--muted); font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:opacity .11s,background .11s; margin-top:1px; }
     .task-card:hover .edit-btn { opacity:1; }
     .edit-btn:hover { background:rgba(233,69,96,.12); border-color:rgba(233,69,96,.28); color:var(--acc); }
@@ -328,16 +327,6 @@
     .meetings-section { margin-bottom:16px; }
     .meetings-hdr { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:#5b9df5; margin:12px 0 6px; padding-left:8px; border-left:3px solid #5b9df5; display:flex; align-items:center; gap:6px; }
     .meetings-hdr .mhdr-cnt { font-size:.65rem; background:rgba(91,157,245,.12); border:1px solid rgba(91,157,245,.22); border-radius:8px; padding:0 6px; color:#5b9df5; }
-    .meeting-card.done { padding-right:116px; }
-    .mtg-done-banner { display:none; }
-    .meeting-card.done .mtg-done-banner {
-      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
-      position:absolute; right:0; top:0; bottom:0; width:110px;
-      background:var(--acc); color:#fff;
-      font-size:.58rem; font-weight:800; letter-spacing:1px;
-      text-transform:uppercase; text-align:center;
-      border-radius:0 var(--r) var(--r) 0;
-    }
     .meeting-card { background:rgba(91,157,245,.07); border:1px solid rgba(91,157,245,.22); border-radius:var(--r); padding:10px 12px; display:flex; gap:10px; animation:cin .22s ease both; position:relative; overflow:hidden; margin-bottom:6px; }
     .meeting-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:#5b9df5; }
     .meeting-time-col { display:flex; flex-direction:column; align-items:center; flex-shrink:0; gap:3px; padding-top:2px; }
@@ -607,12 +596,7 @@ function parseMd(md){
     if(!mD&&!mT)continue;
     const done=!!mD;const raw2=(done?mD[1]:mT[1]).trim();
     const timeM=raw2.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/);
-    const links=[];const _lr=/\[([^\]]+)\]\(([^)]+)\)/g;let _lm;
-    while((_lm=_lr.exec(raw2))!==null)links.push({text:_lm[1],url:_lm[2]});
-    const raw2nl=raw2.replace(/\[([^\]]+)\]\([^)]+\)/g,'');
-    const parenM=raw2nl.match(/\(([^)]+)\)/);
-    const mtM=raw2nl.match(/^📅\s*(\d{1,2}:\d{2})/);
-    const timeRange=timeM?`${timeM[1]}–${timeM[2]}`:(mtM?mtM[1]:(parenM?parenM[1]:null));
+    const timeRange=timeM?`${timeM[1]}–${timeM[2]}`:null;
     // Multiple persons: "— Кирилл, Эрадж" / "— Кирилл / Эрадж" / "@mention"
     const personsArr=[];
     const pmAll=[...raw2.matchAll(/—\s*([А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*)/gu)];
@@ -622,8 +606,8 @@ function parseMd(md){
     const person=persons[0]||null;
     const dlM=raw2.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
     const deadline=dlM?dlM[1]:null;
-    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\[([^\]]+)\]\([^)]+\)/g,'').replace(/^📅\s*\d{1,2}:\d{2}\s*/,'').replace(/\([^)]+\)/g,'').replace(/\(\s*\)/g,'').replace(/^[-—\s]+|[-—\s]+$/g,'').replace(/\s{2,}/g,' ').trim();
-    items.push({done,text:clean||raw2,rawText:raw2,person,persons,timeRange,deadline,section,links});
+    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\s{2,}/g,' ').trim();
+    items.push({done,text:clean||raw2,rawText:raw2,person,persons,timeRange,deadline,section});
   }
   return items;
 }
@@ -665,22 +649,18 @@ function parseMeetingsMd(md){
 }
 
 function renderMeetingCard(m){
-  const pChips=(m.persons||[]).map(p=>`<span class="chip cp">👤 ${esc(p)}</span>`).join('');
-  const doneBanner=m.done
-    ?`<div class="mtg-done-banner"><span>ВСТРЕЧА</span><span>ПРОВЕДЕНА</span></div>`
-    :'';
-  return `<div class="meeting-card${m.done?' done':''}">
+  const pChips=m.persons.map(p=>`<span class="chip cp">👤 ${esc(p)}</span>`).join('');
+  return `<div class="meeting-card">
     <div class="meeting-time-col">
       <span class="meeting-icon">📅</span>
-      <span class="meeting-time">${esc(m.timeRange||'')}</span>
+      <span class="meeting-time">${esc(m.timeRange)}</span>
     </div>
     <div class="meeting-body">
       <div class="meeting-title">${esc(m.title)}</div>
       ${m.desc?`<div class="meeting-desc">${esc(m.desc)}</div>`:''}
-      ${m.persons&&m.persons.length?`<div class="meeting-meta">${pChips}</div>`:''}
-      ${m.link&&!m.done?`<a class="meeting-link" href="${esc(m.link)}" target="_blank" rel="noopener">🔗 Подключиться</a>`:''}
+      ${m.persons.length?`<div class="meeting-meta">${pChips}</div>`:''}
+      ${m.link?`<a class="meeting-link" href="${esc(m.link)}" target="_blank" rel="noopener">🔗 Подключиться</a>`:''}
     </div>
-    ${doneBanner}
   </div>`;
 }
 
@@ -711,26 +691,6 @@ function detectConflicts(tasks,meetings){
 // ═══════════════════════════════════════════════════════════════
 // Базовый список-рендер (день / полгода / год)
 function renderPanelList(el,period,file,tasks,meetings=[]){
-  // Встречи из day-файла (секция Встречи или строки с 📅) -> синий блок
-  const _ms=['встречи','meetings'];
-  const _dm=tasks.filter(t=>
-    _ms.includes((t.section||'').toLowerCase())||
-    (t.rawText||'').trimStart().startsWith('📅'));
-  tasks=tasks.filter(t=>
-    !_ms.includes((t.section||'').toLowerCase())&&
-    !(t.rawText||'').trimStart().startsWith('📅'));
-  const _extra=_dm.map(t=>({
-    type:'meeting',
-    title:t.text,
-    timeRange:t.timeRange||'',
-    persons:t.persons||(t.person?[t.person]:[]),
-    link:t.links&&t.links.length?t.links[0].url:null,
-    sortKey:(t.timeRange||'99:99').split(/[–\-]/)[0],
-    done:t.done,
-    desc:''
-  }));
-  meetings=[...(meetings||[]),..._extra];
-  meetings.sort((a,b)=>(a.sortKey||'99:99').localeCompare(b.sortKey||'99:99'));
   const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
   const base=file.split('/').pop();
   let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
@@ -1053,7 +1013,6 @@ function renderCard(task,isConflict=false){
   pList.forEach(p=>{ meta+=`<span class="chip cp">👤 ${esc(p)}</span>`; });
   if(task.timeRange)meta+=`<span class="chip ct">🕐 ${esc(task.timeRange)}</span>`;
   if(task.deadline)meta+=`<span class="chip cd">📅 ${esc(task.deadline)}</span>`;
-  (task.links||[]).forEach(l=>{meta+=`<a class="chip cl" href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.text)}</a>`;});
   if(isConflict)meta+=`<span class="conflict-badge">⚠️ пересечение со встречей</span>`;
   const files=ls(K_FILES,{});
   const tf=files[key]||[];
