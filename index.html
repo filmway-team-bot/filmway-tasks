@@ -348,25 +348,6 @@
     .cal-week-col .meeting-title { font-size:.74rem; }
     .cal-week-col .meeting-time { font-size:.62rem; }
     .cal-week-col .meeting-icon { font-size:.85rem; }
-
-    /* ── Кнопка Sync ────────────────────────────────────── */
-    #sync-btn {
-      display: none;
-      align-items: center; gap: 6px;
-      padding: 8px 18px;
-      background: linear-gradient(135deg, rgba(233,69,96,.14), rgba(233,69,96,.07));
-      border: 1px solid rgba(233,69,96,.38);
-      border-radius: 8px;
-      color: var(--text); font-size: .82rem; font-weight: 600;
-      cursor: pointer; transition: background .2s, opacity .2s;
-      margin-left: 12px;
-    }
-    #sync-btn:hover:not(:disabled) { background: rgba(233,69,96,.26); }
-    #sync-btn:disabled { opacity: .5; cursor: default; }
-    #sync-btn.syncing { border-color: var(--time-border); color: var(--time-color); }
-    @keyframes spin-slow { to { transform: rotate(360deg); } }
-    #sync-spin { display:inline-block; }
-    #sync-btn.syncing #sync-spin { animation: spin-slow .9s linear infinite; }
   </style>
 </head>
 <body>
@@ -385,9 +366,6 @@
     <button class="btn-icon" id="search-btn" title="Поиск (⌘F)">🔍</button>
     <div class="hdr-meta" id="last-updated">…</div>
   </div>
-  <button id="sync-btn" onclick="triggerSync()" title="Синхронизировать задачи через Haiku AI">
-    <span id="sync-spin">↻</span> <span id="sync-label">Sync</span>
-  </button>
 </header>
 
 <!-- ═══ TEAM BAR ══════════════════════════════════════════════════ -->
@@ -634,7 +612,7 @@ function parseMd(md){
     const person=persons[0]||null;
     const dlM=raw2.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
     const deadline=dlM?dlM[1]:null;
-    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\[([^\]]+)\]\([^)]+\)/g,'').replace(/^📅\s*\d{1,2}:\d{2}\s*/u,'').replace(/\([^)]+\)/g,'').replace(/\(\s*\)/g,'').replace(/^[-—\s]+|[-—\s]+$/g,'').replace(/\s{2,}/g,' ').trim();
+    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\[([^\]]+)\]\([^)]+\)/g,'').replace(/^📅\s*\d{1,2}:\d{2}\s*/,'').replace(/\([^)]+\)/g,'').replace(/\(\s*\)/g,'').replace(/^[-—\s]+|[-—\s]+$/g,'').replace(/\s{2,}/g,' ').trim();
     items.push({done,text:clean||raw2,rawText:raw2,person,persons,timeRange,deadline,section,links});
   }
   return items;
@@ -1434,71 +1412,7 @@ async function loadAll(){
 // ═══════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════
-
-/* ══════════════════════════════════════════════════════════
-   SYNC BUTTON
-══════════════════════════════════════════════════════════ */
-let SYNC_URL = null;
-
-async function initSyncButton() {
-  try {
-    const r = await fetch(RAW + 'sync_config.json?_=' + Date.now());
-    if (!r.ok) return;
-    const cfg = await r.json();
-    if (cfg.sync_url) {
-      SYNC_URL = cfg.sync_url.replace(/\/$/, '');
-      document.getElementById('sync-btn').style.display = 'flex';
-    }
-  } catch(e) {}
-}
-
-async function triggerSync() {
-  if (!SYNC_URL) return;
-  const btn  = document.getElementById('sync-btn');
-  const lbl  = document.getElementById('sync-label');
-  btn.disabled = true;
-  btn.classList.add('syncing');
-  lbl.textContent = 'Идёт…';
-
-  try {
-    const r = await fetch(SYNC_URL + '/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-
-    // поллинг статуса каждые 2 сек
-    const poll = setInterval(async () => {
-      try {
-        const sr = await fetch(SYNC_URL + '/status');
-        const s  = await sr.json();
-        if (s.status === 'done') {
-          clearInterval(poll);
-          lbl.textContent = '✅ Готово';
-          btn.classList.remove('syncing');
-          setTimeout(() => {
-            btn.disabled = false;
-            lbl.textContent = 'Sync';
-            loadAll();
-          }, 2500);
-        } else if (s.status === 'error') {
-          clearInterval(poll);
-          lbl.textContent = '❌ Ошибка';
-          btn.classList.remove('syncing');
-          setTimeout(() => { btn.disabled = false; lbl.textContent = 'Sync'; }, 3000);
-        }
-      } catch(e) {}
-    }, 2000);
-
-  } catch(e) {
-    lbl.textContent = '❌ Нет связи';
-    btn.classList.remove('syncing');
-    setTimeout(() => { btn.disabled = false; lbl.textContent = 'Sync'; }, 3000);
-  }
-}
-
 loadAll();
-initSyncButton();
 setInterval(loadAll,2*60*1000);
 </script>
 </body>
