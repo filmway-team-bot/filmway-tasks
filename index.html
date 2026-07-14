@@ -139,6 +139,7 @@
     .cp { background:rgba(233,69,96,.1); color:var(--acc); border:1px solid rgba(233,69,96,.2); }
     .ct { background:rgba(255,190,11,.09); color:#ffbe0b; border:1px solid rgba(255,190,11,.2); }
     .cd { background:rgba(80,180,80,.09); color:#5db867; border:1px solid rgba(80,180,80,.18); }
+    .cl { background:rgba(91,157,245,.1); color:#5b9df5; border:1px solid rgba(91,157,245,.25); text-decoration:none; cursor:pointer; }
     .edit-btn { opacity:0; flex-shrink:0; width:24px; height:24px; border-radius:5px; border:1px solid rgba(255,255,255,.07); background:rgba(255,255,255,.03); color:var(--muted); font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:opacity .11s,background .11s; margin-top:1px; }
     .task-card:hover .edit-btn { opacity:1; }
     .edit-btn:hover { background:rgba(233,69,96,.12); border-color:rgba(233,69,96,.28); color:var(--acc); }
@@ -618,8 +619,12 @@ function parseMd(md){
     if(!mD&&!mT)continue;
     const done=!!mD;const raw2=(done?mD[1]:mT[1]).trim();
     const timeM=raw2.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/);
-    const parenM=raw2.match(/\(([^)]+)\)/);
-    const timeRange=timeM?`${timeM[1]}–${timeM[2]}`:(parenM?parenM[1]:null);
+    const links=[];const _lr=/\[([^\]]+)\]\(([^)]+)\)/g;let _lm;
+    while((_lm=_lr.exec(raw2))!==null)links.push({text:_lm[1],url:_lm[2]});
+    const raw2nl=raw2.replace(/\[([^\]]+)\]\([^)]+\)/g,'');
+    const parenM=raw2nl.match(/\(([^)]+)\)/);
+    const mtM=raw2nl.match(/^📅\s*(\d{1,2}:\d{2})/);
+    const timeRange=timeM?`${timeM[1]}–${timeM[2]}`:(mtM?mtM[1]:(parenM?parenM[1]:null));
     // Multiple persons: "— Кирилл, Эрадж" / "— Кирилл / Эрадж" / "@mention"
     const personsArr=[];
     const pmAll=[...raw2.matchAll(/—\s*([А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*)/gu)];
@@ -629,8 +634,8 @@ function parseMd(md){
     const person=persons[0]||null;
     const dlM=raw2.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
     const deadline=dlM?dlM[1]:null;
-    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\([^)]+\)/g,'').replace(/\s{2,}/g,' ').trim();
-    items.push({done,text:clean||raw2,rawText:raw2,person,persons,timeRange,deadline,section});
+    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\[([^\]]+)\]\([^)]+\)/g,'').replace(/^📅\s*\d{1,2}:\d{2}\s*/u,'').replace(/\([^)]+\)/g,'').replace(/\(\s*\)/g,'').replace(/^[-—\s]+|[-—\s]+$/g,'').replace(/\s{2,}/g,' ').trim();
+    items.push({done,text:clean||raw2,rawText:raw2,person,persons,timeRange,deadline,section,links});
   }
   return items;
 }
@@ -1036,6 +1041,7 @@ function renderCard(task,isConflict=false){
   pList.forEach(p=>{ meta+=`<span class="chip cp">👤 ${esc(p)}</span>`; });
   if(task.timeRange)meta+=`<span class="chip ct">🕐 ${esc(task.timeRange)}</span>`;
   if(task.deadline)meta+=`<span class="chip cd">📅 ${esc(task.deadline)}</span>`;
+  (task.links||[]).forEach(l=>{meta+=`<a class="chip cl" href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.text)}</a>`;});
   if(isConflict)meta+=`<span class="conflict-badge">⚠️ пересечение со встречей</span>`;
   const files=ls(K_FILES,{});
   const tf=files[key]||[];
