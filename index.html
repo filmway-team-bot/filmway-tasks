@@ -618,7 +618,8 @@ function parseMd(md){
     if(!mD&&!mT)continue;
     const done=!!mD;const raw2=(done?mD[1]:mT[1]).trim();
     const timeM=raw2.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/);
-    const timeRange=timeM?`${timeM[1]}–${timeM[2]}`:null;
+    const parenM=raw2.match(/\(([^)]+)\)/);
+    const timeRange=timeM?`${timeM[1]}–${timeM[2]}`:(parenM?parenM[1]:null);
     // Multiple persons: "— Кирилл, Эрадж" / "— Кирилл / Эрадж" / "@mention"
     const personsArr=[];
     const pmAll=[...raw2.matchAll(/—\s*([А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*)/gu)];
@@ -628,7 +629,7 @@ function parseMd(md){
     const person=persons[0]||null;
     const dlM=raw2.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
     const deadline=dlM?dlM[1]:null;
-    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\s{2,}/g,' ').trim();
+    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\([^)]+\)/g,'').replace(/\s{2,}/g,' ').trim();
     items.push({done,text:clean||raw2,rawText:raw2,person,persons,timeRange,deadline,section});
   }
   return items;
