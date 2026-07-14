@@ -6,1009 +6,1407 @@
   <title>Filmway AI — Task Dashboard</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:          #0a0a0a;
-      --card:        #1a1a2e;
-      --accent:      #e94560;
-      --accent2:     #c73652;
-      --text:        #ffffff;
-      --text-muted:  #8892a4;
-      --done:        #2ecc71;
-      --border:      rgba(233,69,96,.25);
-      --shadow:      0 8px 32px rgba(0,0,0,.6);
-      --radius:      12px;
-      --time-color:  #4fc3f7;
-      --time-bg:     rgba(79,195,247,.10);
-      --time-border: rgba(79,195,247,.28);
+      --bg:    #0a0a0a; --bg2:   #0d0d1a; --card:  #14142a;
+      --acc:   #e94560; --a2:    #c73652;
+      --text:  #f0f0f0; --muted: #7a8499;
+      --done:  #2ecc71; --border:#1e1e3a; --b2:rgba(255,255,255,.07);
+      --shad:  0 8px 28px rgba(0,0,0,.55); --r:11px;
+    }
+    html { scroll-behavior:smooth; }
+    body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif; min-height:100vh; overflow-x:hidden; }
+    body::before { content:''; position:fixed; inset:0; z-index:0; pointer-events:none; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E"); background-size:180px; }
+
+    /* ══ HEADER ══════════════════════════════════════════════════ */
+    header { position:relative; z-index:20; background:linear-gradient(135deg,#0d0d1a 0%,#1a1a2e 60%,#0a0a0a 100%); border-bottom:1px solid rgba(233,69,96,.18); padding:15px 22px 12px; display:flex; align-items:center; gap:12px; }
+    .logo-wrap { display:flex; align-items:center; gap:11px; flex:1; min-width:0; }
+    .logo-icon { width:36px; height:36px; flex-shrink:0; border-radius:9px; background:linear-gradient(135deg,var(--acc),#ff6b6b); display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow:0 0 14px rgba(233,69,96,.36); }
+    h1 { font-size:clamp(.9rem,2.6vw,1.38rem); font-weight:700; letter-spacing:-.3px; }
+    h1 span { color:var(--acc); }
+    .hdr-right { display:flex; align-items:center; gap:7px; flex-shrink:0; }
+    .search-slide { overflow:hidden; max-width:0; opacity:0; transition:max-width .28s ease,opacity .22s ease; display:flex; align-items:center; gap:6px; }
+    .search-slide.open { max-width:250px; opacity:1; }
+    .search-input { width:185px; padding:5px 12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:15px; color:var(--text); font-size:.8rem; font-family:inherit; outline:none; transition:border-color .14s; }
+    .search-input::placeholder { color:var(--muted); }
+    .search-input:focus { border-color:rgba(233,69,96,.46); }
+    .search-count { font-size:.68rem; color:var(--muted); white-space:nowrap; min-width:44px; }
+    .btn-icon { width:30px; height:30px; border-radius:7px; flex-shrink:0; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); color:var(--muted); font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .13s,border-color .13s,color .13s; }
+    .btn-icon:hover,.btn-icon.on { background:rgba(233,69,96,.13); border-color:rgba(233,69,96,.34); color:var(--acc); }
+    .hdr-meta { font-size:.68rem; color:var(--muted); text-align:right; white-space:nowrap; line-height:1.5; }
+    .hdr-meta strong { color:var(--text); }
+
+    /* ══ TEAM BAR ════════════════════════════════════════════════ */
+    .team-bar { position:relative; z-index:15; background:var(--bg2); border-bottom:1px solid var(--b2); padding:8px 22px; display:flex; align-items:center; gap:5px; overflow-x:auto; scrollbar-width:none; }
+    .team-bar::-webkit-scrollbar { display:none; }
+    .team-label { font-size:9px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); flex-shrink:0; margin-right:3px; }
+    .member-chip { display:flex; align-items:center; gap:5px; padding:3px 9px 3px 4px; border-radius:18px; border:1px solid var(--b2); background:rgba(255,255,255,.04); cursor:pointer; white-space:nowrap; flex-shrink:0; transition:background .12s,border-color .12s; }
+    .member-chip:hover { background:rgba(255,255,255,.07); }
+    .member-chip.active { background:rgba(233,69,96,.11); border-color:rgba(233,69,96,.32); }
+    .m-av { width:20px; height:20px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
+    .m-name { font-size:11.5px; font-weight:600; }
+    .m-cnt { font-size:9.5px; color:var(--muted); margin-left:1px; }
+    .m-mtg { font-size:9px; background:rgba(91,157,245,.18); color:#89b4ff; border-radius:6px; padding:1px 5px; margin-left:1px; }
+    .team-spacer { flex:1; }
+    .filter-clear { font-size:9px; color:var(--acc); cursor:pointer; padding:2px 7px; border-radius:5px; border:1px solid rgba(233,69,96,.22); display:none; background:rgba(233,69,96,.05); }
+    .filter-clear:hover { background:rgba(233,69,96,.12); }
+    .filter-clear.show { display:block; }
+
+    /* ══ ACTIONS PANEL ═══════════════════════════════════════════ */
+    .actions-wrap { position:relative; z-index:14; overflow:hidden; max-height:0; transition:max-height .3s ease; background:rgba(8,8,20,.95); border-bottom:1px solid var(--b2); }
+    .actions-wrap.open { max-height:160px; }
+    .actions-bar { padding:11px 22px; display:flex; gap:20px; align-items:flex-start; }
+    .qa-sec { flex:1; }
+    .mini-title { font-size:9px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:5px; }
+    .qa-row { display:flex; gap:6px; }
+    .qa-ta { flex:1; min-height:42px; resize:none; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:7px; padding:5px 8px; font-size:11.5px; font-family:inherit; color:var(--text); outline:none; }
+    .qa-ta::placeholder { color:var(--muted); }
+    .qa-ta:focus { border-color:rgba(233,69,96,.38); }
+    .qa-ctrl { display:flex; flex-direction:column; gap:4px; }
+    .qa-sel { font-size:10.5px; padding:3px 4px; background:rgba(255,255,255,.06); color:var(--text); border:1px solid var(--b2); border-radius:5px; font-family:inherit; }
+    .qa-add { font-size:10.5px; padding:4px 9px; background:var(--acc); color:#fff; border:none; border-radius:5px; cursor:pointer; }
+    .qa-add:hover { background:var(--a2); }
+    .act-sec { width:190px; flex-shrink:0; }
+    .act-scroll { max-height:100px; overflow-y:auto; }
+    .act-item { font-size:10.5px; color:var(--muted); padding:3px 0; border-bottom:1px solid var(--b2); line-height:1.3; }
+    .act-time { color:rgba(255,255,255,.2); margin-left:3px; font-size:9.5px; }
+
+    /* ══ TOPBAR ══════════════════════════════════════════════════ */
+    .topbar { position:relative; z-index:13; background:var(--bg2); border-bottom:1px solid var(--b2); display:flex; align-items:center; gap:7px; padding:4px 22px; }
+    .tb-btn { font-size:10.5px; padding:3px 9px; background:rgba(255,255,255,.04); border:1px solid var(--b2); border-radius:5px; color:var(--muted); cursor:pointer; transition:background .12s,color .12s; }
+    .tb-btn:hover { background:rgba(233,69,96,.09); color:var(--text); }
+    .tb-btn.on { background:rgba(233,69,96,.1); color:var(--acc); border-color:rgba(233,69,96,.26); }
+    .tb-spacer { flex:1; }
+    .ref-row { display:flex; align-items:center; gap:4px; font-size:9.5px; color:var(--muted); }
+    .rdot { width:5px; height:5px; border-radius:50%; background:var(--done); animation:pdot 2.5s infinite; }
+    @keyframes pdot{0%,100%{opacity:1}50%{opacity:.2}}
+    .refreshing .rdot { background:#ff9800; }
+
+    /* ══ TABS ════════════════════════════════════════════════════ */
+    .tabs-bar { position:relative; z-index:10; background:var(--bg2); border-bottom:1px solid var(--b2); display:flex; gap:2px; padding:7px 22px 0; overflow-x:auto; scrollbar-width:none; }
+    .tabs-bar::-webkit-scrollbar { display:none; }
+    .tab-btn { padding:7px 16px; border:none; background:transparent; color:var(--muted); font-size:.83rem; font-weight:600; cursor:pointer; border-radius:var(--r) var(--r) 0 0; transition:color .15s,background .15s; white-space:nowrap; position:relative; }
+    .tab-btn::after { content:''; position:absolute; bottom:0; left:50%; right:50%; height:2px; background:var(--acc); transition:left .2s,right .2s; border-radius:2px 2px 0 0; }
+    .tab-btn:hover { color:var(--text); background:rgba(255,255,255,.04); }
+    .tab-btn.active { color:var(--text); background:rgba(233,69,96,.07); }
+    .tab-btn.active::after { left:9px; right:9px; }
+    .tab-badge { display:inline-block; margin-left:4px; padding:1px 5px; border-radius:999px; font-size:.62rem; background:var(--acc); color:#fff; vertical-align:middle; opacity:0; transform:scale(.7); transition:opacity .17s,transform .17s; }
+    .tab-badge.show { opacity:1; transform:scale(1); }
+
+    /* ══ MAIN ════════════════════════════════════════════════════ */
+    main { padding:18px 22px 48px; max-width:1060px; margin:0 auto; position:relative; z-index:5; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; animation:fup .24s ease both; }
+    @keyframes fup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    .period-hdr { display:flex; align-items:center; gap:9px; margin-bottom:14px; flex-wrap:wrap; }
+    .period-title { font-size:.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1.3px; }
+    .period-date { font-size:.7rem; color:var(--acc); background:rgba(233,69,96,.09); padding:2px 8px; border-radius:999px; border:1px solid rgba(233,69,96,.24); }
+
+    .prog-wrap { background:rgba(255,255,255,.04); border-radius:var(--r); padding:11px 16px; margin-bottom:16px; border:1px solid var(--border); display:flex; align-items:center; gap:11px; flex-wrap:wrap; }
+    .prog-label { font-size:.73rem; color:var(--muted); min-width:75px; }
+    .prog-outer { flex:1; min-width:75px; height:5px; background:rgba(255,255,255,.07); border-radius:999px; overflow:hidden; }
+    .prog-inner { height:100%; background:linear-gradient(90deg,var(--acc),#ff6b6b); border-radius:999px; transition:width .55s cubic-bezier(.4,0,.2,1); width:0%; box-shadow:0 0 6px rgba(233,69,96,.38); }
+    .prog-pct { font-size:.85rem; font-weight:700; min-width:34px; text-align:right; }
+    .prog-cnt { font-size:.7rem; color:var(--muted); }
+
+    .task-list { display:flex; flex-direction:column; gap:6px; }
+    .sec-heading { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted); margin:12px 0 5px; padding-left:8px; border-left:3px solid var(--acc); }
+
+    /* ══ TASK CARD ═══════════════════════════════════════════════ */
+    .task-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:10px 12px; display:flex; align-items:flex-start; gap:9px; transition:transform .14s,box-shadow .14s,border-color .14s; animation:cin .22s ease both; position:relative; overflow:hidden; }
+    .task-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--acc); opacity:0; transition:opacity .14s; }
+    .task-card:hover { transform:translateX(3px); box-shadow:var(--shad); border-color:rgba(233,69,96,.28); }
+    .task-card:hover::before { opacity:1; }
+    .task-card.done { opacity:.54; }
+    .task-card.done::before { background:var(--done); opacity:.38; }
+    .task-card.found { border-color:rgba(233,69,96,.42); }
+    .task-card.h-search,.task-card.h-member { display:none!important; }
+    @keyframes cin{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+    .task-card:nth-child(1){animation-delay:.02s}.task-card:nth-child(2){animation-delay:.04s}
+    .task-card:nth-child(3){animation-delay:.06s}.task-card:nth-child(4){animation-delay:.08s}
+    .task-card:nth-child(5){animation-delay:.10s}.task-card:nth-child(6){animation-delay:.12s}
+    .task-card:nth-child(7){animation-delay:.14s}.task-card:nth-child(8){animation-delay:.16s}
+
+    .task-check { width:16px; height:16px; flex-shrink:0; border-radius:4px; border:2px solid rgba(255,255,255,.13); margin-top:2px; display:flex; align-items:center; justify-content:center; transition:background .13s,border-color .13s; cursor:pointer; }
+    .task-check.checked { background:var(--done); border-color:var(--done); }
+    .task-check.checked::after { content:''; display:block; width:3px; height:7px; border:2px solid #fff; border-top:none; border-left:none; transform:rotate(45deg) translate(-1px,-1px); }
+    .task-body { flex:1; min-width:0; }
+    .task-text { font-size:.86rem; line-height:1.48; word-break:break-word; }
+    .task-card.done .task-text { text-decoration:line-through; color:var(--muted); }
+    mark { background:rgba(233,69,96,.28); color:inherit; border-radius:3px; padding:0 1px; }
+    .task-meta { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; align-items:center; }
+    .chip { display:inline-flex; align-items:center; gap:3px; font-size:.67rem; padding:2px 7px; border-radius:999px; font-weight:600; }
+    .cp { background:rgba(233,69,96,.1); color:var(--acc); border:1px solid rgba(233,69,96,.2); }
+    .ct { background:rgba(255,190,11,.09); color:#ffbe0b; border:1px solid rgba(255,190,11,.2); }
+    .cd { background:rgba(80,180,80,.09); color:#5db867; border:1px solid rgba(80,180,80,.18); }
+    .edit-btn { opacity:0; flex-shrink:0; width:24px; height:24px; border-radius:5px; border:1px solid rgba(255,255,255,.07); background:rgba(255,255,255,.03); color:var(--muted); font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:opacity .11s,background .11s; margin-top:1px; }
+    .task-card:hover .edit-btn { opacity:1; }
+    .edit-btn:hover { background:rgba(233,69,96,.12); border-color:rgba(233,69,96,.28); color:var(--acc); }
+    .edit-area { display:none; width:100%; background:rgba(255,255,255,.06); border:1px solid rgba(233,69,96,.36); border-radius:6px; padding:5px 8px; color:var(--text); font-size:.86rem; font-family:inherit; line-height:1.45; outline:none; resize:none; }
+    .edit-area.open { display:block; }
+    .edit-btns { display:none; gap:4px; margin-top:4px; }
+    .edit-btns.open { display:flex; }
+    .btn-save,.btn-cancel { font-size:.7rem; padding:3px 9px; border-radius:5px; border:1px solid; cursor:pointer; font-family:inherit; }
+    .btn-save { background:var(--acc); color:#fff; border-color:var(--acc); }
+    .btn-save:hover { background:var(--a2); }
+    .btn-cancel { background:rgba(255,255,255,.05); color:var(--muted); border-color:rgba(255,255,255,.1); }
+    .attach-row { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+    .file-chip { display:inline-flex; align-items:center; gap:3px; font-size:.66rem; padding:2px 6px 2px 4px; background:rgba(80,130,220,.1); border:1px solid rgba(80,130,220,.24); border-radius:999px; color:#7aacff; text-decoration:none; max-width:190px; }
+    .file-chip:hover { background:rgba(80,130,220,.17); }
+    .fcn { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px; }
+    .fcd { color:rgba(255,255,255,.28); cursor:pointer; font-size:12px; line-height:1; flex-shrink:0; transition:color .11s; }
+    .fcd:hover { color:var(--acc); }
+    .attach-btn { display:inline-flex; align-items:center; gap:3px; font-size:.66rem; padding:2px 6px; background:rgba(255,255,255,.04); border:1px dashed rgba(255,255,255,.13); border-radius:999px; color:var(--muted); cursor:pointer; transition:background .11s,border-color .11s,color .11s; }
+    .attach-btn:hover { background:rgba(80,130,220,.09); border-color:rgba(80,130,220,.28); color:#7aacff; }
+    input.file-input { display:none; }
+
+    /* ══ EMPTY / LOADING ═════════════════════════════════════════ */
+    .empty { text-align:center; padding:44px 20px; color:var(--muted); }
+    .empty-icon { font-size:2.2rem; margin-bottom:8px; opacity:.36; }
+    .loading { display:flex; align-items:center; justify-content:center; gap:10px; padding:40px 20px; color:var(--muted); font-size:.82rem; }
+    .spinner { width:17px; height:17px; border:3px solid rgba(233,69,96,.14); border-top-color:var(--acc); border-radius:50%; animation:spin .6s linear infinite; }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ══ WEEK CHIPS ══════════════════════════════════════════════ */
+    .wk-chip { display:flex; align-items:center; gap:5px; font-size:9.5px; padding:3px 6px 3px 5px; border-radius:5px; cursor:pointer; background:rgba(255,255,255,.04); border:1px solid var(--b2); margin-bottom:3px; line-height:1.35; transition:background .1s,border-color .1s; }
+    .wk-chip:hover { background:rgba(255,255,255,.09); border-color:rgba(255,255,255,.15); }
+    .wk-chip.wk-done { opacity:.5; }
+    .wk-chip.wk-done .wk-chip-text { text-decoration:line-through; color:var(--muted); }
+    .wk-chip-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.25); flex-shrink:0; margin-top:1px; }
+    .wk-chip.wk-done .wk-chip-dot { background:var(--done); }
+    .wk-chip.wk-conflict .wk-chip-dot { background:var(--acc); }
+    .wk-chip-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); flex:1; min-width:0; }
+    .wk-chip-time { font-size:8.5px; color:var(--muted); flex-shrink:0; }
+    .wk-task-detail { background:rgba(255,255,255,.05); border:1px solid rgba(233,69,96,.2); border-radius:6px; padding:7px 8px 6px; margin-bottom:4px; animation:fup .15s ease; }
+    .wk-td-text { font-weight:600; font-size:10.5px; margin-bottom:4px; color:var(--text); line-height:1.4; }
+    .wk-td-meta { color:var(--muted); font-size:9px; display:flex; flex-wrap:wrap; gap:4px; }
+    .wk-td-tag { background:rgba(255,255,255,.07); border-radius:4px; padding:1px 5px; }
+
+    /* ══ FILES TAB ═══════════════════════════════════════════════ */
+    #panel-files { padding-top:4px; }
+    .files-layout { display:flex; gap:16px; align-items:flex-start; }
+
+    /* Projects sidebar */
+    .projects-panel { width:200px; flex-shrink:0; background:rgba(255,255,255,.03); border:1px solid var(--b2); border-radius:var(--r); padding:10px; }
+    .proj-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid var(--b2); display:flex; align-items:center; justify-content:space-between; }
+    .proj-add-btn { font-size:14px; cursor:pointer; color:var(--muted); transition:color .12s; line-height:1; }
+    .proj-add-btn:hover { color:var(--acc); }
+
+    .proj-item { display:flex; align-items:center; gap:7px; padding:5px 6px; border-radius:7px; cursor:pointer; transition:background .11s; margin-bottom:2px; }
+    .proj-item:hover { background:rgba(255,255,255,.05); }
+    .proj-item.active { background:rgba(233,69,96,.1); }
+    .proj-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .proj-name { font-size:12px; font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .proj-fc { font-size:10px; color:var(--muted); }
+    .proj-del { font-size:12px; color:rgba(255,255,255,.2); cursor:pointer; opacity:0; transition:opacity .11s,color .11s; }
+    .proj-item:hover .proj-del { opacity:1; }
+    .proj-del:hover { color:var(--acc); }
+
+    .proj-add-form { display:none; padding:6px 0; }
+    .proj-add-form.open { display:block; }
+    .proj-add-inp { width:100%; background:rgba(255,255,255,.06); border:1px solid rgba(233,69,96,.36); border-radius:6px; padding:5px 8px; font-size:11.5px; font-family:inherit; color:var(--text); outline:none; }
+    .proj-colors { display:flex; gap:4px; flex-wrap:wrap; margin:5px 0; }
+    .proj-color-swatch { width:16px; height:16px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:transform .1s,border-color .1s; }
+    .proj-color-swatch.selected { border-color:#fff; transform:scale(1.2); }
+    .paf-btns { display:flex; gap:4px; }
+    .paf-btns button { font-size:10.5px; padding:3px 8px; border-radius:5px; border:1px solid; cursor:pointer; font-family:inherit; }
+    .paf-save { background:var(--acc); color:#fff; border-color:var(--acc); }
+    .paf-cancel { background:rgba(255,255,255,.05); color:var(--muted); border-color:rgba(255,255,255,.1); }
+
+    /* Files area */
+    .files-area { flex:1; min-width:0; }
+    .files-area-hdr { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+    .files-area-title { font-size:1rem; font-weight:700; }
+    .files-upload-btn { display:inline-flex; align-items:center; gap:4px; font-size:12px; padding:5px 13px; background:var(--acc); color:#fff; border:none; border-radius:7px; cursor:pointer; margin-left:auto; transition:background .12s; }
+    .files-upload-btn:hover { background:var(--a2); }
+    .files-count { font-size:11px; color:var(--muted); }
+    .files-storage { font-size:10px; color:var(--muted); }
+
+    .files-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
+    .file-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:12px; display:flex; flex-direction:column; gap:6px; position:relative; transition:border-color .13s,box-shadow .13s; }
+    .file-card:hover { border-color:rgba(80,130,220,.4); box-shadow:0 4px 16px rgba(0,0,0,.4); }
+    .file-icon { font-size:2rem; text-align:center; }
+    .file-name { font-size:11.5px; font-weight:600; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .file-size { font-size:10px; color:var(--muted); text-align:center; }
+    .file-date { font-size:9.5px; color:rgba(255,255,255,.25); text-align:center; }
+    .file-proj-badge { font-size:9.5px; padding:2px 6px; border-radius:999px; text-align:center; align-self:center; font-weight:600; }
+    .file-actions { display:flex; gap:5px; justify-content:center; }
+    .fa-btn { font-size:11px; padding:3px 8px; border-radius:5px; border:1px solid; cursor:pointer; font-family:inherit; text-decoration:none; display:inline-flex; align-items:center; }
+    .fa-dl { background:rgba(80,130,220,.1); color:#7aacff; border-color:rgba(80,130,220,.22); }
+    .fa-dl:hover { background:rgba(80,130,220,.18); }
+    .fa-del { background:rgba(233,69,96,.08); color:var(--acc); border-color:rgba(233,69,96,.18); }
+    .fa-del:hover { background:rgba(233,69,96,.15); }
+
+    .file-del-overlay { position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%; background:rgba(10,10,20,.7); display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:0; transition:opacity .12s; font-size:11px; color:var(--muted); }
+    .file-card:hover .file-del-overlay { opacity:1; }
+    .file-del-overlay:hover { color:var(--acc); }
+
+    .files-empty { text-align:center; padding:50px 20px; color:var(--muted); }
+    .files-empty-icon { font-size:2.5rem; opacity:.3; margin-bottom:10px; }
+
+    .no-proj-sel { text-align:center; padding:60px 20px; color:var(--muted); }
+
+    /* move to project select in file card */
+    .file-move-sel { font-size:10px; background:rgba(255,255,255,.06); border:1px solid var(--b2); border-radius:5px; color:var(--text); padding:2px 4px; font-family:inherit; width:100%; }
+
+    /* ══ FOOTER ══════════════════════════════════════════════════ */
+    footer { position:relative; z-index:5; text-align:center; padding:10px; font-size:.67rem; color:var(--muted); border-top:1px solid var(--b2); }
+    footer a { color:var(--acc); text-decoration:none; }
+
+    @media(max-width:640px){
+      header,.topbar,.team-bar,.tabs-bar { padding-left:12px; padding-right:12px; }
+      main { padding:14px 12px 36px; }
+      .act-sec { display:none; }
+      .projects-panel { width:140px; }
+      .files-grid { grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
     }
 
-    html { scroll-behavior: smooth; }
+    /* ══ WEEK CALENDAR ═══════════════════════════════════════════ */
+    .cal-week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; overflow-x:auto; }
+    @media(max-width:900px){ .cal-week-grid { grid-template-columns:repeat(5,1fr); } }
+    @media(max-width:560px){ .cal-week-grid { grid-template-columns:repeat(3,minmax(120px,1fr)); padding-bottom:8px; } }
+    .cal-week-col { background:rgba(255,255,255,.03); border:1px solid var(--b2); border-radius:var(--r); padding:8px 6px 10px; min-width:110px; }
+    .cal-week-col.cal-today-col { border-color:rgba(233,69,96,.32); background:rgba(233,69,96,.04); }
+    .cal-week-col.cal-offday { background:rgba(233,69,96,.02); border-color:rgba(233,69,96,.12); }
+    .cal-week-hdr { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; padding:0 2px 5px; border-bottom:1px solid var(--b2); }
+    .cal-week-col.cal-today-col .cal-week-hdr { color:var(--acc); border-bottom-color:rgba(233,69,96,.2); }
+    .cal-week-col.cal-offday .cal-week-hdr { color:rgba(233,69,96,.5); border-bottom-color:rgba(233,69,96,.15); }
+    .offday-badge { background:rgba(233,69,96,.1); border:1px solid rgba(233,69,96,.28); color:var(--acc); font-size:8.5px; font-weight:700; text-align:center; padding:5px 4px; border-radius:6px; letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px; text-decoration:line-through; text-decoration-color:rgba(233,69,96,.6); }
+    .cal-day-count { font-size:9px; background:rgba(255,255,255,.07); padding:1px 5px; border-radius:8px; }
+    .cal-empty-day { padding:10px 0; text-align:center; color:rgba(255,255,255,.15); font-size:.75rem; }
+    .cal-week-col .task-card { font-size:.78rem; padding:7px 8px; }
+    .cal-week-col .task-text { font-size:.78rem; }
+    .cal-week-col .chip { font-size:.59rem; padding:1px 5px; }
+    .cal-week-col .edit-area { font-size:.78rem; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    /* ══ MONTH CALENDAR ══════════════════════════════════════════ */
+    .cal-month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:12px; }
+    .cal-dow { font-size:9.5px; font-weight:700; text-align:center; color:var(--muted); padding:4px 0; text-transform:uppercase; letter-spacing:.06em; }
+    .cal-day-cell { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); border-radius:7px; padding:5px 6px; min-height:90px; cursor:pointer; transition:background .12s,border-color .12s; display:flex; flex-direction:column; gap:2px; overflow:hidden; }
+    .cal-day-cell:hover { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.12); }
+    .cal-day-cell.cal-today { border-color:var(--acc); background:rgba(233,69,96,.08); }
+    .cal-day-cell.cal-weekend .cal-day-num { color:var(--muted); }
+    .cal-day-cell.cal-holiday .cal-day-num { color:rgba(233,69,96,.7); }
+    .cal-day-cell.cal-day-empty { background:transparent; border-color:transparent; cursor:default; pointer-events:none; }
+    .cal-day-cell.cal-day-active { border-color:rgba(233,69,96,.5); background:rgba(233,69,96,.13); }
+    .cal-day-num { font-size:11.5px; font-weight:700; color:var(--text); line-height:1.2; flex-shrink:0; }
+    .cal-day-cell.cal-today .cal-day-num { color:var(--acc); }
+    .cal-day-dots { display:flex; flex-wrap:wrap; gap:2px; margin-top:auto; padding-top:3px; }
+    .cal-dot { display:inline-block; width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .cal-mini-meeting { font-size:8px; background:rgba(91,157,245,.13); border:1px solid rgba(91,157,245,.25); border-radius:4px; padding:2px 5px; color:#89b4ff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.5; flex-shrink:0; }
+    .cal-mini-task { font-size:8px; background:rgba(255,255,255,.05); border-radius:4px; padding:1px 4px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.5; flex-shrink:0; }
+    .cal-mini-done { opacity:.35; }
+    .cal-noday-section { margin-top:20px; }
+    .cal-noday-hdr { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--b2); }
+    /* ══ OVERVIEW CALENDAR (halfyear / year) ════════════════════ */
+    .overview-grid { display:grid; gap:10px; margin-bottom:16px; }
+    .overview-grid.hy { grid-template-columns:repeat(3,1fr); }
+    .overview-grid.yr { grid-template-columns:repeat(4,1fr); }
+    @media(max-width:900px){ .overview-grid.yr { grid-template-columns:repeat(3,1fr); } }
+    @media(max-width:600px){ .overview-grid { grid-template-columns:repeat(2,1fr); } }
+    .mini-month { background:rgba(255,255,255,.02); border:1px solid var(--b2); border-radius:var(--r); padding:10px 8px 8px; }
+    .mini-month-hdr { font-size:.75rem; font-weight:700; color:var(--text); text-align:center; margin-bottom:6px; letter-spacing:-.2px; }
+    .mini-month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; }
+    .mini-dow { font-size:6.5px; color:var(--muted); text-align:center; padding:2px 0 3px; text-transform:uppercase; }
+    .mini-cell { font-size:8px; text-align:center; padding:2px 1px; border-radius:3px; cursor:pointer; line-height:1.7; color:rgba(255,255,255,.3); transition:background .1s,color .1s; position:relative; }
+    .mini-cell:hover { background:rgba(255,255,255,.08); color:var(--text); }
+    .mini-cell.mc-today { color:var(--acc); font-weight:800; }
+    .mini-cell.mc-meeting { background:rgba(91,157,245,.2); color:#89b4ff; font-weight:700; border-radius:50%; }
+    .mini-cell.mc-meeting.mc-today { background:rgba(233,69,96,.3); color:var(--acc); }
+    .mini-cell.mc-offday { color:rgba(233,69,96,.45); }
+    .mini-cell.mc-holiday { color:rgba(233,69,96,.65); font-weight:600; }
+    .mini-cell.mc-empty { cursor:default; pointer-events:none; }
+    .mini-detail { background:rgba(255,255,255,.03); border:1px solid rgba(233,69,96,.22); border-radius:var(--r); padding:14px; margin-bottom:16px; animation:fup .2s ease; }
+    .cal-month-detail { background:rgba(255,255,255,.03); border:1px solid rgba(233,69,96,.22); border-radius:var(--r); padding:14px 14px 10px; margin-bottom:16px; animation:fup .2s ease; }
+    .cal-detail-hdr { display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+    .cal-close-btn { margin-left:auto; background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; line-height:1; padding:2px 4px; transition:color .12s; }
+    .cal-close-btn:hover { color:var(--acc); }
+    .cal-section-tasks { margin-top:16px; }
 
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-      background-size: 180px;
-      pointer-events: none;
-    }
-
-    /* ── Header ─────────────────────────────────────────── */
-    header {
-      position: relative; z-index: 10;
-      padding: 28px 32px 20px;
-      background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 60%, #0a0a0a 100%);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 18px;
-      flex-wrap: wrap;
-    }
-
-    .logo-wrap { display: flex; align-items: center; gap: 14px; }
-
-    .logo-icon {
-      width: 48px; height: 48px;
-      background: linear-gradient(135deg, var(--accent), #ff6b6b);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-      box-shadow: 0 0 20px rgba(233,69,96,.45);
-      flex-shrink: 0;
-    }
-
-    h1 { font-size: clamp(1.2rem, 4vw, 1.75rem); font-weight: 700; letter-spacing: -.5px; line-height: 1.15; }
-    h1 span { color: var(--accent); }
-
-    .header-meta { margin-left: auto; text-align: right; font-size: .78rem; color: var(--text-muted); line-height: 1.6; }
-    .header-meta strong { color: var(--text); }
-
-    /* ── Tabs ────────────────────────────────────────────── */
-    .tabs-bar {
-      position: relative; z-index: 10;
-      display: flex; gap: 4px;
-      padding: 16px 32px 0;
-      background: #0d0d1a;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .tabs-bar::-webkit-scrollbar { display: none; }
-
-    .tab-btn {
-      padding: 10px 22px;
-      border: none; background: transparent;
-      color: var(--text-muted);
-      font-size: .9rem; font-weight: 600;
-      cursor: pointer;
-      border-radius: var(--radius) var(--radius) 0 0;
-      transition: color .2s, background .2s;
-      white-space: nowrap;
-      position: relative;
-    }
-
-    .tab-btn::after {
-      content: '';
-      position: absolute; bottom: 0; left: 50%; right: 50%;
-      height: 2px;
-      background: var(--accent);
-      transition: left .25s, right .25s;
-      border-radius: 2px 2px 0 0;
-    }
-
-    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,.04); }
-    .tab-btn.active { color: var(--text); background: rgba(233,69,96,.08); }
-    .tab-btn.active::after { left: 12px; right: 12px; }
-
-    .tab-btn .badge {
-      display: inline-block; margin-left: 6px;
-      padding: 1px 7px; border-radius: 999px;
-      font-size: .7rem; background: var(--accent); color: #fff;
-      vertical-align: middle;
-      opacity: 0; transform: scale(.7);
-      transition: opacity .2s, transform .2s;
-    }
-    .tab-btn .badge.visible { opacity: 1; transform: scale(1); }
-
-    /* ── Main ────────────────────────────────────────────── */
-    main {
-      position: relative; z-index: 5;
-      padding: 28px 32px 48px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; animation: fadeUp .35s ease both; }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Period header ───────────────────────────────────── */
-    .period-header {
-      display: flex; align-items: center; gap: 14px;
-      margin-bottom: 22px; flex-wrap: wrap;
-    }
-
-    .period-title {
-      font-size: 1.1rem; font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase; letter-spacing: 1.5px;
-    }
-
-    .period-date {
-      font-size: .8rem; color: var(--accent);
-      background: rgba(233,69,96,.1);
-      padding: 3px 10px; border-radius: 999px;
-      border: 1px solid rgba(233,69,96,.3);
-    }
-
-    /* ── Progress bar ────────────────────────────────────── */
-    .progress-wrap {
-      background: rgba(255,255,255,.06);
-      border-radius: var(--radius);
-      padding: 18px 22px; margin-bottom: 24px;
-      border: 1px solid var(--border);
-      display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
-    }
-
-    .progress-label { font-size: .85rem; color: var(--text-muted); min-width: 110px; }
-
-    .progress-bar-outer {
-      flex: 1; min-width: 120px; height: 8px;
-      background: rgba(255,255,255,.08);
-      border-radius: 999px; overflow: hidden;
-    }
-
-    .progress-bar-inner {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), #ff6b6b);
-      border-radius: 999px;
-      transition: width .7s cubic-bezier(.4,0,.2,1);
-      width: 0%;
-      box-shadow: 0 0 10px rgba(233,69,96,.5);
-    }
-
-    .progress-pct { font-size: 1rem; font-weight: 700; color: var(--text); min-width: 44px; text-align: right; }
-    .progress-count { font-size: .8rem; color: var(--text-muted); }
-
-    /* ── Task list ───────────────────────────────────────── */
-    .task-list { display: flex; flex-direction: column; gap: 10px; }
-
-    /* ── Task card ───────────────────────────────────────── */
-    .task-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      display: flex; align-items: flex-start; gap: 14px;
-      transition: transform .2s, box-shadow .2s, border-color .2s;
-      animation: cardIn .3s ease both;
-      position: relative; overflow: hidden;
-    }
-
-    .task-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0;
-      width: 3px; height: 100%;
-      background: var(--accent);
-      opacity: 0; transition: opacity .2s;
-    }
-
-    .task-card:hover { transform: translateX(3px); box-shadow: var(--shadow); border-color: rgba(233,69,96,.4); }
-    .task-card:hover::before { opacity: 1; }
-    .task-card.done { opacity: .65; }
-    .task-card.done::before { background: var(--done); opacity: .6; }
-
-    @keyframes cardIn {
-      from { opacity: 0; transform: translateX(-10px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-
-    .task-card:nth-child(1)  { animation-delay: .02s; }
-    .task-card:nth-child(2)  { animation-delay: .05s; }
-    .task-card:nth-child(3)  { animation-delay: .08s; }
-    .task-card:nth-child(4)  { animation-delay: .11s; }
-    .task-card:nth-child(5)  { animation-delay: .14s; }
-    .task-card:nth-child(6)  { animation-delay: .17s; }
-    .task-card:nth-child(7)  { animation-delay: .20s; }
-    .task-card:nth-child(8)  { animation-delay: .23s; }
-    .task-card:nth-child(9)  { animation-delay: .26s; }
-    .task-card:nth-child(10) { animation-delay: .29s; }
-
-    /* ── Checkbox ────────────────────────────────────────── */
-    .task-check {
-      width: 20px; height: 20px; flex-shrink: 0;
-      border: 2px solid var(--border);
-      border-radius: 5px; margin-top: 2px;
-      display: flex; align-items: center; justify-content: center;
-      transition: background .2s, border-color .2s;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .task-check:hover { border-color: var(--done); background: rgba(46,204,113,.08); }
-
-    .task-check.checked { background: var(--done); border-color: var(--done); }
-
-    .task-check.checked::after {
-      content: '';
-      display: block; width: 5px; height: 9px;
-      border: 2px solid #fff;
-      border-top: none; border-left: none;
-      transform: rotate(45deg) translate(-1px, -1px);
-    }
-
-    /* ── Task body ───────────────────────────────────────── */
-    .task-body { flex: 1; min-width: 0; }
-
-    .task-text { font-size: .93rem; line-height: 1.5; word-break: break-word; transition: color .2s; }
-    .task-card.done .task-text { text-decoration: line-through; color: var(--text-muted); }
-
-    .task-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-
-    .meta-chip {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: .73rem; padding: 2px 9px;
-      border-radius: 999px; font-weight: 600;
-    }
-
-    .chip-person   { background: rgba(233,69,96,.12); color: var(--accent); border: 1px solid rgba(233,69,96,.25); }
-    .chip-deadline { background: rgba(255,190,11,.10); color: #ffbe0b;      border: 1px solid rgba(255,190,11,.25); }
-    .chip-time     { background: var(--time-bg);       color: var(--time-color); border: 1px solid var(--time-border); }
-    .chip-period   { background: rgba(139,92,246,.10); color: #a78bfa;      border: 1px solid rgba(139,92,246,.25); }
-
-    /* ── Section heading ─────────────────────────────────── */
-    .section-heading {
-      font-size: .78rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1.5px;
-      color: var(--text-muted);
-      margin: 18px 0 8px;
-      border-left: 3px solid var(--accent);
-      padding-left: 10px;
-    }
-
-    /* ── Person heading (Команда tab) ────────────────────── */
-    .person-heading {
-      display: flex; align-items: center; gap: 12px;
-      margin: 28px 0 10px;
-      padding: 12px 16px;
-      background: rgba(233,69,96,.06);
-      border-radius: var(--radius);
-      border: 1px solid rgba(233,69,96,.15);
-    }
-
-    .person-avatar {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, var(--accent), #ff6b6b);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 700; flex-shrink: 0;
-    }
-
-    .person-name { font-size: 1rem; font-weight: 700; }
-    .person-count { margin-left: auto; font-size: .8rem; color: var(--text-muted); }
-
-    /* ── Files panel ─────────────────────────────────────── */
-    .files-toolbar {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
-    }
-
-    .upload-btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 22px;
-      background: var(--accent); color: #fff;
-      border: none; border-radius: var(--radius);
-      font-size: .88rem; font-weight: 600;
-      cursor: pointer; text-decoration: none;
-      transition: background .2s, transform .15s;
-    }
-    .upload-btn:hover { background: var(--accent2); transform: translateY(-1px); }
-
-    .file-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 12px;
-    }
-
-    .file-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      display: flex; align-items: center; gap: 14px;
-      transition: transform .2s, box-shadow .2s, border-color .2s;
-      animation: cardIn .3s ease both;
-    }
-
-    .file-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: rgba(233,69,96,.4); }
-
-    .file-icon {
-      font-size: 26px; flex-shrink: 0;
-      width: 44px; height: 44px;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(255,255,255,.05); border-radius: 8px;
-    }
-
-    .file-info { flex: 1; min-width: 0; }
-    .file-name { font-size: .88rem; font-weight: 600; word-break: break-all; margin-bottom: 4px; }
-    .file-size { font-size: .74rem; color: var(--text-muted); }
-
-    .file-dl {
-      flex-shrink: 0;
-      color: var(--accent);
-      font-size: .8rem; font-weight: 600;
-      text-decoration: none;
-      padding: 4px 12px;
-      border: 1px solid rgba(233,69,96,.3);
-      border-radius: 6px;
-      transition: background .2s;
-    }
-    .file-dl:hover { background: rgba(233,69,96,.1); }
-
-    /* ── Meeting cards ───────────────────────────────────── */
-    .meetings-header {
-      font-size: .72rem; font-weight: 700; letter-spacing: .1em;
-      color: var(--time-color); text-transform: uppercase;
-      margin: 24px 0 10px; display: flex; align-items: center; gap: 8px;
-    }
-    .meetings-header::after {
-      content: ''; flex: 1; height: 1px;
-      background: linear-gradient(to right, var(--time-border), transparent);
-    }
-
-    .meeting-card {
-      background: linear-gradient(135deg, rgba(79,195,247,.07), rgba(79,195,247,.03));
-      border: 1px solid var(--time-border);
-      border-left: 3px solid var(--time-color);
-    }
-
-    .meeting-time-badge {
-      font-size: 1rem; font-weight: 700; color: var(--time-color);
-      background: var(--time-bg); border: 1px solid var(--time-border);
-      border-radius: 8px; padding: 2px 10px; flex-shrink: 0;
-      white-space: nowrap;
-    }
-
-    .meeting-link-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 3px 12px;
-      background: rgba(79,195,247,.12);
-      border: 1px solid rgba(79,195,247,.35);
-      border-radius: 20px;
-      color: var(--time-color); text-decoration: none;
-      font-size: .76rem; font-weight: 600;
-      transition: background .18s;
-    }
-    .meeting-link-btn:hover { background: rgba(79,195,247,.25); }
-
-    .tasks-header {
-      font-size: .72rem; font-weight: 700; letter-spacing: .1em;
-      color: var(--text-muted); text-transform: uppercase;
-      margin: 20px 0 10px; display: flex; align-items: center; gap: 8px;
-    }
-    .tasks-header::after {
-      content: ''; flex: 1; height: 1px;
-      background: linear-gradient(to right, rgba(136,146,164,.3), transparent);
-    }
-
-    /* ── Empty / loading ─────────────────────────────────── */
-    .empty-state {
-      text-align: center; padding: 60px 20px; color: var(--text-muted);
-    }
-    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: .4; display: block; }
-    .empty-state p { font-size: .95rem; }
-    .empty-state a { color: var(--accent); }
-
-    .loading {
-      display: flex; align-items: center; justify-content: center;
-      gap: 12px; padding: 50px 20px;
-      color: var(--text-muted); font-size: .9rem;
-    }
-
-    .spinner {
-      width: 22px; height: 22px;
-      border: 3px solid rgba(233,69,96,.2);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Footer ──────────────────────────────────────────── */
-    footer {
-      position: relative; z-index: 10;
-      text-align: center; padding: 16px;
-      font-size: .75rem; color: var(--text-muted);
-      border-top: 1px solid var(--border);
-    }
-    footer a { color: var(--accent); text-decoration: none; }
-
-    /* ── Responsive ──────────────────────────────────────── */
-    @media (max-width: 640px) {
-      header { padding: 18px 16px 14px; }
-      .tabs-bar { padding: 12px 16px 0; }
-      main { padding: 18px 16px 36px; }
-      .tab-btn { padding: 8px 14px; font-size: .82rem; }
-      .file-grid { grid-template-columns: 1fr; }
-    }
+    /* ══ MEETING CARDS ═══════════════════════════════════════════ */
+    .meetings-section { margin-bottom:16px; }
+    .meetings-hdr { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:#5b9df5; margin:12px 0 6px; padding-left:8px; border-left:3px solid #5b9df5; display:flex; align-items:center; gap:6px; }
+    .meetings-hdr .mhdr-cnt { font-size:.65rem; background:rgba(91,157,245,.12); border:1px solid rgba(91,157,245,.22); border-radius:8px; padding:0 6px; color:#5b9df5; }
+    .meeting-card { background:rgba(91,157,245,.07); border:1px solid rgba(91,157,245,.22); border-radius:var(--r); padding:10px 12px; display:flex; gap:10px; animation:cin .22s ease both; position:relative; overflow:hidden; margin-bottom:6px; }
+    .meeting-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:#5b9df5; }
+    .meeting-time-col { display:flex; flex-direction:column; align-items:center; flex-shrink:0; gap:3px; padding-top:2px; }
+    .meeting-icon { font-size:1.1rem; line-height:1; }
+    .meeting-time { font-size:.68rem; color:#5b9df5; font-weight:700; white-space:nowrap; }
+    .meeting-body { flex:1; min-width:0; }
+    .meeting-title { font-size:.88rem; font-weight:700; color:var(--text); line-height:1.35; margin-bottom:3px; }
+    .meeting-desc { font-size:.74rem; color:var(--muted); margin-bottom:4px; }
+    .meeting-meta { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; align-items:center; }
+    .meeting-link { display:inline-flex; align-items:center; gap:3px; font-size:.67rem; color:#5b9df5; text-decoration:none; padding:2px 8px; border:1px solid rgba(91,157,245,.28); border-radius:999px; margin-top:5px; transition:background .12s; }
+    .meeting-link:hover { background:rgba(91,157,245,.13); }
+    /* Conflict highlighting */
+    .task-card.conflict { border-color:rgba(255,190,11,.45)!important; }
+    .task-card.conflict::before { background:#ffbe0b!important; opacity:1!important; }
+    .conflict-badge { font-size:.6rem; padding:1px 5px; border-radius:999px; background:rgba(255,190,11,.1); color:#ffbe0b; border:1px solid rgba(255,190,11,.26); }
+    /* Compact meeting card for week columns */
+    .cal-week-col .meeting-card { padding:5px 7px; }
+    .cal-week-col .meeting-title { font-size:.74rem; }
+    .cal-week-col .meeting-time { font-size:.62rem; }
+    .cal-week-col .meeting-icon { font-size:.85rem; }
   </style>
 </head>
 <body>
 
-<!-- Header -->
+<!-- ═══ HEADER ════════════════════════════════════════════════════ -->
 <header>
   <div class="logo-wrap">
     <div class="logo-icon">🎬</div>
-    <h1>Filmway AI — <span>Task Dashboard</span></h1>
+    <h1>Filmway AI — <span>Tasks</span></h1>
   </div>
-  <div class="header-meta">
-    <div>Репозиторий: <strong>filmway-team-bot/filmway-tasks</strong></div>
-    <div id="last-updated">Обновление…</div>
+  <div class="hdr-right">
+    <div class="search-slide" id="search-slide">
+      <input class="search-input" id="search-input" type="search" placeholder="Поиск…" autocomplete="off">
+      <span class="search-count" id="search-count"></span>
+    </div>
+    <button class="btn-icon" id="search-btn" title="Поиск (⌘F)">🔍</button>
+    <div class="hdr-meta" id="last-updated">…</div>
   </div>
 </header>
 
-<!-- Tabs -->
-<div class="tabs-bar" id="tabs-bar">
-  <button class="tab-btn active" data-tab="day">День <span class="badge" id="badge-day"></span></button>
-  <button class="tab-btn" data-tab="week">Неделя <span class="badge" id="badge-week"></span></button>
-  <button class="tab-btn" data-tab="month">Месяц <span class="badge" id="badge-month"></span></button>
-  <button class="tab-btn" data-tab="halfyear">Полгода <span class="badge" id="badge-halfyear"></span></button>
-  <button class="tab-btn" data-tab="year">Год <span class="badge" id="badge-year"></span></button>
-  <button class="tab-btn" data-tab="team">Команда 👥</button>
-  <button class="tab-btn" data-tab="files">Файлы 📁</button>
+<!-- ═══ TEAM BAR ══════════════════════════════════════════════════ -->
+<div class="team-bar" id="team-bar">
+  <span class="team-label">👥</span>
+  <span class="team-spacer"></span>
+  <span class="filter-clear" id="filter-clear" onclick="clearMember()">✕ Все</span>
 </div>
 
-<!-- Panels -->
-<main id="main-content">
-  <div class="tab-panel active" id="panel-day"      data-period="day"></div>
-  <div class="tab-panel"       id="panel-week"      data-period="week"></div>
-  <div class="tab-panel"       id="panel-month"     data-period="month"></div>
-  <div class="tab-panel"       id="panel-halfyear"  data-period="halfyear"></div>
-  <div class="tab-panel"       id="panel-year"      data-period="year"></div>
-  <div class="tab-panel"       id="panel-team"></div>
-  <div class="tab-panel"       id="panel-files"></div>
+<!-- ═══ ACTIONS PANEL ════════════════════════════════════════════ -->
+<div class="actions-wrap" id="actions-wrap">
+  <div class="actions-bar">
+    <div class="qa-sec">
+      <div class="mini-title">⚡ Быстро добавить задачу</div>
+      <div class="qa-row">
+        <textarea class="qa-ta" id="qa-text" placeholder="Текст… — Кирилл 10:00-11:00"></textarea>
+        <div class="qa-ctrl">
+          <select class="qa-sel" id="qa-period">
+            <option value="day">Сегодня</option>
+            <option value="week">Неделя</option>
+            <option value="month">Месяц</option>
+          </select>
+          <button class="qa-add" onclick="quickAdd()">＋ Добавить</button>
+        </div>
+      </div>
+    </div>
+    <div class="act-sec">
+      <div class="mini-title">🕐 Активность</div>
+      <div class="act-scroll" id="act-log"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOPBAR ════════════════════════════════════════════════════ -->
+<div class="topbar">
+  <button class="tb-btn" id="act-toggle-btn" onclick="toggleActions()">⚡ Действия</button>
+  <div class="tb-spacer"></div>
+  <div class="ref-row" id="ref-row">
+    <span class="rdot"></span>
+    <span id="ref-time">авто-обновление 2 мин</span>
+  </div>
+</div>
+
+<!-- ═══ TABS ══════════════════════════════════════════════════════ -->
+<div class="tabs-bar" id="tabs-bar">
+  <button class="tab-btn active" data-tab="day">День <span class="tab-badge" id="badge-day"></span></button>
+  <button class="tab-btn" data-tab="week">Неделя <span class="tab-badge" id="badge-week"></span></button>
+  <button class="tab-btn" data-tab="month">Месяц <span class="tab-badge" id="badge-month"></span></button>
+  <button class="tab-btn" data-tab="halfyear">Полгода <span class="tab-badge" id="badge-halfyear"></span></button>
+  <button class="tab-btn" data-tab="year">Год <span class="tab-badge" id="badge-year"></span></button>
+  <button class="tab-btn" data-tab="files">📁 Файлы</button>
+</div>
+
+<!-- ═══ PANELS ════════════════════════════════════════════════════ -->
+<main>
+  <div class="tab-panel active" id="panel-day"></div>
+  <div class="tab-panel" id="panel-week"></div>
+  <div class="tab-panel" id="panel-month"></div>
+  <div class="tab-panel" id="panel-halfyear"></div>
+  <div class="tab-panel" id="panel-year"></div>
+
+  <!-- ─── FILES ───────────────────────────────────────────────── -->
+  <div class="tab-panel" id="panel-files">
+    <div class="files-layout">
+      <!-- Projects panel -->
+      <div class="projects-panel">
+        <div class="proj-title">
+          📂 Проекты
+          <span class="proj-add-btn" title="Новый проект" onclick="openAddProj()">＋</span>
+        </div>
+        <div class="proj-add-form" id="proj-add-form">
+          <input class="proj-add-inp" id="proj-name-inp" placeholder="Название проекта" maxlength="30">
+          <div class="proj-colors" id="proj-colors"></div>
+          <div class="paf-btns">
+            <button class="paf-save" onclick="saveProj()">Создать</button>
+            <button class="paf-cancel" onclick="closeAddProj()">Отмена</button>
+          </div>
+        </div>
+        <div id="proj-list"></div>
+        <div class="proj-item" id="proj-all" onclick="selectProj(null)">
+          <span style="font-size:14px">🗂</span>
+          <span class="proj-name">Все файлы</span>
+          <span class="proj-fc" id="all-fc"></span>
+        </div>
+      </div>
+      <!-- Files area -->
+      <div class="files-area" id="files-area">
+        <div class="no-proj-sel">
+          <div style="font-size:2rem;opacity:.3;margin-bottom:8px">📁</div>
+          <p style="font-size:.85rem">Выберите проект или «Все файлы»</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <footer>
   Filmway AI © 2026 &nbsp;·&nbsp;
   <a href="https://github.com/filmway-team-bot/filmway-tasks" target="_blank" rel="noopener">GitHub</a>
-  &nbsp;·&nbsp; Автообновление каждые 5 минут
+  &nbsp;·&nbsp; обновление каждые 2 мин
 </footer>
 
+<input type="file" id="g-file-input" class="file-input" multiple>
+<input type="file" id="proj-file-input" class="file-input" multiple>
+
 <script>
-/* ══════════════════════════════════════════════════════════
-   CONFIG
-══════════════════════════════════════════════════════════ */
-const REPO   = 'filmway-team-bot/filmway-tasks';
-const BRANCH = 'main';
-const RAW    = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/`;
-const API    = `https://api.github.com/repos/${REPO}/`;
+// ═══════════════════════════════════════════════════════════════
+//  CONSTANTS & STORAGE
+// ═══════════════════════════════════════════════════════════════
+const REPO  = 'filmway-team-bot/filmway-tasks';
+const BASE  = `https://raw.githubusercontent.com/${REPO}/main/`;
+const K_EDITS = 'fw-edits';
+const K_FILES = 'fw-files';      // task attachments {taskKey:[{name,dataUrl,size}]}
+const K_PROJ  = 'fw-projects';   // [{id,name,color}]
+const K_PFILES= 'fw-pfiles';     // project files [{id,name,dataUrl,size,projId,date,type}]
+const K_ACT   = 'fw-act';
+const K_CHECKS= 'fw-checks';    // manual checkbox overrides {taskKey: bool}
 
 const PERIODS = {
-  day:      { label: 'День',    fn: () => `tasks/day/${todayStr()}.md` },
-  week:     { label: 'Неделя',  fn: () => `tasks/week/${weekStr()}.md` },
-  month:    { label: 'Месяц',   fn: () => `tasks/month/${monthStr()}.md` },
-  halfyear: { label: 'Полгода', fn: () => `tasks/halfyear/${halfyearStr()}.md` },
-  year:     { label: 'Год',     fn: () => `tasks/year/${yearStr()}.md` },
+  day:      { label:'День',    fn:()=>`tasks/day/${tdStr()}.md` },
+  week:     { label:'Неделя',  fn:()=>`tasks/week/${wkStr()}.md` },
+  month:    { label:'Месяц',   fn:()=>`tasks/month/${moStr()}.md` },
+  halfyear: { label:'Полгода', fn:()=>`tasks/halfyear/${hyStr()}.md` },
+  year:     { label:'Год',     fn:()=>`tasks/year/${yrStr()}.md` },
 };
 
-/* ══════════════════════════════════════════════════════════
-   DATE HELPERS
-══════════════════════════════════════════════════════════ */
-const pad = n => String(n).padStart(2, '0');
-
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+// Производственный календарь РФ 2026 — официальные нерабочие праздничные дни
+const RU_HOLIDAYS_2026 = new Set([
+  // Новогодние каникулы (1–8 января)
+  '2026-01-01','2026-01-02','2026-01-05','2026-01-06','2026-01-07','2026-01-08',
+  // День защитника Отечества
+  '2026-02-23',
+  // Международный женский день (8 марта — вс, перенос на 9 марта — пн)
+  '2026-03-09',
+  // Праздник Весны и Труда
+  '2026-05-01',
+  // мостовые дни у длинных майских выходных
+  '2026-05-04',
+  // День Победы (9 мая — сб, перенос на 11 мая — пн)
+  '2026-05-11',
+  // День России
+  '2026-06-12',
+  // День народного единства
+  '2026-11-04',
+]);
+// Вспомогательная функция
+function isOffDay(dateStr){
+  if(RU_HOLIDAYS_2026.has(dateStr))return'holiday';
+  const dow=new Date(dateStr).getDay(); // 0=Sun,6=Sat
+  if(dow===0||dow===6)return'weekend';
+  return null;
 }
+let _weekDayTasks={};       // задачи из day-файлов для каждой даты текущей недели
+let _allMeetingsByDate={};  // все загруженные встречи {dateStr: []} для тим-бара
 
-function weekStr() {
-  const d = new Date(), jan1 = new Date(d.getFullYear(), 0, 1);
-  const w = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
-  return `${d.getFullYear()}-W${pad(w)}`;
-}
+const TEAM = [
+  {name:'Кирилл',k:'кирилл',bg:'#2a2e50',tx:'#8899ee'},
+  {name:'Эрадж',k:'эрадж',bg:'#1e3028',tx:'#5ecc80'},
+  {name:'Кира',k:'кира',bg:'#301828',tx:'#ee6080'},
+  {name:'Ульяна',k:'ульяна',bg:'#24203a',tx:'#9980ee'},
+  {name:'Катрина',k:'катрина',bg:'#302010',tx:'#ee9040'},
+  {name:'Полина',k:'полина',bg:'#103028',tx:'#40ccb0'},
+  {name:'Дима',k:'дима',bg:'#2a2800',tx:'#ddcc20'},
+  {name:'Даша',k:'даша',bg:'#301c10',tx:'#ee7040'},
+  {name:'Лера',k:'лера',bg:'#220a30',tx:'#bb60ee'},
+];
 
-function monthStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-}
+const PROJ_COLORS = ['#e94560','#5b9df5','#2ecc71','#ffbe0b','#bb60ee','#40ccb0','#ee9040','#ee6080','#ddcc20'];
 
-function halfyearStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth() < 6 ? 'H1' : 'H2'}`;
-}
+function ls(k,d){ try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch{return d} }
+function sv(k,v){ try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert('localStorage заполнен, удалите старые файлы')} }
 
-function yearStr() { return String(new Date().getFullYear()); }
-
-function humanDate(s) {
-  if (s.includes('-W')) return `Неделя ${s.split('-W')[1]}, ${s.split('-')[0]}`;
-  if (s.includes('-H')) return s.replace('H1','первое полугодие').replace('H2','второе полугодие');
-  if (/^\d{4}$/.test(s)) return s;
-  if (/\d{4}-\d{2}-\d{2}/.test(s)) {
-    const [y,m,dd] = s.split('-');
-    const mo = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-    return `${+dd} ${mo[+m-1]} ${y}`;
-  }
-  if (/\d{4}-\d{2}/.test(s)) {
-    const [y,m] = s.split('-');
-    const mo = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-    return `${mo[+m-1]} ${y}`;
-  }
+// ═══════════════════════════════════════════════════════════════
+//  DATE HELPERS
+// ═══════════════════════════════════════════════════════════════
+const pad=n=>String(n).padStart(2,'0');
+function tdStr(){const d=new Date();return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
+// Возвращает массив из 7 дат (Пн–Вс) текущей недели
+function weekDates(){const d=new Date(),dow=(d.getDay()+6)%7,mon=new Date(d);mon.setDate(d.getDate()-dow);return Array.from({length:7},(_,i)=>{const dd=new Date(mon);dd.setDate(mon.getDate()+i);return`${dd.getFullYear()}-${pad(dd.getMonth()+1)}-${pad(dd.getDate())}`;});}
+function wkStr(){const d=new Date(),j=new Date(d.getFullYear(),0,1),w=Math.ceil(((d-j)/864e5+j.getDay()+1)/7);return`${d.getFullYear()}-W${pad(w)}`;}
+function moStr(){const d=new Date();return`${d.getFullYear()}-${pad(d.getMonth()+1)}`;}
+function hyStr(){const d=new Date();return`${d.getFullYear()}-${d.getMonth()<6?'H1':'H2'}`;}
+function yrStr(){return String(new Date().getFullYear());}
+function nowT(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+function fmtDate(ts){return new Date(ts).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'});}
+function fmtSize(b){if(b<1024)return b+'B';if(b<1024*1024)return(b/1024).toFixed(1)+'KB';return(b/1024/1024).toFixed(1)+'MB';}
+function humanDate(s){
+  if(s.includes('-W'))return`Неделя ${s.split('-W')[1]}, ${s.split('-')[0]}`;
+  if(s.includes('-H'))return s.replace('H1','I полугодие').replace('H2','II полугодие');
+  if(/^\d{4}$/.test(s))return s;
+  if(/\d{4}-\d{2}-\d{2}/.test(s)){const[y,m,dd]=s.split('-'),mn=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];return`${+dd} ${mn[+m-1]} ${y}`;}
+  if(/\d{4}-\d{2}/.test(s)){const[y,m]=s.split('-'),mn=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];return`${mn[+m-1]} ${y}`;}
   return s;
 }
 
-function formatSize(b) {
-  if (b < 1024)       return b + ' Б';
-  if (b < 1048576)    return (b/1024).toFixed(1) + ' КБ';
-  return (b/1048576).toFixed(1) + ' МБ';
+// ═══════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function djb2(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return(h>>>0).toString(36);}
+function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
+function fileIcon(name){
+  const ext=name.split('.').pop().toLowerCase();
+  if(['jpg','jpeg','png','gif','webp','svg'].includes(ext)) return '🖼️';
+  if(['mp4','mov','avi','mkv'].includes(ext)) return '🎬';
+  if(['mp3','wav','aac'].includes(ext)) return '🎵';
+  if(['pdf'].includes(ext)) return '📕';
+  if(['doc','docx'].includes(ext)) return '📝';
+  if(['xls','xlsx'].includes(ext)) return '📊';
+  if(['ppt','pptx'].includes(ext)) return '📋';
+  if(['zip','rar','7z'].includes(ext)) return '🗜️';
+  return '📄';
 }
+function logAct(msg){const log=ls(K_ACT,[]);log.unshift({msg,t:nowT()});if(log.length>25)log.pop();sv(K_ACT,log);renderActLog();}
+function renderActLog(){const el=document.getElementById('act-log');if(!el)return;const log=ls(K_ACT,[]);if(!log.length){el.innerHTML='<div class="act-item" style="color:rgba(255,255,255,.18)">Нет активности</div>';return;}el.innerHTML=log.slice(0,10).map(e=>`<div class="act-item">${esc(e.msg)}<span class="act-time">${e.t}</span></div>`).join('');}
 
-function fileIcon(name) {
-  const ext = name.split('.').pop().toLowerCase();
-  return { pdf:'📄',mp4:'🎬',mov:'🎬',avi:'🎬',mkv:'🎬',webm:'🎬',
-    mp3:'🎵',wav:'🎵',aac:'🎵',flac:'🎵',
-    jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️',svg:'🖼️',
-    doc:'📝',docx:'📝',txt:'📝',md:'📝',
-    xls:'📊',xlsx:'📊',csv:'📊',
-    zip:'🗜️',rar:'🗜️','7z':'🗜️',
-    ppt:'📋',pptx:'📋',
-    ai:'🎨',psd:'🎨',fig:'🎨',sketch:'🎨',
-  }[ext] || '📎';
-}
+// ═══════════════════════════════════════════════════════════════
+//  FETCH + PARSE MARKDOWN
+// ═══════════════════════════════════════════════════════════════
+async function fetchMd(file){try{const r=await fetch(BASE+file+'?_='+Date.now());return r.ok?r.text():null;}catch{return null;}}
 
-/* ══════════════════════════════════════════════════════════
-   LOCALSTORAGE — checkbox state
-══════════════════════════════════════════════════════════ */
-function taskKey(period, rawText) {
-  const s = period + '|' + rawText.slice(0, 80);
-  let h = 5381;
-  for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
-  return 'fw_' + (h >>> 0).toString(36);
-}
-
-function storedDone(key, fallback) {
-  const v = localStorage.getItem(key);
-  return v === 'done' ? true : v === 'todo' ? false : fallback;
-}
-
-function toggleStored(key, currentDone) {
-  localStorage.setItem(key, currentDone ? 'todo' : 'done');
-}
-
-/* ══════════════════════════════════════════════════════════
-   FETCH
-══════════════════════════════════════════════════════════ */
-async function fetchMd(filename) {
-  try {
-    const r = await fetch(RAW + filename + '?_=' + Date.now());
-    return r.ok ? r.text() : null;
-  } catch { return null; }
-}
-
-/* ══════════════════════════════════════════════════════════
-   PARSE MARKDOWN
-══════════════════════════════════════════════════════════ */
-function parseMd(md, period) {
-  const items = [];
-  let section = '';
-
-  for (const raw of md.split('\n')) {
-    const line = raw.trimEnd();
-
-    if (/^#+\s/.test(line)) {
-      section = line.replace(/^#+\s*/, '').trim();
-      continue;
-    }
-
-    const mDone = line.match(/^[-*]\s+\[x\]\s+(.*)/i);
-    const mTodo = line.match(/^[-*]\s+\[ \]\s+(.*)/);
-    if (!mDone && !mTodo) continue;
-
-    const origDone = !!mDone;
-    const full     = (origDone ? mDone[1] : mTodo[1]).trim();
-
-    // ── meeting detection: line starts with 📅 ───────────
-    const isMeeting = full.startsWith('📅');
-
-    // meeting time: 📅 HH:MM
-    let meetingTime = null;
-    if (isMeeting) {
-      const rest = full.indexOf('📅') >= 0 ? full.slice(full.indexOf('📅') + 2) : '';
-      const mt = rest.match(/^\s*(\d{1,2}:\d{2})/);
-      if (mt) meetingTime = mt[1];
-    }
-
-    // markdown links [text](url) — collect for link buttons
-    const links = [];
-    const linkRe = /\[([^\]]+)\]\(([^)]+)\)/g;
-    let lm;
-    while ((lm = linkRe.exec(full)) !== null) {
-      links.push({ text: lm[1], url: lm[2] });
-    }
-
-    // time range: 12:00-18:00 / 12:00–18:00
-    const tMatch = full.match(/(\d{1,2}:\d{2})\s*[–\-—]\s*(\d{1,2}:\d{2})/);
-    const timeRange = tMatch ? `${tMatch[1]}–${tMatch[2]}` : null;
-
-    // person: — Имя or @handle  (ORIGINAL logic preserved)
-    const pMatch = full.match(/—\s*([А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?)/u)
-                || full.match(/@([\w\d_]+)/);
-    const person  = pMatch ? pMatch[0].replace(/^—\s*/, '').trim() : null;
-
-    // deadline: до ДД.ММ  (ORIGINAL)
-    const dMatch   = full.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
-    const deadline = dMatch ? dMatch[1] : null;
-
-    // clean display text (ORIGINAL + strip 📅 prefix + strip links)
-    let text = full;
-    if (isMeeting) {
-      // strip 📅 and optional time from start
-      text = text.replace(/^📅\s*\d{1,2}:\d{2}\s*/, '').replace(/^📅\s*/, '');
-    }
-    text = text
-      .replace(/(\d{1,2}:\d{2})\s*[–\-—]\s*(\d{1,2}:\d{2})/, '')
-      .replace(/—\s*[А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?/u, '')
-      .replace(/@[\w\d_]+/, '')
-      .replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/\s{2,}/g, ' ').trim().replace(/^[-—]\s*/, '');
-    if (!text) text = full;
-
-    const key  = taskKey(period, full);
-    const done = storedDone(key, origDone);
-
-    items.push({ done, origDone, text, person, deadline, timeRange, meetingTime, isMeeting, links, section, key });
+function parseMd(md){
+  const items=[];let section='';
+  for(const raw of md.split('\n')){
+    const line=raw.trimEnd();
+    if(/^#+\s/.test(line)){section=line.replace(/^#+\s*/,'').trim();continue;}
+    const mD=line.match(/^[-*]\s+\[x\]\s+(.*)/i);
+    const mT=line.match(/^[-*]\s+\[ \]\s+(.*)/);
+    if(!mD&&!mT)continue;
+    const done=!!mD;const raw2=(done?mD[1]:mT[1]).trim();
+    const timeM=raw2.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/);
+    const timeRange=timeM?`${timeM[1]}–${timeM[2]}`:null;
+    // Multiple persons: "— Кирилл, Эрадж" / "— Кирилл / Эрадж" / "@mention"
+    const personsArr=[];
+    const pmAll=[...raw2.matchAll(/—\s*([А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*)/gu)];
+    pmAll.forEach(m=>m[1].split(/[,\/]/).forEach(p=>{const tr=p.trim();if(tr)personsArr.push(tr);}));
+    [...raw2.matchAll(/@([\w\d_]+)/g)].forEach(m=>personsArr.push(m[1]));
+    const persons=[...new Set(personsArr)];
+    const person=persons[0]||null;
+    const dlM=raw2.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
+    const deadline=dlM?dlM[1]:null;
+    const clean=raw2.replace(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g,'').replace(/—\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+(?:[,\/]\s*[А-ЯЁа-яё][а-яёА-ЯЁ]+)*/gu,'').replace(/@[\w\d_]+/g,'').replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/g,'').replace(/\s{2,}/g,' ').trim();
+    items.push({done,text:clean||raw2,rawText:raw2,person,persons,timeRange,deadline,section});
   }
   return items;
 }
 
-/* ══════════════════════════════════════════════════════════
-   RENDER CARD (task)
-══════════════════════════════════════════════════════════ */
-function card(task, extra = '') {
-  const done = task.done;
-  let meta = '';
-  if (task.timeRange) meta += `<span class="meta-chip chip-time">⏰ ${esc(task.timeRange)}</span>`;
-  if (task.person)    meta += `<span class="meta-chip chip-person">👤 ${esc(task.person)}</span>`;
-  if (task.deadline)  meta += `<span class="meta-chip chip-deadline">📅 до ${esc(task.deadline)}</span>`;
-  meta += extra;
+// ═══════════════════════════════════════════════════════════════
+//  MEETINGS — PARSE / RENDER / CONFLICT
+// ═══════════════════════════════════════════════════════════════
 
-  return `<div class="task-card${done?' done':''}" data-key="${esc(task.key)}" data-done="${done}">
-    <div class="task-check${done?' checked':''}" role="checkbox" aria-checked="${done}" tabindex="0"></div>
-    <div class="task-body">
-      <div class="task-text">${esc(task.text)}</div>
-      ${meta ? `<div class="task-meta">${meta}</div>` : ''}
+// Format: tasks/meetings/YYYY-MM-DD.md
+// ## 11:00–12:00 Название встречи
+// участники: Кирилл, Эрадж
+// ссылка: https://...
+// описание: текст
+function parseMeetingsMd(md){
+  const meetings=[];
+  const blocks=md.split(/(?=^##\s)/m).filter(b=>b.trim());
+  for(const block of blocks){
+    const lines=block.split('\n').map(l=>l.trim()).filter(Boolean);
+    if(!lines.length)continue;
+    const header=lines[0].replace(/^##\s*/,'').trim();
+    const timeM=header.match(/(\d{1,2}:\d{2})\s*[–\-]\s*(\d{1,2}:\d{2})/);
+    if(!timeM)continue;
+    const timeRange=`${timeM[1]}–${timeM[2]}`;
+    const title=header.replace(/(\d{1,2}:\d{2})\s*[–\-]\s*(\d{1,2}:\d{2})\s*/,'').trim();
+    const [sh,sm]=timeM[1].split(':').map(Number);
+    const [eh,em]=timeM[2].split(':').map(Number);
+    const sortKey=sh*60+sm;
+    let persons=[],link=null,desc=null;
+    for(const l of lines.slice(1)){
+      const ll=l.toLowerCase();
+      if(ll.startsWith('участники:'))persons=l.replace(/участники:\s*/i,'').split(',').map(p=>p.trim()).filter(Boolean);
+      else if(ll.startsWith('ссылка:'))link=l.replace(/ссылка:\s*/i,'').trim();
+      else if(ll.startsWith('описание:'))desc=l.replace(/описание:\s*/i,'').trim();
+    }
+    meetings.push({type:'meeting',timeRange,title,persons,link,desc,sortKey,
+      startMin:sh*60+sm, endMin:eh*60+em});
+  }
+  return meetings.sort((a,b)=>a.sortKey-b.sortKey);
+}
+
+function renderMeetingCard(m){
+  const pChips=m.persons.map(p=>`<span class="chip cp">👤 ${esc(p)}</span>`).join('');
+  return `<div class="meeting-card">
+    <div class="meeting-time-col">
+      <span class="meeting-icon">📅</span>
+      <span class="meeting-time">${esc(m.timeRange)}</span>
+    </div>
+    <div class="meeting-body">
+      <div class="meeting-title">${esc(m.title)}</div>
+      ${m.desc?`<div class="meeting-desc">${esc(m.desc)}</div>`:''}
+      ${m.persons.length?`<div class="meeting-meta">${pChips}</div>`:''}
+      ${m.link?`<a class="meeting-link" href="${esc(m.link)}" target="_blank" rel="noopener">🔗 Подключиться</a>`:''}
     </div>
   </div>`;
 }
 
-/* ── Meeting card ─────────────────────────────────────── */
-function meetingCard(task) {
-  let linksHtml = '';
-  for (const link of (task.links || [])) {
-    linksHtml += `<a class="meeting-link-btn" href="${esc(link.url)}" target="_blank" rel="noopener">🔗 ${esc(link.text)}</a> `;
-  }
-  const participants = task.person ? `<span class="meta-chip chip-person">👥 ${esc(task.person)}</span>` : '';
-  const timeBadge = task.meetingTime
-    ? `<span class="meeting-time-badge">📅 ${esc(task.meetingTime)}</span>`
-    : `<span class="meeting-time-badge">📅</span>`;
+// Возвращает Set ключей задач, которые пересекаются по времени с встречами
+function detectConflicts(tasks,meetings){
+  const conflictKeys=new Set();
+  if(!meetings.length)return conflictKeys;
+  tasks.forEach(t=>{
+    if(!t.timeRange)return;
+    const parts=t.timeRange.split('–');
+    if(parts.length<2)return;
+    const[ths,tms]=parts[0].split(':').map(Number);
+    const[the,tme]=parts[1].split(':').map(Number);
+    if(isNaN(ths)||isNaN(the))return;
+    const tStart=ths*60+tms,tEnd=the*60+tme;
+    for(const m of meetings){
+      if(tStart<m.endMin&&tEnd>m.startMin){
+        conflictKeys.add(djb2(t.rawText||t.text));
+        break;
+      }
+    }
+  });
+  return conflictKeys;
+}
 
-  return `<div class="task-card meeting-card${task.done?' done':''}">
-    <div class="task-body" style="width:100%">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        ${timeBadge}
-        <div class="task-text" style="flex:1">${esc(task.text)}</div>
+// ═══════════════════════════════════════════════════════════════
+//  RENDER TASK PANELS
+// ═══════════════════════════════════════════════════════════════
+// Базовый список-рендер (день / полгода / год)
+function renderPanelList(el,period,file,tasks,meetings=[]){
+  const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
+  const base=file.split('/').pop();
+  let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
+  if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
+
+  // Встречи — перед задачами
+  if(meetings.length){
+    html+=`<div class="meetings-section">`;
+    html+=`<div class="meetings-hdr">📅 Встречи <span class="mhdr-cnt">${meetings.length}</span></div>`;
+    meetings.forEach(m=>html+=renderMeetingCard(m));
+    html+=`</div>`;
+  }
+
+  const conflicts=detectConflicts(tasks,meetings);
+  html+=`<div class="task-list">`;
+  const secs=[...new Set(tasks.map(t=>t.section))];
+  for(const s of secs){
+    if(s)html+=`<div class="sec-heading">${esc(s)}</div>`;
+    for(const t of tasks.filter(x=>x.section===s)){
+      const key=djb2(t.rawText||t.text);
+      html+=renderCard(t,conflicts.has(key));
+    }
+  }
+  html+=`</div>`;
+  el.innerHTML=html;
+  requestAnimationFrame(()=>{const pb=document.getElementById('pb-'+period);if(pb)pb.style.width=pct+'%';});
+  const badge=document.getElementById('badge-'+period);
+  if(badge&&total>0){badge.textContent=total-done||'✓';badge.classList.add('show');}
+  el.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+  applyFilters();
+  renderTeam();
+}
+
+// ─── OVERVIEW: мини-месяц (общий компонент) ───────────────────
+const MONTHS_RU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const DOW_MIN=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+function renderMiniMonth(year,month,meetingsByDate={}){
+  const todayStr=tdStr();
+  const firstDay=new Date(year,month,1);
+  const lastDay=new Date(year,month+1,0);
+  const startDow=(firstDay.getDay()+6)%7;
+  let html=`<div class="mini-month"><div class="mini-month-hdr">${MONTHS_RU[month]}</div><div class="mini-month-grid">`;
+  DOW_MIN.forEach(d=>{html+=`<div class="mini-dow">${d}</div>`;});
+  for(let i=0;i<startDow;i++)html+=`<div class="mini-cell mc-empty"></div>`;
+  for(let d=1;d<=lastDay.getDate();d++){
+    const ds=`${year}-${pad(month+1)}-${pad(d)}`;
+    const isToday=ds===todayStr;
+    const hasMtg=(meetingsByDate[ds]||[]).length>0;
+    const offType=isOffDay(ds); // 'weekend', 'holiday', or null
+    const cls='mini-cell'+(hasMtg?' mc-meeting':'')+(isToday?' mc-today':'')+(offType==='holiday'?' mc-holiday':offType?' mc-offday':'');
+    html+=`<div class="${cls}" onclick="miniDayClick('${ds}')" title="${ds}">${d}</div>`;
+  }
+  html+=`</div></div>`;
+  return html;
+}
+
+function renderHalfYearCalendar(el,period,file,tasks,meetings={}){
+  const now=new Date(),yr=now.getFullYear();
+  const startMo=now.getMonth()<6?0:6;
+  const mtgs=Array.isArray(meetings)?{}:meetings;
+  const base=file.split('/').pop();
+  const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
+  let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${base.replace('.md','')}</span></div>`;
+  if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
+  html+=`<div class="overview-grid hy">`;
+  for(let m=startMo;m<startMo+6;m++)html+=renderMiniMonth(yr,m,mtgs);
+  html+=`</div><div id="mini-detail" class="mini-detail" style="display:none" data-date=""></div>`;
+  if(tasks.length){html+=`<div class="cal-noday-section"><div class="cal-noday-hdr">📋 Задачи полугодия</div><div class="task-list">`;tasks.forEach(t=>html+=renderCard(t));html+=`</div></div>`;}
+  el.innerHTML=html;
+  requestAnimationFrame(()=>{const pb=document.getElementById('pb-'+period);if(pb)pb.style.width=pct+'%';});
+  el.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+  applyFilters();renderTeam();
+}
+
+function renderYearCalendar(el,period,file,tasks,meetings={}){
+  const yr=new Date().getFullYear();
+  const mtgs=Array.isArray(meetings)?{}:meetings;
+  const base=file.split('/').pop();
+  const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
+  let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${base.replace('.md','')}</span></div>`;
+  if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
+  html+=`<div class="overview-grid yr">`;
+  for(let m=0;m<12;m++)html+=renderMiniMonth(yr,m,mtgs);
+  html+=`</div><div id="mini-detail-yr" class="mini-detail" style="display:none" data-date=""></div>`;
+  if(tasks.length){html+=`<div class="cal-noday-section"><div class="cal-noday-hdr">📋 Задачи года</div><div class="task-list">`;tasks.forEach(t=>html+=renderCard(t));html+=`</div></div>`;}
+  el.innerHTML=html;
+  requestAnimationFrame(()=>{const pb=document.getElementById('pb-'+period);if(pb)pb.style.width=pct+'%';});
+  el.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+  applyFilters();renderTeam();
+}
+
+async function miniDayClick(dateStr){
+  // Ищем detail-панель в активной вкладке
+  const detail=document.querySelector('#mini-detail[data-date],#mini-detail-yr[data-date]')||document.getElementById('mini-detail')||document.getElementById('mini-detail-yr');
+  if(!detail)return;
+  const CLOSE=`this.closest('.mini-detail').style.display='none'`;
+  if(detail.dataset.date===dateStr&&detail.style.display!=='none'){detail.style.display='none';detail.dataset.date='';return;}
+  detail.dataset.date=dateStr;detail.style.display='block';
+  detail.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="period-date">${humanDate(dateStr)}</span><button class="cal-close-btn" onclick="${CLOSE}">✕</button></div><div class="loading"><div class="spinner"></div>Загрузка…</div>`;
+  const [md,mmd]=await Promise.all([fetchMd(`tasks/day/${dateStr}.md`),fetchMd(`tasks/meetings/${dateStr}.md`)]);
+  const dayTasks=md?parseMd(md):[];const dayMtgs=mmd?parseMeetingsMd(mmd):[];
+  let html=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="period-date">${humanDate(dateStr)}</span><button class="cal-close-btn" onclick="${CLOSE}">✕</button></div>`;
+  if(!dayTasks.length&&!dayMtgs.length){html+=`<div class="empty"><div class="empty-icon">📭</div><p>Нет задач и встреч</p></div>`;}
+  else{
+    if(dayMtgs.length){html+=`<div class="meetings-section">`;dayMtgs.forEach(m=>html+=renderMeetingCard(m));html+=`</div>`;}
+    if(dayTasks.length){html+=`<div class="task-list">`;dayTasks.forEach(t=>html+=renderCard(t));html+=`</div>`;}
+  }
+  detail.innerHTML=html;
+  detail.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+}
+
+// Роутер: week/month/halfyear/year → календарный вид, остальное → список
+function renderPanel(el,period,file,tasks,meetings=[]){
+  if(period==='week'){renderWeekCalendar(el,period,file,tasks,meetings);return;}
+  if(period==='month'){renderMonthCalendar(el,period,file,tasks,meetings);return;}
+  if(period==='halfyear'){renderHalfYearCalendar(el,period,file,tasks,meetings);return;}
+  if(period==='year'){renderYearCalendar(el,period,file,tasks,meetings);return;}
+  renderPanelList(el,period,file,tasks,meetings);
+}
+
+// ─── НЕДЕЛЯ: сетка по дням ───────────────────────────────────
+const WEEK_DAYS=[
+  {ru:'понедельник',short:'Пн',dow:0},{ru:'вторник',short:'Вт',dow:1},
+  {ru:'среда',short:'Ср',dow:2},{ru:'четверг',short:'Чт',dow:3},
+  {ru:'пятница',short:'Пт',dow:4},{ru:'суббота',short:'Сб',dow:5},
+  {ru:'воскресенье',short:'Вс',dow:6},
+];
+
+function renderWeekCalendar(el,period,file,tasks,meetings=[]){
+  // Всегда сетка 7 столбцов
+  const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
+  const base=file.split('/').pop();
+  const todayDow=(new Date().getDay()+6)%7; // Mon=0
+  const wDates=weekDates(); // ['2026-07-13',...,'2026-07-19']
+  // meetings может быть массивом (day) или объектом {dateStr: []} (week)
+  const meetingsByDate=Array.isArray(meetings)?{}:meetings;
+
+  let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
+  if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
+  html+=`<div class="cal-week-grid">`;
+
+  WEEK_DAYS.forEach((d,i)=>{
+    const colDate=wDates[i];
+    // Задачи из недельного файла (по секции дня) + задачи из индивидуального дневного файла
+    const weekFileTasks=tasks.filter(t=>t.section&&t.section.toLowerCase().includes(d.ru));
+    const dayFileTasks=_weekDayTasks[colDate]||[];
+    const seenKeys=new Set(weekFileTasks.map(t=>djb2(t.rawText||t.text)));
+    const dayTasks=[...weekFileTasks,...dayFileTasks.filter(t=>!seenKeys.has(djb2(t.rawText||t.text)))];
+    // Встречи для конкретной даты этого столбца
+    const dayMeetings=meetingsByDate[colDate]||[];
+    const dayDone=dayTasks.filter(t=>t.done).length;
+    const isToday=d.dow===todayDow;
+    const offDay=isOffDay(colDate); // 'weekend', 'holiday', or null
+    const conflicts=detectConflicts(dayTasks,dayMeetings);
+    const colCls='cal-week-col'+(isToday?' cal-today-col':'')+(offDay?' cal-offday':'');
+    html+=`<div class="${colCls}">
+      <div class="cal-week-hdr">
+        <span>${d.short}</span>
+        ${(dayTasks.length+dayMeetings.length)?`<span class="cal-day-count">${dayDone}/${dayTasks.length}${dayMeetings.length?` ·${dayMeetings.length}📅`:''}</span>`:''}
       </div>
-      ${participants || linksHtml ? `<div class="task-meta" style="margin-top:8px">${participants}${linksHtml}</div>` : ''}
-    </div>
-  </div>`;
-}
-
-/* ══════════════════════════════════════════════════════════
-   RENDER PERIOD PANEL
-══════════════════════════════════════════════════════════ */
-function renderPeriod(el, period, filename, tasks) {
-  const total = tasks.length;
-  const done  = tasks.filter(t => t.done).length;
-  const pct   = total ? Math.round(done/total*100) : 0;
-  const fbase = filename.split('/').pop().replace('.md','');
-
-  const meetings  = tasks.filter(t => t.isMeeting);
-  const taskItems = tasks.filter(t => !t.isMeeting);
-
-  // progress bar counts only tasks, not meetings
-  const taskTotal = taskItems.length;
-  const taskDone  = taskItems.filter(t => t.done).length;
-  const taskPct   = taskTotal ? Math.round(taskDone / taskTotal * 100) : 0;
-
-  let h = `<div class="period-header">
-    <span class="period-title">${PERIODS[period].label}</span>
-    <span class="period-date">${humanDate(fbase)}</span>
-  </div>`;
-
-  if (taskTotal > 0) h += `<div class="progress-wrap">
-    <span class="progress-label">Прогресс</span>
-    <div class="progress-bar-outer"><div class="progress-bar-inner" id="pb-${period}"></div></div>
-    <span class="progress-pct">${taskPct}%</span>
-    <span class="progress-count">${taskDone}/${taskTotal} выполнено</span>
-  </div>`;
-
-  // ── Meetings section ──────────────────────────────────
-  if (meetings.length) {
-    // sort by time if available
-    meetings.sort((a, b) => {
-      if (!a.meetingTime && !b.meetingTime) return 0;
-      if (!a.meetingTime) return 1;
-      if (!b.meetingTime) return -1;
-      return a.meetingTime.localeCompare(b.meetingTime);
-    });
-    h += `<div class="meetings-header">📅 Встречи (${meetings.length})</div>`;
-    h += `<div class="task-list">`;
-    meetings.forEach(t => { h += meetingCard(t); });
-    h += `</div>`;
-  }
-
-  // ── Tasks section ─────────────────────────────────────
-  h += `<div class="task-list">`;
-  if (meetings.length && taskItems.length) {
-    h += `<div class="tasks-header">✅ Задачи (${taskItems.length})</div>`;
-  }
-  for (const sec of [...new Set(taskItems.map(t => t.section))]) {
-    if (sec) h += `<div class="section-heading">${esc(sec)}</div>`;
-    taskItems.filter(t => t.section === sec).forEach(t => { h += card(t); });
-  }
-  h += `</div>`;
-
-  el.innerHTML = h;
-
-  requestAnimationFrame(() => {
-    const pb = document.getElementById(`pb-${period}`);
-    if (pb) pb.style.width = taskPct + '%';
+      <div class="task-list">`;
+    if(offDay)html+=`<div class="offday-badge">выходной</div>`;
+    if(!dayTasks.length&&!dayMeetings.length&&!offDay)html+=`<div class="cal-empty-day">—</div>`;
+    dayMeetings.forEach(m=>html+=renderMeetingCard(m));
+    dayTasks.forEach(t=>html+=renderWeekChip(t,conflicts.has(djb2(t.rawText||t.text))));
+    html+=`</div></div>`;
   });
 
-  const badge = document.getElementById(`badge-${period}`);
-  if (badge && (taskTotal > 0 || meetings.length > 0)) {
-    const pendingTasks = taskTotal - taskDone;
-    badge.textContent = pendingTasks > 0 ? pendingTasks : (meetings.length ? `📅${meetings.length}` : '✓');
-    badge.classList.add('visible');
-  }
-}
+  html+=`</div>`;
 
-function renderEmpty(el, period, filename) {
-  const fbase = filename.split('/').pop();
-  el.innerHTML = `<div class="period-header">
-    <span class="period-title">${PERIODS[period].label}</span>
-    <span class="period-date">${humanDate(fbase.replace('.md',''))}</span>
-  </div>
-  <div class="empty-state">
-    <span class="empty-icon">📭</span>
-    <p>Задач нет</p>
-    <p style="margin-top:6px;font-size:.8rem">Файл <code>${filename}</code> не найден или пуст</p>
-  </div>`;
-}
-
-function renderLoading(el) {
-  el.innerHTML = `<div class="loading"><div class="spinner"></div> Загрузка…</div>`;
-}
-
-/* ══════════════════════════════════════════════════════════
-   TEAM PANEL
-══════════════════════════════════════════════════════════ */
-async function loadTeam() {
-  const el = document.getElementById('panel-team');
-  renderLoading(el);
-
-  const periodsList = { day:'День', week:'Неделя', month:'Месяц' };
-  const all = [];
-
-  for (const [period, lbl] of Object.entries(periodsList)) {
-    const md = await fetchMd(PERIODS[period].fn());
-    if (!md) continue;
-    parseMd(md, period).forEach(t => all.push({ ...t, periodLabel: lbl }));
+  // Задачи без привязки к конкретному дню недели
+  const noDayTasks=tasks.filter(t=>!t.section||!WEEK_DAYS.some(d=>t.section.toLowerCase().includes(d.ru)));
+  if(noDayTasks.length){
+    html+=`<div class="cal-noday-section"><div class="cal-noday-hdr">📋 Задачи недели без привязки к дню (${noDayTasks.filter(t=>t.done).length}/${noDayTasks.length})</div><div class="task-list">`;
+    noDayTasks.forEach(t=>html+=renderWeekChip(t,false));
+    html+=`</div></div>`;
   }
 
-  if (!all.length) {
-    el.innerHTML = `<div class="empty-state">
-      <span class="empty-icon">👥</span>
-      <p>Нет задач с исполнителями</p>
-      <p style="margin-top:6px;font-size:.8rem">Добавьте имена через «—» в файлах задач</p>
+  el.innerHTML=html;
+  requestAnimationFrame(()=>{const pb=document.getElementById('pb-'+period);if(pb)pb.style.width=pct+'%';});
+  const badge=document.getElementById('badge-'+period);
+  if(badge&&total>0){badge.textContent=total-done||'✓';badge.classList.add('show');}
+  applyFilters();renderTeam();
+}
+
+// ─── МЕСЯЦ: сетка-календарь + список задач ───────────────────
+function renderMonthCalendar(el,period,file,tasks,meetings={}){
+  const now=new Date();
+  const year=now.getFullYear(),month=now.getMonth();
+  const firstDay=new Date(year,month,1);
+  const lastDay=new Date(year,month+1,0);
+  const startDow=(firstDay.getDay()+6)%7; // Пн=0
+  const todayStr=tdStr();
+  const meetingsByDate=Array.isArray(meetings)?{}:meetings;
+
+  const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
+  const base=file.split('/').pop();
+
+  let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
+  if(total>0)html+=`<div class="prog-wrap"><span class="prog-label">Прогресс</span><div class="prog-outer"><div class="prog-inner" id="pb-${period}"></div></div><span class="prog-pct">${pct}%</span><span class="prog-cnt">${done}/${total}</span></div>`;
+
+  html+=`<div class="cal-month-grid">
+    <div class="cal-dow">Пн</div><div class="cal-dow">Вт</div><div class="cal-dow">Ср</div>
+    <div class="cal-dow">Чт</div><div class="cal-dow">Пт</div><div class="cal-dow">Сб</div>
+    <div class="cal-dow">Вс</div>`;
+
+  for(let i=0;i<startDow;i++)html+=`<div class="cal-day-cell cal-day-empty"></div>`;
+
+  for(let d=1;d<=lastDay.getDate();d++){
+    const dateStr=`${year}-${pad(month+1)}-${pad(d)}`;
+    const isToday=dateStr===todayStr;
+    const dow=(new Date(year,month,d).getDay()+6)%7;
+    const isWeekend=dow>=5;
+    const isHoliday=RU_HOLIDAYS_2026.has(dateStr);
+    const _mts=meetingsByDate[dateStr]||[];
+    const _miniMts=_mts.map(m=>`<div class="cal-mini-meeting" title="${esc(m.title)}">📅 ${m.timeRange?m.timeRange.split('–')[0]+' ':''}<b>${esc(m.title)}</b></div>`).join('');
+    html+=`<div class="cal-day-cell${isToday?' cal-today':''}${isWeekend?' cal-weekend':''}${isHoliday?' cal-holiday':''}" data-date="${dateStr}" onclick="calMonthDayClick('${dateStr}')">
+      <div class="cal-day-num">${d}${_mts.length?`<span style="float:right;font-size:8px;color:#89b4ff;font-weight:400;opacity:.8">${_mts.length}📅</span>`:''}</div>
+      ${_miniMts}
+      <div id="cal-d-${dateStr}" class="cal-day-dots"></div>
     </div>`;
+  }
+  html+=`</div>`;
+  html+=`<div id="cal-month-detail" class="cal-month-detail" style="display:none" data-date=""></div>`;
+
+  // Секция со всеми задачами месяца ниже календаря
+  if(tasks.length>0){
+    html+=`<div class="cal-section-tasks">`;
+    const secs=[...new Set(tasks.map(t=>t.section))];
+    for(const s of secs){
+      if(s)html+=`<div class="sec-heading">${esc(s)}</div>`;
+      html+=`<div class="task-list">`;
+      for(const t of tasks.filter(x=>x.section===s))html+=renderCard(t);
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+  }
+
+  el.innerHTML=html;
+  requestAnimationFrame(()=>{const pb=document.getElementById('pb-'+period);if(pb)pb.style.width=pct+'%';});
+  const badge=document.getElementById('badge-'+period);
+  if(badge&&total>0){badge.textContent=total-done||'✓';badge.classList.add('show');}
+  el.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
+
+  // Подсветка сегодня — показываем сводку из уже загруженных задач
+  // (dayTasks из loadAll не доступны здесь, но после загрузки calMonthDayClick подтянет)
+  applyFilters();renderTeam();
+}
+
+async function calMonthDayClick(dateStr){
+  const detail=document.getElementById('cal-month-detail');
+  if(!detail)return;
+
+  // Тоггл: кликнули на уже открытый день → закрываем
+  if(detail.dataset.date===dateStr&&detail.style.display!=='none'){
+    detail.style.display='none';detail.dataset.date='';
+    document.querySelectorAll('.cal-day-cell').forEach(c=>c.classList.remove('cal-day-active'));
     return;
   }
 
-  const byPerson = {};
-  const noPerson = [];
-  for (const t of all) {
-    t.person ? (byPerson[t.person] = byPerson[t.person] || [], byPerson[t.person].push(t))
-             : noPerson.push(t);
+  document.querySelectorAll('.cal-day-cell').forEach(c=>c.classList.remove('cal-day-active'));
+  const cell=document.querySelector(`.cal-day-cell[data-date="${dateStr}"]`);
+  if(cell){cell.classList.add('cal-day-active');cell.scrollIntoView({behavior:'smooth',block:'nearest'});}
+
+  detail.dataset.date=dateStr;
+  detail.style.display='block';
+  detail.innerHTML=`<div class="loading"><div class="spinner"></div>Загрузка ${humanDate(dateStr)}…</div>`;
+
+  const [md, mmd]=await Promise.all([
+    fetchMd(`tasks/day/${dateStr}.md`),
+    fetchMd(`tasks/meetings/${dateStr}.md`),
+  ]);
+  const dayTasks=md?parseMd(md):[];
+  const dayMeetings=mmd?parseMeetingsMd(mmd):[];
+  const CLOSE=`document.getElementById('cal-month-detail').style.display='none';document.querySelectorAll('.cal-day-cell').forEach(c=>c.classList.remove('cal-day-active'))`;
+  if(!dayTasks.length&&!dayMeetings.length){
+    detail.innerHTML=`<div class="cal-detail-hdr"><span class="period-date">${humanDate(dateStr)}</span><button class="cal-close-btn" onclick="${CLOSE}">✕</button></div><div class="empty"><div class="empty-icon">📭</div><p>Нет задач</p></div>`;
+    return;
   }
 
-  let h = `<div class="period-header">
-    <span class="period-title">Команда</span>
-    <span class="period-date">День · Неделя · Месяц</span>
+  const doneC=dayTasks.filter(t=>t.done).length;
+  const pctD=dayTasks.length?Math.round(doneC/dayTasks.length*100):0;
+
+  let html=`<div class="cal-detail-hdr">
+    <span class="period-date">${humanDate(dateStr)}</span>
+    ${dayTasks.length?`<span style="font-size:.71rem;color:var(--muted)">${doneC}/${dayTasks.length} · ${pctD}%</span>`:''}
+    <button class="cal-close-btn" onclick="${CLOSE}">✕</button>
   </div>`;
-
-  for (const [person, tasks] of Object.entries(byPerson)) {
-    const ini = person.replace(/[@]/g,'').trim().split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
-    const dc  = tasks.filter(t=>t.done).length;
-    h += `<div class="person-heading">
-      <div class="person-avatar">${ini||'?'}</div>
-      <span class="person-name">${esc(person)}</span>
-      <span class="person-count">${dc}/${tasks.length} выполнено</span>
-    </div><div class="task-list">`;
-    tasks.forEach(t => {
-      h += card(t, `<span class="meta-chip chip-period">📅 ${esc(t.periodLabel)}</span>`);
-    });
-    h += `</div>`;
+  if(dayMeetings.length){
+    html+=`<div class="meetings-section">`;
+    dayMeetings.forEach(m=>html+=renderMeetingCard(m));
+    html+=`</div>`;
   }
-
-  if (noPerson.length) {
-    h += `<div class="person-heading" style="margin-top:28px">
-      <div class="person-avatar">?</div>
-      <span class="person-name">Без исполнителя</span>
-      <span class="person-count">${noPerson.length} задач</span>
-    </div><div class="task-list">`;
-    noPerson.forEach(t => {
-      h += card(t, `<span class="meta-chip chip-period">📅 ${esc(t.periodLabel)}</span>`);
-    });
-    h += `</div>`;
+  if(dayTasks.length){
+    html+=`<div class="task-list">`;
+    dayTasks.forEach(t=>html+=renderCard(t));
+    html+=`</div>`;
   }
+  detail.innerHTML=html;
+  detail.querySelectorAll('.task-card').forEach(card=>{attachEdit(card);attachFileHandlers(card);});
 
-  el.innerHTML = h;
+  // Точка на клетке
+  const dotEl=document.getElementById(`cal-d-${dateStr}`);
+  if(dotEl)dotEl.innerHTML=`<span class="cal-dot" style="background:${doneC===dayTasks.length?'var(--done)':'var(--acc)'}"></span>`;
 }
 
-/* ══════════════════════════════════════════════════════════
-   FILES PANEL
-══════════════════════════════════════════════════════════ */
-async function loadFiles() {
-  const el = document.getElementById('panel-files');
-  renderLoading(el);
+function renderCard(task,isConflict=false){
+  const edits=ls(K_EDITS,{});
+  const checks=ls(K_CHECKS,{});
+  const key=djb2(task.rawText||task.text);
+  const disp=edits[key]||task.text;
+  // localStorage check override takes priority over markdown state
+  const isDone=checks.hasOwnProperty(key)?checks[key]:task.done;
+  const mi=TEAM.find(m=>task.rawText?.toLowerCase().includes(m.k));
+  const borderC=mi?mi.tx:null;
+  let meta='';
+  // multiple persons support
+  const pList=task.persons?.length?task.persons:task.person?[task.person]:[];
+  pList.forEach(p=>{ meta+=`<span class="chip cp">👤 ${esc(p)}</span>`; });
+  if(task.timeRange)meta+=`<span class="chip ct">🕐 ${esc(task.timeRange)}</span>`;
+  if(task.deadline)meta+=`<span class="chip cd">📅 ${esc(task.deadline)}</span>`;
+  if(isConflict)meta+=`<span class="conflict-badge">⚠️ пересечение со встречей</span>`;
+  const files=ls(K_FILES,{});
+  const tf=files[key]||[];
+  let fhtml='';
+  if(tf.length>0){fhtml=`<div class="attach-row" id="ar-${key}">`;tf.forEach((f,i)=>{fhtml+=`<a class="file-chip" href="${esc(f.dataUrl)}" download="${esc(f.name)}" title="${esc(f.name)}">📄 <span class="fcn">${esc(f.name)}</span><span class="fcd" data-key="${key}" data-idx="${i}" onclick="delTaskFile(event)">×</span></a>`;});fhtml+=`</div>`;}
+  else fhtml=`<div class="attach-row" id="ar-${key}"></div>`;
+  return `<div class="task-card${isDone?' done':''}${isConflict?' conflict':''}" data-key="${key}"${borderC?` style="--acc:${borderC}"`:''}><div class="task-check${isDone?' checked':''}" onclick="toggleCheck(event,'${key}')"></div><div class="task-body"><div class="task-text">${esc(disp)}</div><textarea class="edit-area" rows="2">${esc(disp)}</textarea><div class="edit-btns"><button class="btn-save">Сохранить</button><button class="btn-cancel">Отмена</button></div>${meta?`<div class="task-meta">${meta}</div>`:''}${fhtml}<button class="attach-btn" data-key="${key}" onclick="openTaskFile(event)">📎 Прикрепить</button></div><button class="edit-btn" title="Редактировать">✏️</button></div>`;
+}
 
-  const uploadUrl = `https://github.com/${REPO}/upload/${BRANCH}/files`;
-  let files = [];
+function renderEmpty(el,period,file){const base=file.split('/').pop();el.innerHTML=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div><div class="empty"><div class="empty-icon">📭</div><p>Нет задач</p><p style="margin-top:5px;font-size:.7rem">Файл <code>${file}</code> не найден</p></div>`;}
+function renderLoading(el){el.innerHTML=`<div class="loading"><div class="spinner"></div>Загрузка…</div>`;}
 
-  try {
-    const r = await fetch(API + 'contents/files?_=' + Date.now());
-    if (r.ok) {
-      const data = await r.json();
-      if (Array.isArray(data)) files = data.filter(f => f.type === 'file');
-    }
-  } catch {}
+// ═══════════════════════════════════════════════════════════════
+//  TASK EDITING
+// ═══════════════════════════════════════════════════════════════
+let editing=false;
+function attachEdit(card){
+  const eBtn=card.querySelector('.edit-btn'),textEl=card.querySelector('.task-text'),area=card.querySelector('.edit-area'),btns=card.querySelector('.edit-btns'),key=card.dataset.key;
+  if(!eBtn)return;
+  const open=()=>{if(editing)return;editing=true;area.value=textEl.textContent;textEl.style.display='none';area.classList.add('open');btns.classList.add('open');area.focus();area.setSelectionRange(area.value.length,area.value.length);};
+  const close=()=>{textEl.style.display='';area.classList.remove('open');btns.classList.remove('open');editing=false;};
+  const save=()=>{const v=area.value.trim();if(!v)return;textEl.textContent=v;const d=ls(K_EDITS,{});d[key]=v;sv(K_EDITS,d);logAct(`✏️ ${v.slice(0,20)}…`);close();};
+  eBtn.addEventListener('click',e=>{e.stopPropagation();open();});
+  btns.querySelector('.btn-save').addEventListener('click',e=>{e.stopPropagation();save();});
+  btns.querySelector('.btn-cancel').addEventListener('click',e=>{e.stopPropagation();close();});
+  area.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();save();}if(e.key==='Escape')close();});
+}
 
-  let h = `<div class="files-toolbar">
+// Toggle checkbox state (persists in localStorage, overrides markdown)
+function toggleCheck(e,key){
+  e.stopPropagation();
+  const checkEl=e.currentTarget;
+  const card=checkEl.closest('.task-card');
+  const newDone=!checkEl.classList.contains('checked');
+  checkEl.classList.toggle('checked',newDone);
+  card.classList.toggle('done',newDone);
+  const textEl=card.querySelector('.task-text');
+  if(textEl)textEl.style.textDecoration=newDone?'line-through':'';
+  const checks=ls(K_CHECKS,{});checks[key]=newDone;sv(K_CHECKS,checks);
+  logAct(newDone?'✅ Выполнено':'↩️ Возвращено');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TASK FILE ATTACHMENTS
+// ═══════════════════════════════════════════════════════════════
+let pendingTaskKey=null;
+const gfi=document.getElementById('g-file-input');
+function openTaskFile(e){e.stopPropagation();pendingTaskKey=e.currentTarget.dataset.key;gfi.value='';gfi.click();}
+function attachFileHandlers(card){}
+gfi.addEventListener('change',()=>{
+  const key=pendingTaskKey;if(!key)return;
+  const fa=Array.from(gfi.files);let done2=0;
+  fa.forEach(file=>{
+    if(file.size>4*1024*1024){alert(`${file.name} > 4МБ, пропускаем`);done2++;chk();return;}
+    const r=new FileReader();
+    r.onload=ev=>{const d=ls(K_FILES,{});d[key]=d[key]||[];d[key].push({name:file.name,size:file.size,dataUrl:ev.target.result});sv(K_FILES,d);logAct(`📎 ${file.name}`);done2++;chk();};
+    r.readAsDataURL(file);
+  });
+  function chk(){if(done2===fa.length)refreshTaskAttach(key);}
+});
+function refreshTaskAttach(key){
+  const ar=document.getElementById('ar-'+key);if(!ar)return;
+  const files=ls(K_FILES,{})[key]||[];ar.innerHTML='';
+  files.forEach((f,i)=>{const a=document.createElement('a');a.className='file-chip';a.href=f.dataUrl;a.download=f.name;a.title=f.name;a.innerHTML=`📄 <span class="fcn">${esc(f.name)}</span><span class="fcd" data-key="${key}" data-idx="${i}" onclick="delTaskFile(event)">×</span>`;ar.appendChild(a);});
+}
+function delTaskFile(e){e.preventDefault();e.stopPropagation();const{key,idx}=e.currentTarget.dataset;const d=ls(K_FILES,{});if(d[key])d[key].splice(+idx,1);sv(K_FILES,d);refreshTaskAttach(key);}
+
+// ═══════════════════════════════════════════════════════════════
+//  SEARCH
+// ═══════════════════════════════════════════════════════════════
+let searchQ='';
+const searchBtn=document.getElementById('search-btn'),searchSlide=document.getElementById('search-slide'),searchInput=document.getElementById('search-input'),searchCount=document.getElementById('search-count');
+searchBtn.addEventListener('click',()=>{const o=searchSlide.classList.toggle('open');searchBtn.classList.toggle('on',o);if(o)searchInput.focus();else{searchInput.value='';searchQ='';applyFilters();}});
+searchInput.addEventListener('input',()=>{searchQ=searchInput.value.trim().toLowerCase();applyFilters();});
+searchInput.addEventListener('keydown',e=>{if(e.key==='Escape')searchBtn.click();});
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='f'){e.preventDefault();if(!searchSlide.classList.contains('open'))searchBtn.click();else searchInput.focus();}});
+
+// ═══════════════════════════════════════════════════════════════
+//  TEAM FILTER
+// ═══════════════════════════════════════════════════════════════
+let activeMember=null;
+function renderTeam(){
+  const bar=document.getElementById('team-bar');if(!bar)return;
+  bar.querySelectorAll('.member-chip').forEach(el=>el.remove());
+  const label=bar.querySelector('.team-label');
+  TEAM.forEach(m=>{
+    const taskCnt=countForMember(m.k);
+    const mtgCnt=meetingCountForMember(m.k);
+    const chip=document.createElement('div');
+    chip.className='member-chip'+(activeMember===m.k?' active':'');
+    chip.innerHTML=`<div class="m-av" style="background:${m.bg};color:${m.tx}">${m.name[0]}</div><span class="m-name">${m.name}</span>${taskCnt>0?`<span class="m-cnt">${taskCnt}</span>`:''}${mtgCnt>0?`<span class="m-mtg">📅${mtgCnt}</span>`:''}`;
+    chip.onclick=()=>{activeMember=activeMember===m.k?null:m.k;document.getElementById('filter-clear').classList.toggle('show',!!activeMember);applyFilters();renderTeam();};
+    label.insertAdjacentElement('afterend',chip);
+  });
+}
+// Задачи из DOM (день-вид)
+function countForMember(k){let n=0;document.querySelectorAll('.task-card').forEach(c=>{if(c.textContent.toLowerCase().includes(k))n++;});return n;}
+// Предстоящие встречи из накопленного _allMeetingsByDate
+function meetingCountForMember(k){
+  const today=tdStr();let n=0;
+  Object.entries(_allMeetingsByDate).forEach(([ds,mtgs])=>{
+    if(ds>=today)mtgs.forEach(m=>{if(m.persons.some(p=>p.toLowerCase().includes(k)))n++;});
+  });
+  return n;
+}
+function clearMember(){activeMember=null;document.getElementById('filter-clear').classList.remove('show');applyFilters();renderTeam();}
+
+function applyFilters(){
+  const cards=document.querySelectorAll('.task-card');let vis=0;
+  cards.forEach(card=>{
+    const textEl=card.querySelector('.task-text');const ft=card.textContent.toLowerCase();const orig=textEl?textEl.textContent:'';
+    if(textEl){if(searchQ){const idx=orig.toLowerCase().indexOf(searchQ);if(idx!==-1){textEl.innerHTML=esc(orig.slice(0,idx))+`<mark>${esc(orig.slice(idx,idx+searchQ.length))}</mark>`+esc(orig.slice(idx+searchQ.length));}else textEl.textContent=orig;}else if(textEl.innerHTML!==esc(orig))textEl.textContent=orig;}
+    const ms=!searchQ||ft.includes(searchQ),mm=!activeMember||ft.includes(activeMember);
+    card.classList.toggle('h-search',!ms);card.classList.toggle('h-member',!mm);card.classList.toggle('found',!!(searchQ||activeMember)&&ms&&mm);
+    if(ms&&mm)vis++;
+  });
+  searchCount.textContent=(searchQ||activeMember)?`${vis} из ${cards.length}`:'';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  WEEK CHIPS
+// ═══════════════════════════════════════════════════════════════
+let _wkTaskMap={};  // key → task object для expand по клику
+
+function renderWeekChip(t,isConflict){
+  const key=djb2(t.rawText||t.text);
+  _wkTaskMap[key]=t;
+  const isDone=t.done;
+  const cls='wk-chip'+(isDone?' wk-done':'')+(isConflict?' wk-conflict':'');
+  const timeStr=t.timeRange?`<span class="wk-chip-time">${esc(t.timeRange.split('–')[0])}</span>`:'';
+  return `<div class="${cls}" data-key="${key}" onclick="wkToggleChip(this)"><div class="wk-chip-dot"></div><span class="wk-chip-text">${esc(t.text)}</span>${timeStr}</div>`;
+}
+
+function wkToggleChip(el){
+  const next=el.nextElementSibling;
+  if(next&&next.classList.contains('wk-task-detail')){next.remove();return;}
+  el.closest('.task-list')?.querySelectorAll('.wk-task-detail').forEach(d=>d.remove());
+  const t=_wkTaskMap[el.dataset.key];if(!t)return;
+  const detail=document.createElement('div');detail.className='wk-task-detail';
+  const persons=t.persons?.length?t.persons:(t.person?[t.person]:[]);
+  const meta=[];
+  if(persons.length)meta.push(persons.map(p=>`<span class="wk-td-tag">👤 ${esc(p)}</span>`).join(''));
+  if(t.timeRange)meta.push(`<span class="wk-td-tag">🕐 ${esc(t.timeRange)}</span>`);
+  if(t.tag)meta.push(`<span class="wk-td-tag">🏷 ${esc(t.tag)}</span>`);
+  detail.innerHTML=`<div class="wk-td-text">${esc(t.text)}</div>${meta.length?`<div class="wk-td-meta">${meta.join('')}</div>`:''}`;
+  el.after(detail);
+}
+
+
+
+
+// ═══════════════════════════════════════════════════════════════
+//  FILES / PROJECTS
+// ═══════════════════════════════════════════════════════════════
+let selectedProjId=null;
+let newProjColor=PROJ_COLORS[0];
+
+function renderProjColors(){
+  const wrap=document.getElementById('proj-colors');if(!wrap)return;
+  wrap.innerHTML='';
+  PROJ_COLORS.forEach(c=>{
+    const sw=document.createElement('div');sw.className='proj-color-swatch'+(newProjColor===c?' selected':'');sw.style.background=c;sw.onclick=()=>{newProjColor=c;renderProjColors();};
+    wrap.appendChild(sw);
+  });
+}
+
+function openAddProj(){const f=document.getElementById('proj-add-form');f.classList.toggle('open');if(f.classList.contains('open')){renderProjColors();document.getElementById('proj-name-inp').focus();}}
+function closeAddProj(){document.getElementById('proj-add-form').classList.remove('open');document.getElementById('proj-name-inp').value='';}
+
+function saveProj(){
+  const name=document.getElementById('proj-name-inp').value.trim();if(!name)return;
+  const projs=ls(K_PROJ,[]);projs.push({id:uid(),name,color:newProjColor});sv(K_PROJ,projs);
+  closeAddProj();renderProjList();logAct(`📂 Проект: ${name}`);
+}
+
+function renderProjList(){
+  const container=document.getElementById('proj-list');if(!container)return;
+  const projs=ls(K_PROJ,[]);const pfiles=ls(K_PFILES,[]);
+  container.innerHTML='';
+  projs.forEach(p=>{
+    const cnt=pfiles.filter(f=>f.projId===p.id).length;
+    const item=document.createElement('div');item.className='proj-item'+(selectedProjId===p.id?' active':'');
+    item.innerHTML=`<span class="proj-dot" style="background:${p.color}"></span><span class="proj-name">${esc(p.name)}</span>${cnt>0?`<span class="proj-fc">${cnt}</span>`:''}<span class="proj-del" data-id="${p.id}" onclick="delProj(event)">✕</span>`;
+    item.onclick=(e)=>{if(e.target.classList.contains('proj-del'))return;selectProj(p.id);};
+    container.appendChild(item);
+  });
+  // all count
+  const allFc=document.getElementById('all-fc');if(allFc)allFc.textContent=pfiles.length>0?pfiles.length:'';
+  const projAll=document.getElementById('proj-all');if(projAll)projAll.classList.toggle('active',selectedProjId===null&&window._projSelected);
+}
+
+window._projSelected=false;
+function selectProj(id){
+  selectedProjId=id;window._projSelected=true;
+  renderProjList();renderFilesArea();
+}
+
+function delProj(e){
+  e.stopPropagation();
+  const id=e.currentTarget.dataset.id;
+  const projs=ls(K_PROJ,[]);const idx=projs.findIndex(p=>p.id===id);if(idx===-1)return;
+  const name=projs[idx].name;
+  if(!confirm(`Удалить проект «${name}»? Файлы останутся без проекта.`))return;
+  projs.splice(idx,1);sv(K_PROJ,projs);
+  const pfiles=ls(K_PFILES,[]);pfiles.forEach(f=>{if(f.projId===id)f.projId=null;});sv(K_PFILES,pfiles);
+  if(selectedProjId===id){selectedProjId=null;window._projSelected=false;}
+  renderProjList();if(window._projSelected)renderFilesArea();
+  logAct(`🗑 Проект удалён: ${name}`);
+}
+
+function renderFilesArea(){
+  const area=document.getElementById('files-area');if(!area)return;
+  const projs=ls(K_PROJ,[]);
+  const pfiles=ls(K_PFILES,[]);
+  const filtered=selectedProjId===null?pfiles:pfiles.filter(f=>f.projId===selectedProjId);
+  const proj=projs.find(p=>p.id===selectedProjId);
+  const titleTxt=proj?proj.name:'Все файлы';
+  const totalSize=filtered.reduce((a,f)=>a+f.size,0);
+
+  area.innerHTML=`<div class="files-area-hdr">
     <div>
-      <div class="period-title" style="font-size:1.05rem;margin-bottom:4px">Файлы проекта</div>
-      <div style="font-size:.8rem;color:var(--text-muted)">Хранятся в папке <code>files/</code> репозитория</div>
+      <div class="files-area-title">${proj?`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${proj.color};margin-right:6px"></span>`:'📁 '}${esc(titleTxt)}</div>
+      <div class="files-count" style="margin-top:2px">${filtered.length} файлов · <span class="files-storage">${fmtSize(totalSize)}</span></div>
     </div>
-    <a class="upload-btn" href="${uploadUrl}" target="_blank" rel="noopener">↑ Загрузить файл</a>
-  </div>`;
+    <button class="files-upload-btn" onclick="openProjUpload()">📤 Загрузить</button>
+  </div>
+  <div class="files-grid" id="files-grid"></div>`;
 
-  if (!files.length) {
-    h += `<div class="empty-state">
-      <span class="empty-icon">📁</span>
-      <p>Файлов пока нет</p>
-      <p style="margin-top:10px;font-size:.85rem">
-        <a href="${uploadUrl}" target="_blank" rel="noopener">Загрузить первый файл →</a>
-      </p>
-      <p style="margin-top:6px;font-size:.77rem;color:var(--text-muted)">
-        Поддерживаются любые форматы: видео, фото, PDF, архивы
-      </p>
-    </div>`;
-  } else {
-    h += `<div class="file-grid">`;
-    for (const f of files) {
-      h += `<div class="file-card">
-        <div class="file-icon">${fileIcon(f.name)}</div>
-        <div class="file-info">
-          <div class="file-name">${esc(f.name)}</div>
-          <div class="file-size">${f.size ? formatSize(f.size) : ''}</div>
-        </div>
-        <a class="file-dl" href="${f.download_url}" target="_blank" rel="noopener" download title="Скачать">↓</a>
+  const grid=document.getElementById('files-grid');
+  if(!filtered.length){grid.innerHTML=`<div class="files-empty" style="grid-column:1/-1"><div class="files-empty-icon">📭</div><p style="font-size:.82rem">Нет файлов</p><p style="font-size:.72rem;margin-top:4px;color:var(--muted)">Нажмите «Загрузить» чтобы добавить</p></div>`;return;}
+
+  filtered.forEach(f=>{
+    const fp=projs.find(p=>p.id===f.projId);
+    const card=document.createElement('div');card.className='file-card';
+    card.innerHTML=`
+      <span class="file-del-overlay" data-id="${f.id}" onclick="delProjFile(event)">✕</span>
+      <div class="file-icon">${fileIcon(f.name)}</div>
+      <div class="file-name" title="${esc(f.name)}">${esc(f.name)}</div>
+      <div class="file-size">${fmtSize(f.size)}</div>
+      <div class="file-date">${fmtDate(f.date)}</div>
+      ${fp&&selectedProjId===null?`<span class="file-proj-badge" style="background:${fp.color}22;color:${fp.color};border:1px solid ${fp.color}44">${esc(fp.name)}</span>`:''}
+      <select class="file-move-sel" data-id="${f.id}" onchange="moveFileToProj(event)">
+        <option value="">— Переместить в… —</option>
+        ${projs.map(p=>`<option value="${p.id}"${p.id===f.projId?' selected':''}>${esc(p.name)}</option>`).join('')}
+        <option value="__none"${!f.projId?' selected':''}>Без проекта</option>
+      </select>
+      <div class="file-actions">
+        <a class="fa-btn fa-dl" href="${esc(f.dataUrl)}" download="${esc(f.name)}">⬇ Скачать</a>
       </div>`;
-    }
-    h += `</div>`;
-  }
-
-  el.innerHTML = h;
+    grid.appendChild(card);
+  });
 }
 
-/* ══════════════════════════════════════════════════════════
-   LOAD ALL PERIODS
-══════════════════════════════════════════════════════════ */
-async function loadAll() {
-  const now = new Date();
-  document.getElementById('last-updated').innerHTML =
-    `Последнее обновление: <strong>${now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</strong>`;
-
-  for (const [period, cfg] of Object.entries(PERIODS)) {
-    const el  = document.getElementById(`panel-${period}`);
-    const fn  = cfg.fn();
-    renderLoading(el);
-    const md = await fetchMd(fn);
-    if (!md) { renderEmpty(el, period, fn); continue; }
-    const tasks = parseMd(md, period);
-    tasks.length ? renderPeriod(el, period, fn, tasks) : renderEmpty(el, period, fn);
-  }
-
-  // refresh team if visible
-  if (document.getElementById('panel-team').classList.contains('active')) loadTeam();
+function moveFileToProj(e){
+  const id=e.currentTarget.dataset.id,val=e.currentTarget.value;
+  if(!val)return;
+  const pfiles=ls(K_PFILES,[]);const f=pfiles.find(x=>x.id===id);
+  if(f)f.projId=val==='__none'?null:val;
+  sv(K_PFILES,pfiles);renderProjList();if(window._projSelected)renderFilesArea();
 }
 
-/* ══════════════════════════════════════════════════════════
-   CHECKBOX INTERACTION
-══════════════════════════════════════════════════════════ */
-document.getElementById('main-content').addEventListener('click', e => {
-  const chk = e.target.closest('.task-check');
-  if (!chk) return;
-  const c = chk.closest('.task-card');
-  if (!c) return;
-
-  const key     = c.dataset.key;
-  const isDone  = c.dataset.done === 'true';
-  const nowDone = !isDone;
-
-  toggleStored(key, isDone);
-
-  c.dataset.done = nowDone;
-  c.classList.toggle('done', nowDone);
-  chk.classList.toggle('checked', nowDone);
-  chk.setAttribute('aria-checked', nowDone);
-
-  const txt = c.querySelector('.task-text');
-  txt.style.textDecoration = nowDone ? 'line-through' : '';
-  txt.style.color          = nowDone ? 'var(--text-muted)' : '';
+const pfi=document.getElementById('proj-file-input');
+function openProjUpload(){pfi.value='';pfi.click();}
+pfi.addEventListener('change',()=>{
+  const fa=Array.from(pfi.files);let done=0;
+  fa.forEach(file=>{
+    if(file.size>8*1024*1024){alert(`${file.name} > 8МБ, пропускаем`);done++;chk2();return;}
+    const r=new FileReader();
+    r.onload=ev=>{
+      const pfiles=ls(K_PFILES,[]);
+      pfiles.push({id:uid(),name:file.name,size:file.size,dataUrl:ev.target.result,projId:selectedProjId,date:Date.now(),type:file.type});
+      sv(K_PFILES,pfiles);logAct(`📁 ${file.name}`);done++;chk2();
+    };r.readAsDataURL(file);
+  });
+  function chk2(){if(done===fa.length){renderProjList();if(window._projSelected)renderFilesArea();}}
 });
 
-// keyboard support
-document.getElementById('main-content').addEventListener('keydown', e => {
-  if (e.key !== ' ' && e.key !== 'Enter') return;
-  if (!e.target.classList.contains('task-check')) return;
-  e.preventDefault();
-  e.target.click();
-});
+function delProjFile(e){
+  e.stopPropagation();const id=e.currentTarget.dataset.id;
+  const pfiles=ls(K_PFILES,[]);const idx=pfiles.findIndex(f=>f.id===id);
+  if(idx===-1)return;const name=pfiles[idx].name;
+  pfiles.splice(idx,1);sv(K_PFILES,pfiles);
+  logAct(`🗑 ${name}`);renderProjList();if(window._projSelected)renderFilesArea();
+}
 
-/* ══════════════════════════════════════════════════════════
-   TABS
-══════════════════════════════════════════════════════════ */
-document.getElementById('tabs-bar').addEventListener('click', e => {
-  const btn = e.target.closest('.tab-btn');
-  if (!btn) return;
-  const tab = btn.dataset.tab;
+// ═══════════════════════════════════════════════════════════════
+//  QUICK ADD
+// ═══════════════════════════════════════════════════════════════
+function quickAdd(){const t=document.getElementById('qa-text')?.value.trim();if(!t)return;const p=document.getElementById('qa-period')?.value||'day';const pending=ls('fw-pending',[]);pending.push({text:t,period:p,ts:Date.now()});sv('fw-pending',pending);document.getElementById('qa-text').value='';logAct(`➕ ${t.slice(0,24)}${t.length>24?'…':''}`);}
 
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+function toggleActions(){const w=document.getElementById('actions-wrap'),b=document.getElementById('act-toggle-btn');w.classList.toggle('open');b.classList.toggle('on',w.classList.contains('open'));}
 
+// ═══════════════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('tabs-bar').addEventListener('click',e=>{
+  const btn=e.target.closest('.tab-btn');if(!btn)return;
+  const tab=btn.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById(`panel-${tab}`).classList.add('active');
-
-  if (tab === 'team')  loadTeam();
-  if (tab === 'files') loadFiles();
+  document.getElementById('panel-'+tab).classList.add('active');
+  if(tab==='files'){renderProjList();renderProjColors();}
 });
 
-/* ══════════════════════════════════════════════════════════
-   UTILS
-══════════════════════════════════════════════════════════ */
-function esc(s) {
-  return String(s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+// ═══════════════════════════════════════════════════════════════
+//  LOAD DATA
+// ═══════════════════════════════════════════════════════════════
+async function loadAll(){
+  if(editing)return;
+  const rr=document.getElementById('ref-row');if(rr)rr.classList.add('refreshing');
+  const now=new Date();
+  document.getElementById('last-updated').innerHTML=`<strong>${now.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</strong>`;
+  let dayTasks=[],dayMeetings=[];
+  _allMeetingsByDate={};  // сброс перед загрузкой
+  for(const [period,cfg] of Object.entries(PERIODS)){
+    const panel=document.getElementById('panel-'+period);
+    const file=cfg.fn();renderLoading(panel);
+    const md=await fetchMd(file);
+    // Подтягиваем встречи для дня и недели
+    let meetings=[];
+    if(period==='day'){
+      const mmd=await fetchMd(`tasks/meetings/${tdStr()}.md`);
+      meetings=mmd?parseMeetingsMd(mmd):[];
+      dayMeetings=meetings;
+    }
+    if(period==='week'){
+      // Загружаем встречи и задачи дня для каждого дня текущей недели
+      const wDates=weekDates();
+      const wMap={};
+      _weekDayTasks={};
+      await Promise.all(wDates.map(async ds=>{
+        const [mmd,dmd]=await Promise.all([
+          fetchMd(`tasks/meetings/${ds}.md`),
+          fetchMd(`tasks/day/${ds}.md`),
+        ]);
+        if(mmd)wMap[ds]=parseMeetingsMd(mmd);
+        if(dmd)_weekDayTasks[ds]=parseMd(dmd);
+      }));
+      meetings=wMap; // объект {dateStr: meetings[]}
+    }
+    if(period==='month'){
+      // Загружаем встречи для каждого дня текущего месяца
+      const now=new Date(),yr=now.getFullYear(),mo=now.getMonth();
+      const days=new Date(yr,mo+1,0).getDate();
+      const mMap={};
+      await Promise.all(Array.from({length:days},(_,i)=>{
+        const ds=`${yr}-${pad(mo+1)}-${pad(i+1)}`;
+        return fetchMd(`tasks/meetings/${ds}.md`).then(mmd=>{if(mmd)mMap[ds]=parseMeetingsMd(mmd);});
+      }));
+      meetings=mMap;
+    }
+    if(period==='halfyear'){
+      const now2=new Date(),yr2=now2.getFullYear(),startMo2=now2.getMonth()<6?0:6;
+      const mMap2={};const fx2=[];
+      for(let mo=startMo2;mo<startMo2+6;mo++){const days=new Date(yr2,mo+1,0).getDate();for(let d=1;d<=days;d++){const ds=`${yr2}-${pad(mo+1)}-${pad(d)}`;fx2.push(fetchMd(`tasks/meetings/${ds}.md`).then(mmd=>{if(mmd)mMap2[ds]=parseMeetingsMd(mmd);}));}}
+      await Promise.all(fx2);meetings=mMap2;
+    }
+    if(period==='year'){
+      const yr3=new Date().getFullYear();
+      const mMap3={};const fx3=[];
+      for(let mo=0;mo<12;mo++){const days=new Date(yr3,mo+1,0).getDate();for(let d=1;d<=days;d++){const ds=`${yr3}-${pad(mo+1)}-${pad(d)}`;fx3.push(fetchMd(`tasks/meetings/${ds}.md`).then(mmd=>{if(mmd)mMap3[ds]=parseMeetingsMd(mmd);}));}}
+      await Promise.all(fx3);meetings=mMap3;
+    }
+    // Накапливаем встречи для тим-бара
+    if(Array.isArray(meetings)){if(meetings.length&&period==='day')_allMeetingsByDate[tdStr()]=meetings;}
+    else{Object.entries(meetings).forEach(([ds,mtgs])=>{_allMeetingsByDate[ds]=mtgs;});}
+    // Проверяем есть ли встречи (meetings может быть массивом или объектом-картой)
+    const hasMtgs=Array.isArray(meetings)
+      ?meetings.length>0
+      :Object.values(meetings).some(a=>a.length>0);
+    if(!md){
+      if(period==='week')renderPanel(panel,period,file,[],meetings); // неделя всегда показывает сетку
+      else if(hasMtgs)renderPanel(panel,period,file,[],meetings);
+      else if(period==='halfyear'||period==='year')renderPanel(panel,period,file,[],meetings); // обзорные виды всегда рендерятся
+      else renderEmpty(panel,period,file);
+      continue;
+    }
+    const tasks=parseMd(md);
+    if(!tasks.length&&!hasMtgs)renderEmpty(panel,period,file);
+    else{renderPanel(panel,period,file,tasks,meetings);if(period==='day')dayTasks=tasks;}
+  }
+  renderTeam();renderActLog();
+  if(rr)rr.classList.remove('refreshing');
+  const rt=document.getElementById('ref-time');
+  if(rt)rt.textContent=`обновлено ${now.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})}`;
 }
 
-/* ══════════════════════════════════════════════════════════
-   INIT
-══════════════════════════════════════════════════════════ */
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
 loadAll();
-setInterval(loadAll, 5 * 60 * 1000);
+setInterval(loadAll,2*60*1000);
 </script>
 </body>
 </html>
