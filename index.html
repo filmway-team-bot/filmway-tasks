@@ -610,26 +610,25 @@ function parseMd(md, period) {
       continue;
     }
 
-    const mDone    = line.match(/^[-*]\s+\[x\]\s+(.*)/i);
-    const mTodo    = line.match(/^[-*]\s+\[ \]\s+(.*)/);
-    const mBareMtg = line.match(/^[-*]\s+(📅\s+.*)/);   // bare bullet + 📅
-    if (!mDone && !mTodo && !mBareMtg) continue;
+    const mDone = line.match(/^[-*]\s+\[x\]\s+(.*)/i);
+    const mTodo = line.match(/^[-*]\s+\[ \]\s+(.*)/);
+    if (!mDone && !mTodo) continue;
 
     const origDone = !!mDone;
-    const full     = (mDone ? mDone[1] : mTodo ? mTodo[1] : mBareMtg[1]).trim();
+    const full     = (origDone ? mDone[1] : mTodo[1]).trim();
 
-    // ── meeting detection: starts with 📅 emoji ──────────
-    const isMeeting = /^📅/.test(full);
+    // ── meeting detection: line starts with 📅 ───────────
+    const isMeeting = full.startsWith('📅');
 
-    // meeting time: 📅 HH:MM  (single time, not range)
-    const mtMatch   = full.match(/^📅\s*(\d{1,2}:\d{2})/);
-    const meetingTime = mtMatch ? mtMatch[1] : null;
+    // meeting time: 📅 HH:MM
+    let meetingTime = null;
+    if (isMeeting) {
+      const rest = full.indexOf('📅') >= 0 ? full.slice(full.indexOf('📅') + 2) : '';
+      const mt = rest.match(/^\s*(\d{1,2}:\d{2})/);
+      if (mt) meetingTime = mt[1];
+    }
 
-    // time range: 12:00-18:00 / 12:00–18:00
-    const tMatch    = full.match(/(\d{1,2}:\d{2})\s*[–\-—]\s*(\d{1,2}:\d{2})/);
-    const timeRange = tMatch ? `${tMatch[1]}–${tMatch[2]}` : null;
-
-    // markdown links: [text](url) — collect all
+    // markdown links [text](url) — collect for link buttons
     const links = [];
     const linkRe = /\[([^\]]+)\]\(([^)]+)\)/g;
     let lm;
@@ -637,27 +636,33 @@ function parseMd(md, period) {
       links.push({ text: lm[1], url: lm[2] });
     }
 
-    // participants after —: «— Имя, Имя» (Cyrillic + Latin, comma-separated)
-    const pMatch = full.match(/—\s*([\wА-ЯЁа-яё][^\[–\-—\n]*?)(?=\s*[\[–\-]|$)/u);
-    const person = pMatch ? pMatch[1].replace(/\s+$/, '').replace(/,\s*$/, '').trim() : null;
+    // time range: 12:00-18:00 / 12:00–18:00
+    const tMatch = full.match(/(\d{1,2}:\d{2})\s*[–\-—]\s*(\d{1,2}:\d{2})/);
+    const timeRange = tMatch ? `${tMatch[1]}–${tMatch[2]}` : null;
 
-    // deadline: до ДД.ММ
+    // person: — Имя or @handle  (ORIGINAL logic preserved)
+    const pMatch = full.match(/—\s*([А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?)/u)
+                || full.match(/@([\w\d_]+)/);
+    const person  = pMatch ? pMatch[0].replace(/^—\s*/, '').trim() : null;
+
+    // deadline: до ДД.ММ  (ORIGINAL)
     const dMatch   = full.match(/до\s+(\d{1,2}\.\d{2}(?:\.\d{2,4})?)/);
     const deadline = dMatch ? dMatch[1] : null;
 
-    // clean display text: strip metadata tokens
-    let text = full
-      .replace(/^📅\s*\d{1,2}:\d{2}\s*/, '')          // meeting time badge
-      .replace(/^📅\s*/, '')                             // bare 📅
-      .replace(/(\d{1,2}:\d{2})\s*[–\-—]\s*(\d{1,2}:\d{2})/, '')  // time range
-      .replace(/—\s*[\wА-ЯЁа-яё][^\[–\-—\n]*?(?=\s*[\[–\-]|$)/u, '')  // participants
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '')             // markdown links
-      .replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/, '') // deadline
-      .replace(/\s{2,}/g, ' ').trim().replace(/^[-—\s]+/, '');
-    if (!text) {
-      // fallback: keep link text and strip just the URL part
-      text = full.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/^📅\s*\d{1,2}:\d{2}\s*/, '').trim();
+    // clean display text (ORIGINAL + strip 📅 prefix + strip links)
+    let text = full;
+    if (isMeeting) {
+      // strip 📅 and optional time from start
+      text = text.replace(/^📅\s*\d{1,2}:\d{2}\s*/, '').replace(/^📅\s*/, '');
     }
+    text = text
+      .replace(/(\d{1,2}:\d{2})\s*[–\-—]\s*(\d{1,2}:\d{2})/, '')
+      .replace(/—\s*[А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+)?/u, '')
+      .replace(/@[\w\d_]+/, '')
+      .replace(/до\s+\d{1,2}\.\d{2}(?:\.\d{2,4})?/, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/\s{2,}/g, ' ').trim().replace(/^[-—]\s*/, '');
+    if (!text) text = full;
 
     const key  = taskKey(period, full);
     const done = storedDone(key, origDone);
