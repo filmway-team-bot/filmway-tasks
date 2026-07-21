@@ -389,6 +389,7 @@
       <span class="search-count" id="search-count"></span>
     </div>
     <button class="btn-icon" id="search-btn" title="Поиск (⌘F)">🔍</button>
+    <button class="btn-icon" onclick="setGhToken()" title="Синхронизация галочек с GitHub" style="position:relative">🔑<span id="gh-sync-dot" style="position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#7a8499"></span></button>
     <div class="hdr-meta" id="last-updated">…</div>
   </div>
 </header>
@@ -512,6 +513,9 @@ const K_PROJ  = 'fw-projects';   // [{id,name,color}]
 const K_PFILES= 'fw-pfiles';     // project files [{id,name,dataUrl,size,projId,date,type}]
 const K_ACT   = 'fw-act';
 const K_CHECKS= 'fw-checks';    // manual checkbox overrides {taskKey: bool}
+const K_GH_TOKEN='fw-gh-token'; // GitHub fine-grained token (write:contents)
+let _renderFile='';              // текущий файл при рендере карточек
+let _taskFileMap={};             // taskKey → github path
 
 const PERIODS = {
   day:      { label:'День',    fn:()=>`tasks/day/${tdStr()}.md` },
@@ -727,7 +731,7 @@ function detectConflicts(tasks,meetings){
 //  RENDER TASK PANELS
 // ═══════════════════════════════════════════════════════════════
 // Базовый список-рендер (день / полгода / год)
-function renderPanelList(el,period,file,tasks,meetings=[]){
+function renderPanelList(el,period,file,tasks,meetings=[]){_renderFile=file;
   const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
   const base=file.split('/').pop();
   let html=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div>`;
@@ -786,7 +790,7 @@ function renderMiniMonth(year,month,meetingsByDate={}){
   return html;
 }
 
-function renderHalfYearCalendar(el,period,file,tasks,meetings={}){
+function renderHalfYearCalendar(el,period,file,tasks,meetings={}){_renderFile=file;
   const now=new Date(),yr=now.getFullYear();
   const startMo=now.getMonth()<6?0:6;
   const mtgs=Array.isArray(meetings)?{}:meetings;
@@ -804,7 +808,7 @@ function renderHalfYearCalendar(el,period,file,tasks,meetings={}){
   applyFilters();renderTeam();
 }
 
-function renderYearCalendar(el,period,file,tasks,meetings={}){
+function renderYearCalendar(el,period,file,tasks,meetings={}){_renderFile=file;
   const yr=new Date().getFullYear();
   const mtgs=Array.isArray(meetings)?{}:meetings;
   const base=file.split('/').pop();
@@ -858,7 +862,7 @@ const WEEK_DAYS=[
   {ru:'воскресенье',short:'Вс',dow:6},
 ];
 
-function renderWeekCalendar(el,period,file,tasks,meetings=[]){
+function renderWeekCalendar(el,period,file,tasks,meetings=[]){_renderFile=file;
   // Всегда сетка 7 столбцов
   const total=tasks.length,done=tasks.filter(t=>t.done).length,pct=total?Math.round(done/total*100):0;
   const base=file.split('/').pop();
@@ -916,7 +920,7 @@ function renderWeekCalendar(el,period,file,tasks,meetings=[]){
 }
 
 // ─── МЕСЯЦ: сетка-календарь + список задач ───────────────────
-function renderMonthCalendar(el,period,file,tasks,meetings={}){
+function renderMonthCalendar(el,period,file,tasks,meetings={}){_renderFile=file;
   const now=new Date();
   const year=now.getFullYear(),month=now.getMonth();
   const firstDay=new Date(year,month,1);
@@ -1040,6 +1044,7 @@ function renderCard(task,isConflict=false){
   const edits=ls(K_EDITS,{});
   const checks=ls(K_CHECKS,{});
   const key=djb2(task.rawText||task.text);
+  if(_renderFile)_taskFileMap[key]=_renderFile;
   const disp=edits[key]||task.text;
   // localStorage check override takes priority over markdown state
   const isDone=checks.hasOwnProperty(key)?checks[key]:task.done;
@@ -1058,7 +1063,7 @@ function renderCard(task,isConflict=false){
   let fhtml='';
   if(tf.length>0){fhtml=`<div class="attach-row" id="ar-${key}">`;tf.forEach((f,i)=>{fhtml+=`<a class="file-chip" href="${esc(f.dataUrl)}" download="${esc(f.name)}" title="${esc(f.name)}">📄 <span class="fcn">${esc(f.name)}</span><span class="fcd" data-key="${key}" data-idx="${i}" onclick="delTaskFile(event)">×</span></a>`;});fhtml+=`</div>`;}
   else fhtml=`<div class="attach-row" id="ar-${key}"></div>`;
-  return `<div class="task-card${isDone?' done':''}${isConflict?' conflict':''}" data-key="${key}"${borderC?` style="--acc:${borderC}"`:''}><div class="task-check${isDone?' checked':''}" onclick="toggleCheck(event,'${key}')"></div><div class="task-body"><div class="task-text">${esc(disp)}</div><textarea class="edit-area" rows="2">${esc(disp)}</textarea><div class="edit-btns"><button class="btn-save">Сохранить</button><button class="btn-cancel">Отмена</button></div>${meta?`<div class="task-meta">${meta}</div>`:''}${fhtml}<button class="attach-btn" data-key="${key}" onclick="openTaskFile(event)">📎 Прикрепить</button></div><button class="edit-btn" title="Редактировать">✏️</button></div>`;
+  return `<div class="task-card${isDone?' done':''}${isConflict?' conflict':''}" data-key="${key}" data-file="${_renderFile}" data-raw="${esc(task.rawText||task.text)}"${borderC?` style="--acc:${borderC}"`:''}><div class="task-check${isDone?' checked':''}" onclick="toggleCheck(event,'${key}')"></div><div class="task-body"><div class="task-text">${esc(disp)}</div><textarea class="edit-area" rows="2">${esc(disp)}</textarea><div class="edit-btns"><button class="btn-save">Сохранить</button><button class="btn-cancel">Отмена</button></div>${meta?`<div class="task-meta">${meta}</div>`:''}${fhtml}<button class="attach-btn" data-key="${key}" onclick="openTaskFile(event)">📎 Прикрепить</button></div><button class="edit-btn" title="Редактировать">✏️</button></div>`;
 }
 
 function renderEmpty(el,period,file){const base=file.split('/').pop();el.innerHTML=`<div class="period-hdr"><span class="period-title">${PERIODS[period].label}</span><span class="period-date">${humanDate(base.replace('.md',''))}</span></div><div class="empty"><div class="empty-icon">📭</div><p>Нет задач</p><p style="margin-top:5px;font-size:.7rem">Файл <code>${file}</code> не найден</p></div>`;}
@@ -1114,6 +1119,75 @@ function toggleCheck(e,key){
   const checks=ls(K_CHECKS,{});checks[key]=newDone;sv(K_CHECKS,checks);
   updatePanelProgress(card);
   logAct(newDone?'✅ Выполнено':'↩️ Возвращено');
+  // Синхронизация с GitHub
+  const file=card.dataset.file||_taskFileMap[key]||'';
+  const raw=card.dataset.raw||'';
+  if(file&&raw)pushCheckToGitHub(file,raw,newDone);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GitHub Checkbox Sync
+// ═══════════════════════════════════════════════════════════════
+
+async function pushCheckToGitHub(file,rawText,newDone){
+  const token=localStorage.getItem(K_GH_TOKEN);
+  if(!token)return;
+  const syncEl=document.getElementById('gh-sync-dot');
+  if(syncEl)syncEl.style.background='#f0a500';
+  try{
+    // 1. Читаем файл + SHA
+    const r=await fetch(`https://api.github.com/repos/${REPO}/contents/${file}`,{
+      headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}
+    });
+    if(!r.ok){console.warn('GH fetch failed',r.status);if(syncEl)syncEl.style.background='#e94560';return;}
+    const data=await r.json();
+    const sha=data.sha;
+    const content=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+    // 2. Меняем [ ] ↔ [x] в нужной строке
+    const safeRaw=rawText.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const prefix=safeRaw.substring(0,40);
+    let updated;
+    if(newDone){
+      updated=content.replace(new RegExp(`- \\[ \\] (.*?${prefix.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').substring(6)}[^\n]*)`),'- [x] $1');
+    }else{
+      updated=content.replace(new RegExp(`- \\[x\\] (.*?${prefix.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').substring(6)}[^\n]*)`),'- [ ] $1');
+    }
+    // Простой fallback: заменить строку целиком
+    if(updated===content){
+      const fromMark=newDone?'- [ ] ':'- [x] ';
+      const toMark=newDone?'- [x] ':'- [ ] ';
+      const lines=content.split('\n');
+      const stripped=rawText.replace(/^- \[[ x]\] /,'');
+      const idx=lines.findIndex(l=>l.includes(stripped.substring(0,30)));
+      if(idx>=0)lines[idx]=lines[idx].replace(fromMark,toMark);
+      updated=lines.join('\n');
+    }
+    if(updated===content){if(syncEl)syncEl.style.background='#7a8499';return;}
+    // 3. Пушим
+    await fetch(`https://api.github.com/repos/${REPO}/contents/${file}`,{
+      method:'PUT',
+      headers:{'Authorization':`token ${token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      body:JSON.stringify({
+        message:newDone?`✅ закрыта задача`:`↩️ открыта задача`,
+        content:btoa(unescape(encodeURIComponent(updated))),
+        sha
+      })
+    });
+    if(syncEl)syncEl.style.background='#2ecc71';
+    setTimeout(()=>{if(syncEl)syncEl.style.background='var(--done)';},2000);
+  }catch(err){
+    console.warn('GH sync error:',err);
+    if(syncEl)syncEl.style.background='#e94560';
+  }
+}
+
+function setGhToken(){
+  const cur=localStorage.getItem(K_GH_TOKEN)||'';
+  const t=prompt('GitHub token (fine-grained, write:contents для filmway-tasks):',cur);
+  if(t===null)return;
+  if(t.trim()){localStorage.setItem(K_GH_TOKEN,t.trim());alert('✅ Токен сохранён. Галочки теперь синхронизируются с GitHub!');}
+  else{localStorage.removeItem(K_GH_TOKEN);alert('Токен удалён.');}
+  document.getElementById('gh-sync-dot').style.background=t.trim()?'var(--done)':'#7a8499';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1614,6 +1688,8 @@ async function loadAll(){
 // ═══════════════════════════════════════════════════════════════
 loadAll();
 setInterval(loadAll,2*60*1000);
+// Инициализация индикатора GitHub sync
+(function(){const dot=document.getElementById('gh-sync-dot');if(dot&&localStorage.getItem(K_GH_TOKEN))dot.style.background='var(--done)';})();
 </script>
 </body>
 </html>
