@@ -13,10 +13,10 @@
     },
     {
       "slug": "test-manual",
-      "title": "Тестовый пуш",
+      "title": "Тестовый пуш 2",
       "status": "new",
       "created_at": "2026-08-11 01:07",
-      "updated_at": "2026-08-11 11:25",
+      "updated_at": "2026-08-11 11:29",
       "text": "",
       "fields": {}
     },
@@ -30,5 +30,5 @@
       "fields": {}
     }
   ],
-  "updated_at": "2026-08-11 11:25"
+  "updated_at": "2026-08-11 11:29"
 }
