@@ -1,6 +1,15 @@
 {
   "briefs": [
     {
+      "slug": "test",
+      "title": "тест",
+      "status": "pending_approval",
+      "created_at": "2026-08-11 11:48",
+      "updated_at": "2026-08-11 11:48",
+      "text": "# Бриф: тест\nДата: 2026-08-11\nИсточник: website (форма)\nSlug: test\n\n## Параметры\n- camera: film (Плёнка)\n- lens: vintage lens bokeh flare (Винтажная, боке и флеры)\n- color: cool tones (Холодный)\n- light: hard backlight (Жёсткий, контровой)\n- mood: energetic dynamic (Энергично, динамично)\n",
+      "fields": {}
+    },
+    {
       "slug": "cook-postapo",
       "title": "Повар в пост-апокалипсисе",
       "status": "clarifying",
@@ -30,5 +39,5 @@
       "fields": {}
     }
   ],
-  "updated_at": "2026-08-11 11:31"
+  "updated_at": "2026-08-11 11:48"
 }
