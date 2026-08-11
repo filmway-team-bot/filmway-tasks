@@ -195,16 +195,25 @@ submitBtn.addEventListener('click', async () => {
 
   if(INTAKE_URL){
     try {
+      // text/plain держит запрос в разряде CORS "simple request" — браузер не
+      // шлёт preflight OPTIONS, который иначе ловит предупреждение ngrok
+      // (у бесплатного домена оно перехватывает запросы без спец-заголовка,
+      // а заголовок в preflight всё равно передать нельзя).
       const res = await fetch(INTAKE_URL, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+        headers: {'Content-Type': 'text/plain;charset=utf-8'},
         body: JSON.stringify({title, brief_text: briefText, ...selected})
       });
+      const ct = res.headers.get('content-type') || '';
+      if(!ct.includes('application/json')){
+        throw new Error('сервер вернул не JSON (возможно, туннель ngrok не поднят) — HTTP ' + res.status);
+      }
       const data = await res.json();
       if(!res.ok || !data.ok){ throw new Error(data.error || ('HTTP ' + res.status)); }
       startPolling(data.slug);
       return;
     } catch(e) {
+      console.warn('intake POST failed, falling back to Telegram:', e);
       // падаем в запасной путь через Telegram, не блокируем пользователя
     }
   }
