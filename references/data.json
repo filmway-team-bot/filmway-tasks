@@ -7,7 +7,17 @@
       "created_at": "2026-08-11 12:12",
       "updated_at": "2026-08-11 12:12",
       "text": "# Референс-бриф: хуй\n\n**Дата:** 2026-08-11\n**Источник:** website (форма new.html)\n**Slug:** huy\n**Статус:** new\n\n## Текст брифа\nдрама о братанах которые любят одну женщину\n\n## Параметры (из формы)\n- **camera:** film\n- **lens:** anamorphic\n- **color:** cool tones\n- **light:** natural soft light\n- **mood:** dramatic\n",
-      "fields": {}
+      "fields": {
+        "camera": "film",
+        "lens": "anamorphic",
+        "color": "cool tones",
+        "light": "natural soft light",
+        "mood": "dramatic"
+      },
+      "links": {
+        "shotdeck": "https://shotdeck.com/browse/stills#/s/anamorphic+cool+dramatic",
+        "frameset": "https://frameset.app/search?search=film+anamorphic+cool+tones+natural+soft+light+dramatic"
+      }
     },
     {
       "slug": "test",
