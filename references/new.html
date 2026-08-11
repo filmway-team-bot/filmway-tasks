@@ -156,7 +156,7 @@
 <script>
 // Заполни после настройки туннеля на Mac mini (intake_server.py) — до этого
 // форма работает через запасной путь: открывает Telegram с готовым текстом.
-const INTAKE_URL = "";
+const INTAKE_URL = "https://purr-player-voice.ngrok-free.dev/submit";
 const BOT_USERNAME = "fw_ai_camerabot";
 
 const selected = {camera:"", lens:"", color:"", light:"", mood:""};
@@ -197,7 +197,7 @@ submitBtn.addEventListener('click', async () => {
     try {
       const res = await fetch(INTAKE_URL, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
         body: JSON.stringify({title, brief_text: briefText, ...selected})
       });
       const data = await res.json();
