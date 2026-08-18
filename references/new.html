@@ -70,14 +70,23 @@
   .result.show{display:block;}
   .spinner{display:flex; align-items:center; gap:12px; color:var(--text-dim); font-size:13.5px;}
   .spinner .dot{width:8px; height:8px; border-radius:50%; background:var(--accent); animation:pulse 1.1s ease-in-out infinite;}
-  @keyframes pulse{0%,100%{opacity:.25;} 50%{opacity:1;}}
+  @keyframes pulse{0%,100%{opacity:25;} 50%{opacity:1;}}
   .result h2{font-size:16px; margin:0 0 12px;}
+  .miro-cta{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    background:var(--accent-dim); border:1px solid var(--accent); border-radius:var(--radius-sm);
+    padding:16px 18px; margin:14px 0 6px;
+  }
+  .miro-cta .txt{font-size:13px; color:var(--text-dim);}
+  .miro-cta .txt b{color:var(--text); display:block; font-size:14.5px; margin-bottom:2px;}
+  .miro-cta a.btn{
+    flex-shrink:0; background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b0d12;
+    text-decoration:none; font-size:13px; font-weight:700; padding:10px 16px; border-radius:8px;
+  }
   .result .links{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
   .result .links a{font-size:12.5px; color:var(--accent); text-decoration:none; border:1px solid #2a3550; padding:6px 12px; border-radius:8px;}
   .result .links a:hover{background:var(--accent-dim);}
   .result .fields{font-size:13px; color:var(--text-dim); line-height:1.8;}
-  .photos{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; margin-top:14px;}
-  .photos img{width:100%; height:90px; object-fit:cover; border-radius:8px; border:1px solid var(--border);}
 </style>
 </head>
 <body>
@@ -86,7 +95,7 @@
     <div class="mark">🎬</div>
     <div>
       <h1>Новый бриф — Кадр</h1>
-      <div class="sub">Выбери параметры — референсы соберутся автоматически</div>
+      <div class="sub">Выбери parametry — референсы соберутся автоматически</div>
     </div>
   </div>
   <a class="back" href="./index.html">← Все референсы</a>
@@ -96,7 +105,7 @@
   <div class="field-block">
     <div class="field-label">Название / текст брифа</div>
     <input type="text" id="title" placeholder="Название проекта или ролика" style="margin-bottom:8px;">
-    <textarea id="briefText" placeholder="О чём ролик — сюжет, сценарий, пара строк описания..."></textarea>
+    <textarea id="briefText" placeholder="<textarea id="briefText" placeholder="О чём ролик - сюжет, сценарий, пара строк описания..."></textarea>
   </div>
 
   <div class="field-block opt-required">
@@ -105,7 +114,7 @@
       <div class="opt" data-value="film">🎞 Плёнка</div>
       <div class="opt" data-value="digital cinema">📷 Цифра, кинематографично</div>
       <div class="opt" data-value="digital documentary">📱 Цифра, документально</div>
-      <div class="opt" data-value="ugc smartphone style">🤳 UGC / смартфон-стиль</div>
+      <div class="opt" data-value="ugc smartphone style">🤳/ смартфонн-стиль</div>
     </div>
   </div>
 
@@ -154,10 +163,7 @@
 </div>
 
 <script>
-// Заполни после настройки туннеля на Mac mini (intake_server.py) — до этого
-// форма работает через запасной путь: открывает Telegram с готовым текстом.
 const INTAKE_URL = "https://purr-player-voice.ngrok-free.dev/submit";
-const BOT_USERNAME = "fw_ai_camerabot";
 
 const selected = {camera:"", lens:"", color:"", light:"", mood:""};
 
@@ -193,31 +199,28 @@ submitBtn.addEventListener('click', async () => {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Отправляю...';
 
-  if(INTAKE_URL){
-    try {
-      // text/plain держит запрос в разряде CORS "simple request" — браузер не
-      // шлёт preflight OPTIONS, который иначе ловит предупреждение ngrok
-      // (у бесплатного домена оно перехватывает запросы без спец-заголовка,
-      // а заголовок в preflight всё равно передать нельзя).
-      const res = await fetch(INTAKE_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'text/plain;charset=utf-8'},
-        body: JSON.stringify({title, brief_text: briefText, ...selected})
-      });
-      const ct = res.headers.get('content-type') || '';
-      if(!ct.includes('application/json')){
-        throw new Error('сервер вернул не JSON (возможно, туннель ngrok не поднят) — HTTP ' + res.status);
-      }
-      const data = await res.json();
-      if(!res.ok || !data.ok){ throw new Error(data.error || ('HTTP ' + res.status)); }
-      startPolling(data.slug);
-      return;
-    } catch(e) {
-      console.warn('intake POST failed, falling back to Telegram:', e);
-      // падаем в запасной путь через Telegram, не блокируем пользователя
+  try {
+    // text/plain держит запрос в разряде CORS "simple request" — браузер не
+    // шлёт preflight OPTIONS, который иначе ловит предупреждение ngrok
+    // (у бесплатного домена оно перехватывает запросы без спец-заголовка,
+    // а заголовок в preflight всё равно передать нельзя).
+    const res = await fetch(INTAKE_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({title, brief_text: briefText, ...selected})
+    });
+    const ct = res.headers.get('content-type') || '';
+    if(!ct.includes('application/json')){
+      throw new Error('сервер вернул не JSON (возможно, туннель ngrok не поднят) — HTTP ' + res.status);
     }
+    const data = await res.json();
+    if(!res.ok || !data.ok){ throw new Error(data.error || ('HTTP ' + res.status)); }
+    startPolling(data.slug);
+  } catch(e) {
+    showErr('Не удалось отправить бриф: ' + e.message + '. Проверь, что Кадр сейчас в сети, и попробуй ещё раз.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '🔍 Собрать референсы';
   }
-  sendViaTelegram(title, briefText);
 });
 
 function showErr(msg){
@@ -225,30 +228,9 @@ function showErr(msg){
   errEl.style.display = 'block';
 }
 
-function sendViaTelegram(title, briefText){
-  const lines = [
-    title ? ('Бриф: ' + title) : 'Новый бриф',
-    briefText || '',
-    '',
-    'Параметры:',
-    'camera: ' + selected.camera,
-    'lens: ' + selected.lens,
-    'color: ' + selected.color,
-  ];
-  if(selected.light) lines.push('light: ' + selected.light);
-  if(selected.mood) lines.push('mood: ' + selected.mood);
-  const full = lines.filter(Boolean).join('\n');
-  const url = 'https://t.me/' + BOT_USERNAME + '?text=' + encodeURIComponent(full);
-  window.open(url, '_blank');
-  resultEl.classList.add('show');
-  resultEl.innerHTML = '<div class="spinner">Открыл Telegram с заполненным брифом — нажми там "Отправить", Кадр подхватит параметры и сразу начнёт искать (переспрашивать то, что уже выбрано, не будет).</div>';
-  submitBtn.disabled = false;
-  submitBtn.textContent = '🔍 Собрать референсы';
-}
-
 function startPolling(slug){
   resultEl.classList.add('show');
-  resultEl.innerHTML = `<div class="spinner"><div class="dot"></div>Кадр ищет референсы на ShotDeck и Frameset — обычно 1-3 минуты...</div>`;
+  resultEl.innerHTML = `<div class="spinner"><div class="dot"></div>Кадр ищет референсы и собирает доску Miro — обычно 1-3 минуты...</div>`;
   submitBtn.textContent = 'Ищу референсы...';
 
   let attempts = 0;
@@ -259,7 +241,7 @@ function startPolling(slug){
       const res = await fetch('./data.json?_=' + Date.now(), {cache:'no-store'});
       const data = await res.json();
       const brief = (data.briefs || []).find(b => b.slug === slug);
-      if(brief && (brief.links && (brief.links.shotdeck || brief.links.frameset))){
+      if(brief && brief.links && brief.links.miro){
         clearInterval(pollTimer);
         renderResult(brief);
       }
@@ -270,13 +252,19 @@ function startPolling(slug){
 function renderResult(brief){
   const links = brief.links || {};
   const fields = brief.fields || {};
-  const linksHtml = Object.entries(links).map(([k,v]) => `<a href="${v}" target="_blank" rel="noopener">${escapeHtml(k)} →</a>`).join('');
-  const fieldsHtml = Object.entries(fields).map(([k,v]) => `<div><b>${escapeHtml(k)}:</b> ${escapeHtml(v)}</div>`).join('');
+  const otherLinksHtml = Object.entries(links).filter(([k]) => k !== 'miro')
+    .map(([k,v]) => `<a href="${v}" target="_blank" rel="noopener">${escapeHtml(k)} →</a>`).join('');
+  const fieldsHtml = Object.entries(fields).filter(([,v]) => v)
+    .map(([k,v]) => `<div><b>${escapeHtml(k)}:</b> ${escapeHtml(v)}</div>`).join('');
   resultEl.innerHTML = `
     <h2>✅ Готово: ${escapeHtml(brief.title || brief.slug)}</h2>
     <div class="fields">${fieldsHtml}</div>
-    <div class="links">${linksHtml}</div>
-    <div style="margin-top:16px; font-size:12.5px; color:var(--text-faint);">Отправлено Эраджу на согласование. Полную карточку смотри на <a href="./index.html" style="color:var(--accent);">странице всех референсов</a>.</div>
+    <div class="miro-cta">
+      <div class="txt"><b>Фото на доске Miro</b>смотреть/комментировать удобнее там, чем на сайте</div>
+      <a class="btn" href="${links.miro}" target="_blank" rel="noopener">Открыть доску →</a>
+    </div>
+    <div class="links">${otherLinksHtml}</div>
+    <div style="margin-top:16px; font-size:12.5px; color:var(--text-faint);">Отправлено на согласование Эраджу. Статус смотри на <a href="./index.html" style="color:var(--accent);">странице всех референсов</a>.</div>
   `;
   submitBtn.textContent = '✅ Отправлено';
 }
