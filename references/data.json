@@ -21,13 +21,16 @@
     },
     {
       "slug": "test",
-      "title": "тест",
+      "title": "Тест",
       "status": "pending_approval",
       "created_at": "2026-08-11 11:48",
-      "updated_at": "2026-08-18 08:34",
-      "text": "# Бриф: тест\nДата: 2026-08-11\nИсточник: website (форма)\nSlug: test\n\n## Параметры\n- camera: film (Плёнка)\n- lens: vintage lens bokeh flare (Винтажная, боке и флеры)\n- color: cool tones (Холодный)\n- light: hard backlight (Жёсткий, контровой)\n- mood: energetic dynamic (Энергично, динамично)\n",
+      "updated_at": "2026-08-18 11:20",
+      "text": "# Тест\n\n**Дата:** 2026-08-18\n**Источник:** website\n**Слаг:** test\n\n## Текст брифа\n\nпроект про большие возможности маленького человека\n\n## Параметры\n\n- **Камера:** film\n- **Оптика:** anamorphic\n- **Цвет:** high contrast saturated\n- **Свет:** natural soft light\n- **Настроение:** dramatic\n",
       "fields": {},
-      "links": {}
+      "links": {
+        "shotdeck": "https://shotdeck.com/browse/stills#/s/anamorphic+high+dramatic",
+        "frameset": "https://frameset.app/search?search=film+anamorphic+high+contrast+saturated+natural+soft+light+dramatic"
+      }
     },
     {
       "slug": "cook-postapo",
@@ -59,5 +62,5 @@
       "fields": {}
     }
   ],
-  "updated_at": "2026-08-18 08:34"
+  "updated_at": "2026-08-18 11:20"
 }
