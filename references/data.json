@@ -3,12 +3,16 @@
     {
       "slug": "testovy-brif-2",
       "title": "Тестовый бриф 2",
-      "status": "new",
+      "status": "pending_approval",
       "created_at": "2026-08-18 12:01",
-      "updated_at": "2026-08-18 12:01",
+      "updated_at": "2026-08-18 12:08",
       "text": "# Тестовый бриф 2\n**Дата:** 2026-08-18  \n**Источник:** сайт (website)  \n**Slug:** testovy-brif-2\n\n## Текст брифа\nработа авито, много растительности\n\n## Параметры\n- **camera:** film (плёнка)\n- **lens:** vintage lens bokeh flare (винтажная оптика, боке и флеры)\n- **color:** cool tones (холодный)\n- **light:** natural soft light (естественный, мягкий)\n- **mood:** energetic dynamic (энергично, динамично)\n",
       "fields": {},
-      "links": {}
+      "links": {
+        "shotdeck": "https://shotdeck.com/browse/stills#/s/urban+greenery+vintage+film",
+        "frameset": "https://frameset.app/search?search=avito+work+vegetation+urban+greenery+film+vintage+lens+bokeh+flare+cool+tones+natural+soft+light+energetic+dynamic",
+        "miro": "https://miro.com/app/board/uXjVHxepjHk=/"
+      }
     },
     {
       "slug": "huy",
@@ -75,5 +79,5 @@
       "fields": {}
     }
   ],
-  "updated_at": "2026-08-18 12:01"
+  "updated_at": "2026-08-18 12:08"
 }
